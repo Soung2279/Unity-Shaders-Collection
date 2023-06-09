@@ -26,7 +26,7 @@ A201-Shaders Collection  ///  Personal Usage
 - **热扭曲与法线扭曲** 着色器
 - **简易卡通与标准PBR** 着色器
 
-在以下环境下，插件已经过测试：
+在以下环境下，Shader已经过测试：
 - [x] ``Windows 10`` // ``Windows 11``
 - [x] ``Unity 2018.4.36f1``
 - [x] ``Unity 2019.3.0f6``
@@ -42,7 +42,7 @@ A201-Shaders Collection  ///  Personal Usage
 着色器导入
 ===========================
 
-直接将本仓库对应渲染管线文件夹放入项目目录下即可。
+直接将本仓库Release对应渲染管线文件夹放入项目目录下即可。
 
 
 说明
