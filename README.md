@@ -15,7 +15,9 @@ A201-Shaders Collection  ///  Personal Usage
 功能介绍
 ===========================
 
-适用于``Unity 2018+``的 **特效着色器合集**
+适用于``Unity 2018+``的 **特效着色器合集**，适配默认内置管线``Built-in`` 与 通用渲染管线``URP``。
+
+所有Shader均已经过特效制作测试。
 
 本合集包含如下内容：
 - 基本 **Additive/Alpha Blend** 着色器
@@ -25,6 +27,8 @@ A201-Shaders Collection  ///  Personal Usage
 - **菲涅尔、颜色渐变、深度消隐、软粒子** 着色器
 - **热扭曲与法线扭曲** 着色器
 - **简易卡通与标准PBR** 着色器
+- **物体描边、复合纹理** 着色器
+- ……
 
 在以下环境下，Shader已经过测试：
 - [x] ``Windows 10`` // ``Windows 11``
@@ -58,6 +62,14 @@ A201-Shaders Collection  ///  Personal Usage
 ****
 
 ## 更新日志
+
+### 2023.7.31 | 更新说明 | Standard 1.3
+
+新增：适用于URP管线的溶解（消融）、纹理叠加（遮罩）、简易描边等Shaders。
+
+本次更新仅适用于URP项目。
+
+考虑到项目制作需要，今后会将偏向更新适用于URP环境的shaders。
 
 ### 2023.6.9 | 更新说明 | Standard 1.2
 
