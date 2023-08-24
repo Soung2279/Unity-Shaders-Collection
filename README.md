@@ -15,29 +15,29 @@ A201-Shaders Collection  ///  Personal Usage
 功能介绍
 ===========================
 
-适用于``Unity 2018+``的 **特效着色器合集**，适配默认内置管线``Built-in`` 与 通用渲染管线``URP``。
-
-所有Shader均已经过特效制作测试。
+收录适用于``Unity 2018+``，``Built-in`` & ``URP`` 环境的 **特效着色器合集**
 
 本合集包含如下内容：
-- 基本 **Additive/Alpha Blend** 着色器
+- 基本粒子 **Additive/Alpha Blend** 着色器
 - **软硬溶解/极坐标溶解/定向溶解** 着色器
 - 后期处理**屏幕扭曲/色差/晕影/黑白闪** 着色器
 - **扭曲与顶点偏移** 着色器
 - **菲涅尔、颜色渐变、深度消隐、软粒子** 着色器
-- **热扭曲与法线扭曲** 着色器
-- **简易卡通与标准PBR** 着色器
-- **物体描边、复合纹理** 着色器
-- ……
+- **热扭曲与法线扭曲、流麻** 着色器
+- **视差与径向模糊** 着色器
+- **简易描边、BA式卡通渲染与标准PBR** 着色器
 
-在以下环境下，Shader已经过测试：
-- [x] ``Windows 10`` // ``Windows 11``
-- [x] ``Unity 2018.4.36f1``
-- [x] ``Unity 2019.3.0f6``
-- [x] ``Unity 2020.3.38f1c1``
-- [x] ``Unity 2020.3.47f1c1``
-- [x] ``Unity 2021.3.18f1c1``
+在下列Unity环境下，着色器经测试可正常使用：
+- [x] ``Windows 10`` & ``Windows 11``
+- [x] ``Unity 2018:`` 4.36f1
+- [x] ``Unity 2019:`` 3.0f6
+- [x] ``Unity 2020:`` 3.38f1c1 // 3.47f1c1 // 3.48f1c1
+- [x] ``Unity 2021:`` 3.18f1c1 // 3.26f1c1
 - [ ] 理论上支持 ``Unity 2018+``
+
+您可在 [Unity下载存档](https://unity.cn/releases) 页面找到以上版本。
+
+> 声明：本仓库收录的大多数shader均来源于网络，如有侵权请联系本人删除。本仓库仅做学习分享之用，请勿用于商业项目。
 
 [![OS](https://img.shields.io/badge/Windows10-0078d6?style=flat-square&logo=windows&logoColor=fff)](https://www.microsoft.com/zh-cn/windows)  [![Unity](https://img.shields.io/badge/Unity-black?style=flat-square&logo=unity)](https://unity.com/cn)
 
@@ -46,13 +46,27 @@ A201-Shaders Collection  ///  Personal Usage
 着色器导入
 ===========================
 
-直接将本仓库Release对应渲染管线文件夹放入项目目录下即可。
+#### 1.确定您的项目渲染管线为 ``Built-in`` 或 ``URP``，根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
+
+##### (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
+
+#### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，并在Unity中优先导入 ``ASE`` 包
+
+##### (双击"Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
+
+#### 3.检查控制台 ``Colsole`` 信息，若无意外，仅会产生黄色警告信息，不影响使用。
+
+##### (如有红色错误信息，尝试检查错误来源或删除解压包并重新导入。)
 
 
 说明
 ========================
 
-在Unity材质球处切换Shader时，选择"A201-Shader/"目录下的Shader即可。
+1. Shader使用：在Unity材质球处切换Shader时，选择"A201-Shader/"目录下的Shader即可，Shader已做分类处理。
+
+2. 若部分ShaderGUI缺失，请检查包内的 ``Editor`` 是否正常导入。
+
+3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合SampleTex中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合SampleTex中的粒子点噪 ``particle.png`` 使用。 </p>
 
 
 ## 鸣谢
@@ -62,6 +76,12 @@ A201-Shaders Collection  ///  Personal Usage
 ****
 
 ## 更新日志
+
+### 2023.8.25 | 更新说明 | Standard 1.4
+
+新增：屏幕后期处理、BA式卡通渲染、星星缩放、流麻Flow(URP)等shader。
+
+#建议使用前在项目中导入ASE环境。
 
 ### 2023.7.31 | 更新说明 | Standard 1.3
 
