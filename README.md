@@ -59,6 +59,10 @@ A201-Shaders Collection  ///  Personal Usage
 ##### (如有红色错误信息，尝试检查错误来源或删除解压包并重新导入。)
 
 
+> *额外：项目环境导入>>>
+> 本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 提供了一个基础的特效制作环境（Unity项目压缩包），下载后即开即用，已预先配置好了着色器、后处理等。
+
+
 说明
 ========================
 
@@ -82,6 +86,8 @@ A201-Shaders Collection  ///  Personal Usage
 新增：屏幕后期处理、BA式卡通渲染、星星缩放、流麻Flow(URP)等shader。
 
 #建议使用前在项目中导入ASE环境。
+
+更新了基础特效制作环境。[Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 处查看。
 
 ### 2023.7.31 | 更新说明 | Standard 1.3
 
