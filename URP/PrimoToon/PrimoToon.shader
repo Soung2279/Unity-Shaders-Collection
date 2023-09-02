@@ -1,4 +1,4 @@
-﻿Shader "A201-Shader/特殊制作/完整卡通着色器_PrimoToon_URP"{
+﻿Shader "A201-Shader/URP/完整卡通着色器_PrimoToon_URP"{
     Properties{
         _WebSite("此Shader教程网址:github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample", Int) = 0
         [Header(__________________________________________________________________________________________)]

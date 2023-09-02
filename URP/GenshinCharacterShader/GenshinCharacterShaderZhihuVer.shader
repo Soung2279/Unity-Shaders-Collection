@@ -1,4 +1,4 @@
-﻿Shader "A201-Shader/特殊制作/原神卡通着色器_GenshinCelShaderURP"
+﻿Shader "A201-Shader/URP/原神卡通着色器_GenshinCelShaderURP"
 {      
     Properties
     {

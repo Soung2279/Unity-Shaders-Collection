@@ -25,7 +25,7 @@ because:
     - we want to avoid breaking SRP batcher's batching because SRP batcher is per shader variant batching, not per shader
     - all modern GPU(include newer mobile devices) can handle static uniform branching with "almost" no performance cost
 */
-Shader "A201-Shader/特殊制作/简易卡通着色器范例_SimpleURPToonLitExample(With Outline)"
+Shader "A201-Shader/URP/简易卡通着色器范例_SimpleURPToonLitExample(With Outline)"
 {
     Properties
     {
