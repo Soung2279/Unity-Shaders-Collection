@@ -1,4 +1,4 @@
-﻿Shader "A201-Shader/进阶功能/混合因子消融_X7PartDiss"
+﻿Shader "A201-Shader/URP/混合因子消融_X7PartDiss"
 {
    Properties
 	{

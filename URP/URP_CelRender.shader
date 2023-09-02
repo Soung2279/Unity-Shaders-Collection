@@ -1,4 +1,4 @@
-Shader "A201-Shader/特殊制作/简易卡通着色器_URP_Toon"
+Shader "A201-Shader/URP/简易卡通着色器_URP_Toon"
 {
     Properties
     {

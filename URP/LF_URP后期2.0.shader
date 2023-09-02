@@ -1,6 +1,6 @@
 // Made with Amplify Shader Editor
 // Available at the Unity Asset Store - http://u3d.as/y3X 
-Shader "A201-Shader/后期处理/URP后期2.0"
+Shader "A201-Shader/URP/URP后期2.0"
 {
 	Properties
 	{

@@ -1,7 +1,7 @@
 ﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
 
-Shader "A201-Shader/进阶功能/叠加纹理_X7AlphaBlend" 
+Shader "A201-Shader/URP/叠加纹理_X7AlphaBlend" 
 {
 	Properties {
 		_MainTex ("基础纹理", 2D) = "white" {}

@@ -1,4 +1,4 @@
-﻿Shader "A201-Shader/特殊制作/简易描边_Outline"
+﻿Shader "A201-Shader/URP/简易描边_Outline"
 {
 	Properties
 	{

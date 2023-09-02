@@ -1,4 +1,4 @@
-Shader "A201-Shader/特殊制作/URP视差流麻_Jiji"
+Shader "A201-Shader/URP/URP视差流麻_Jiji"
 {
     Properties
     {
