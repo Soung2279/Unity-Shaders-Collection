@@ -12,10 +12,24 @@ A201-Shaders Collection  ///  Personal Usage
 →→ **[查看更新日志](#更新日志)**
 
   
-功能介绍
+简介
 ===========================
 
-收录适用于``Unity 2018+``，``Built-in`` & ``URP`` 环境的 **特效着色器合集**
+收录适用于``Unity 2018+``，``Built-in`` & ``URP`` 环境的 **特效着色器合集**。
+
+不同于常见的shader仓库，本仓库对所收录的shader均作了大量 **汉化** 处理，同时为了方便使用，将着色器目录路径(Shader Path)均 **统一**在了 **A201-Shader/** 路径下，并按着色器的使用类型进行了 **分类** 。这使得使用着色器变得异常简单。
+
+目前存在的分类如下：
+- URP：适用于URP的shader
+- 个人制作：本人编写的shader
+- 全面功能：包含溶解、遮罩、扭曲、偏移、菲涅尔等多项功能的全面shader
+- 基本效果：基础的additive或alphablend着色器
+- 后期处理：用于屏幕特效、色散、黑白闪、晕影等
+- 进阶功能：多遮罩或多功能的单项shader
+- 特殊制作：视差地裂、流麻、分层纹理、渐变等特殊需求shader
+- 未知类型：未知用途的shader
+
+*暂时不支持 ``HDRP`` 或其他渲染管线。*
 
 本合集包含如下内容：
 - 基本粒子 **Additive/Alpha Blend** 着色器
@@ -27,13 +41,13 @@ A201-Shaders Collection  ///  Personal Usage
 - **视差与径向模糊** 着色器
 - **简易描边、BA式卡通渲染与标准PBR** 着色器
 
-在下列Unity环境下，着色器经测试可正常使用：
+着色器已经过下列Unity环境测试并可正常使用：
 - [x] ``Windows 10`` & ``Windows 11``
-- [x] ``Unity 2018:`` 4.36f1
-- [x] ``Unity 2019:`` 3.0f6
-- [x] ``Unity 2020:`` 3.38f1c1 // 3.47f1c1 // 3.48f1c1
-- [x] ``Unity 2021:`` 3.18f1c1 // 3.26f1c1
-- [ ] 理论上支持 ``Unity 2018+``
+- [x] ``Unity 2018:`` 4.36f1 //……
+- [x] ``Unity 2019:`` 3.0f6 // ……
+- [x] ``Unity 2020:`` 3.38f1c1 // 3.47f1c1 // 3.48f1c1 //……
+- [x] ``Unity 2021:`` 3.5 // 3.18f1c1 // 3.26f1c1 //……
+- [ ] 理论上支持 ``Unity 2018+``，推荐 ``Unity 2020`` 系列。
 
 您可在 [Unity下载存档](https://unity.cn/releases) 页面找到以上版本。
 
@@ -50,7 +64,7 @@ A201-Shaders Collection  ///  Personal Usage
 
 ##### (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
 
-#### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，并在Unity中优先导入 ``ASE`` 包
+#### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，并在Unity中导入 ``ASE`` 包
 
 ##### (双击"Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
 
@@ -60,8 +74,15 @@ A201-Shaders Collection  ///  Personal Usage
 
 
 > *额外：项目环境导入>>>
-> 本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 提供了一个基础的特效制作环境（Unity项目压缩包），下载后即开即用，已预先配置好了着色器、后处理等。
+> 本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 提供了一个基础的特效制作环境（Unity项目压缩包），下载后即开即用，已预先配置好了着色器、后处理配置等。
 
+#### 4. 着色器更新：
+
+- 通常情况下，本合集目录不会有较大变更，在 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处选择对应文件下载后，直接覆盖更新即可。覆盖后，请手动删除Unity对应路径下的 ``.meta`` 文件。
+
+- 特殊情况下，在 [更新日志](#更新日志) 中应有对应的更新指南，按指南操作即可。若日志中没有给出更新方法，请备份上一版本的shader后，覆盖更新，并使用 ``notepad++``, ``Windows记事本`` 或 ``VSCode`` 等IDE打开shader，查看新的着色器目录路径(Shader Path)（通常在文件的前5行）。
+
+- 自行更新：若您有更高版本或适用于新效果的着色器，推荐自行统一着色器目录路径(Shader Path)为 **A201-Shader/** 。
 
 说明
 ========================
@@ -72,6 +93,8 @@ A201-Shaders Collection  ///  Personal Usage
 
 3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合SampleTex中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合SampleTex中的粒子点噪 ``particle.png`` 使用。 </p>
 
+4. 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
+
 
 ## 鸣谢
 
@@ -80,6 +103,18 @@ A201-Shaders Collection  ///  Personal Usage
 ****
 
 ## 更新日志
+
+### 2023.9.3 | 更新说明 | Standard 1.5
+
+^更新：已全部汉化原ShaderGraph系列shader并部分优化。
+
+*优化：优化了URP适用的 ``SinC_BlendURP``、``SinC_PBRURP`` 并完全汉化。
+
+优化了着色器路径目录，现在URP适用的shader将单独显示在URP分支中。
+
+^因数据更新，在旧版本的ShaderGraph上，着色器表现可能有差异。同时，请勿使用 ``ASE`` 编辑此着色器，这会导致着色器失效。
+
+*因汉化与 ASE 冲突，请勿通过 ASE 编辑此shader。
 
 ### 2023.8.25 | 更新说明 | Standard 1.4
 
@@ -117,13 +152,13 @@ A201-Shaders Collection  ///  Personal Usage
 
 新增：新增屏幕扭曲shader，使用法线贴图来控制屏幕扭曲效果。
 
-已知故障：进阶处理-多功能溶解ADD/Alpha Double的自定义顶点流可能失效，等待ShaderForge重置修复。
+~~已知故障：进阶处理-多功能溶解ADD/Alpha Double的自定义顶点流可能失效，等待ShaderForge重置修复。~~
 
 ### 2023.5.4 | 更新说明 | Standard 1.0
 
 资源优化：移除了部分失效Shader。
 
-目录层级重构：现在所有Shader均按使用类型放置在A201-Shader/目录下。
+目录层级重构：现在所有Shader均按使用类型放置在 **A201-Shader/** 目录下。
 
 更新：更新后期处理shader到最新版本，更新LTY-shader到最新版本。
 
