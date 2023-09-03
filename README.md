@@ -95,16 +95,26 @@ A201-Shaders Collection  ///  Personal Usage
 
 4. 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
 
+5. ``Post-Processing Scan`` 为脚本驱动的后处理屏幕扫描特效，使用方法详见 [Post-Processing-Scan - MirzaBeig](https://github.com/MirzaBeig/Post-Processing-Scan)
+
+
 
 ## 鸣谢
 
 [UnityURPToonLitShader](https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample)
 
+[Post-Processing-Scan](https://github.com/MirzaBeig/Post-Processing-Scan)
 ****
 
 ## 更新日志
 
-### 2023.9.3 | 更新说明 | Standard 1.5
+### 2023.9.3 | 更新说明 | Standard 1.5.1
+
+新增：风格化水面与屏幕扫描(脚本驱动)，可在 [Post-Processing-Scan - MirzaBeig](https://github.com/MirzaBeig/Post-Processing-Scan) 查看屏幕扫描使用方法。
+
+修复：修复了 [Standard V1.5 Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/StandardV1.5) 错误的版本号。
+
+### 2023.9.3 | 更新说明 | Standard 1.5.1
 
 ^更新：已全部汉化原ShaderGraph系列shader并部分优化。
 
