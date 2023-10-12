@@ -40,14 +40,15 @@ A201-Shaders Collection  ///  Personal Usage
 - **热扭曲与法线扭曲、流麻** 着色器
 - **视差与径向模糊** 着色器
 - **简易描边、BA式卡通渲染与标准PBR** 着色器
+- **序列帧动画材质、RenderTexture折射** 着色器
 
 着色器已经过下列Unity环境测试并可正常使用：
 - [x] ``Windows 10`` & ``Windows 11``
 - [x] ``Unity 2018:`` 4.36f1 //……
 - [x] ``Unity 2019:`` 3.0f6 // ……
 - [x] ``Unity 2020:`` 3.38f1c1 // 3.47f1c1 // 3.48f1c1 //……
-- [x] ``Unity 2021:`` 3.5 // 3.18f1c1 // 3.26f1c1 //……
-- [ ] 理论上支持 ``Unity 2018+``，推荐 ``Unity 2020`` 系列。
+- [x] ``Unity 2021:`` 3.5 // 3.18f1c1 // 3.22f1 // 3.26f1c1 //……
+- [ ] 理论上支持 ``Unity 2018+``，推荐 ``Unity 2020`` 及以上系列。
 
 您可在 [Unity下载存档](https://unity.cn/releases) 页面找到以上版本。
 
@@ -91,13 +92,11 @@ A201-Shaders Collection  ///  Personal Usage
 
 2. 若部分ShaderGUI缺失，请检查包内的 ``Editor`` 是否正常导入。
 
-3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合SampleTex中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合SampleTex中的粒子点噪 ``particle.png`` 使用。 </p>
+3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合*SampleTex*中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合*SampleTex*中的粒子点噪 ``particle.png`` 使用。 <p> ``Soung_FlipAddtive.shader`` (同AlphaBlend) 使用 ``ASE`` ``Flipbook`` 节点制作，若出现边缘有无法消除的白线，请使用*SampleTex*中的修复遮罩 ``FlipMask.png``。</p>
 
 4. 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
 
 5. ``Post-Processing Scan`` 为脚本驱动的后处理屏幕扫描特效，使用方法详见 [Post-Processing-Scan - MirzaBeig](https://github.com/MirzaBeig/Post-Processing-Scan)
-
-
 
 ## 鸣谢
 
@@ -107,6 +106,16 @@ A201-Shaders Collection  ///  Personal Usage
 ****
 
 ## 更新日志
+
+### 2023.10.12 | 更新说明 | Standard 1.6
+
+新增：Panda熊猫shaderURP版，雨天地面，雨幕折射与屏幕模糊，雪地轨迹地面，简单序列帧材质，built-in
+
+**重要更新**：Panda熊猫10.10 最新V2.3改。提供 [熊猫最新版发布地址](https://www.magesbox.com/article/detail/id/1321.html)
+
+#个人制作shader均使用ASE 1.9.1.5 制作。
+
+#简单序列帧材质 ``FlipAddtive`` 与 ``FlipAlphaB`` 建议配合修复遮罩贴图使用。详见 →→ **[查看说明](#说明)**
 
 ### 2023.9.3 | 更新说明 | Standard 1.5.1
 
