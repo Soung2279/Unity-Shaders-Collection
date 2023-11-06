@@ -9,7 +9,7 @@ A201-Shaders Collection  ///  Personal Usage
 <div align="left">
 
 
-→→ **[查看更新日志](#更新日志)**
+→→ **[查看更新日志](#更新日志)**    →→ **[前往下载地址](https://github.com/Soung2279/Unity-Shaders-Collection/releases)**
 
   
 简介
@@ -63,27 +63,30 @@ A201-Shaders Collection  ///  Personal Usage
 
 #### 1.确定您的项目渲染管线为 ``Built-in`` 或 ``URP``，根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
 
-##### (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
+- (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
 
 #### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，并在Unity中导入 ``ASE`` 包
 
-##### (双击"Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
+- (双击"Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
+- (本仓库大部分Shader使用ASE 1.9.1.5版制作/编辑，建议ASE环境不低于1.8)
 
 #### 3.检查控制台 ``Colsole`` 信息，若无意外，仅会产生黄色警告信息，不影响使用。
 
-##### (如有红色错误信息，尝试检查错误来源或删除解压包并重新导入。)
+- (如有红色错误信息，可尝试检查错误来源或重新导入。)
 
 
-> *额外：项目环境导入>>>
-> 本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 提供了一个基础的特效制作环境（Unity项目压缩包），下载后即开即用，已预先配置好了着色器、后处理配置等。
+> *额外：预制环境>>>
+> 本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 提供了一个基础的特效制作环境（Unity项目压缩包），下载后即开即用，已预先配置好了着色器、后处理配置等（Shader包版本V1.5）。
 
 #### 4. 着色器更新：
 
-- 通常情况下，本合集目录不会有较大变更，在 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处选择对应文件下载后，直接覆盖更新即可。覆盖后，请手动删除Unity对应路径下的 ``.meta`` 文件。
+- 通常情况下，本合集目录不会有较大变更，在 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处选择对应文件下载后，直接**覆盖更新**即可。覆盖后，请手动删除Unity对应路径下的 ``.meta`` 文件。
 
 - 特殊情况下，在 [更新日志](#更新日志) 中应有对应的更新指南，按指南操作即可。若日志中没有给出更新方法，请备份上一版本的shader后，覆盖更新，并使用 ``notepad++``, ``Windows记事本`` 或 ``VSCode`` 等IDE打开shader，查看新的着色器目录路径(Shader Path)（通常在文件的前5行）。
 
 - 自行更新：若您有更高版本或适用于新效果的着色器，推荐自行统一着色器目录路径(Shader Path)为 **A201-Shader/** 。
+
+- 使用ASE编辑：若您想使用ASE自行编辑现有着色器，则可能出现汉化还原的情况，不影响使用，但建议 [此问题](https://github.com/Soung2279/Unity-Shaders-Collection/issues/1) 修复前避免使用ASE重复编辑 。
 
 说明
 ========================
@@ -106,6 +109,12 @@ A201-Shaders Collection  ///  Personal Usage
 ****
 
 ## 更新日志
+
+### 2023.11.6 | 更新说明 | Standard 1.7 (Unreleased)
+
+新增：风格化卡通火焰与其简化版、风格化卡通地裂与其简化版、菲涅尔护盾
+
+#定位了一个问题，此问题导致使用ASE重新编辑本仓库shader后会导致汉化失效。
 
 ### 2023.10.12 | 更新说明 | Standard 1.6
 
