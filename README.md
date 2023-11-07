@@ -61,7 +61,7 @@ A201-Shaders Collection  ///  Personal Usage
 着色器导入
 ===========================
 
-#### 1.确定您的项目渲染管线为 ``Built-in`` 或 ``URP``，根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
+#### 1.确认您的项目渲染管线为 ``Built-in`` 或 ``URP``，根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
 
 - (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
 
@@ -95,9 +95,9 @@ A201-Shaders Collection  ///  Personal Usage
 
 2. 若部分ShaderGUI缺失，请检查包内的 ``Editor`` 是否正常导入。
 
-3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合*SampleTex*中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合*SampleTex*中的粒子点噪 ``particle.png`` 使用。 <p> ``Soung_FlipAddtive.shader`` (同AlphaBlend) 使用 ``ASE`` ``Flipbook`` 节点制作，若出现边缘有无法消除的白线，请使用*SampleTex*中的修复遮罩 ``FlipMask.png``。</p>
+3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合*SampleTex*中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合*SampleTex*中的粒子点噪 ``particle.png`` 使用。 <p>  [(已解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/2) ``Soung_FlipAddtive.shader`` (同AlphaBlend) 使用 ``ASE`` ``Flipbook`` 节点制作，若出现边缘有无法消除的白线，请使用*SampleTex*中的修复遮罩 ``FlipMask.png``。</p>
 
-4. 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
+4. [(待解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/1) 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
 
 5. ``Post-Processing Scan`` 为脚本驱动的后处理屏幕扫描特效，使用方法详见 [Post-Processing-Scan - MirzaBeig](https://github.com/MirzaBeig/Post-Processing-Scan)
 
@@ -106,15 +106,21 @@ A201-Shaders Collection  ///  Personal Usage
 [UnityURPToonLitShader](https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample)
 
 [Post-Processing-Scan](https://github.com/MirzaBeig/Post-Processing-Scan)
+
+[Bilibili: 多喝热水嗝嗝嗝](https://space.bilibili.com/2537966)
+
+[Bilibili: Cz_wang](https://space.bilibili.com/15396626)
 ****
 
 ## 更新日志
 
-### 2023.11.6 | 更新说明 | Standard 1.7 (Unreleased)
+### 2023.11.7 | 更新说明 | Standard 1.7
 
-新增：风格化卡通火焰与其简化版、风格化卡通地裂与其简化版、菲涅尔护盾
+新增：风格化卡通火焰与其简化版、风格化卡通地裂与其简化版、菲涅尔护盾和适用于URP的风格化水面包
 
-#定位了一个问题，此问题导致使用ASE重新编辑本仓库shader后会导致汉化失效。
+修复：修复了序列帧材质边缘切线问题 [issue #2](https://github.com/Soung2279/Unity-Shaders-Collection/issues/2)
+
+#定位了一个问题，此问题导致使用ASE重新编辑本仓库shader后会使汉化失效。
 
 ### 2023.10.12 | 更新说明 | Standard 1.6
 
