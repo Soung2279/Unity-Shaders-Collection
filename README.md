@@ -95,13 +95,15 @@ A201-Shaders Collection  ///  Personal Usage
 
 2. 若部分ShaderGUI缺失，请检查包内的 ``Editor`` 是否正常导入。
 
-3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合*SampleTex*中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合*SampleTex*中的粒子点噪 ``particle.png`` 使用。 <p>  [(已解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/2) ``Soung_FlipAddtive.shader`` (同AlphaBlend) 使用 ``ASE`` ``Flipbook`` 节点制作，若出现边缘有无法消除的白线，请使用*SampleTex*中的修复遮罩 ``FlipMask.png``。</p>
+3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合*SampleTex*中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合*SampleTex*中的粒子点噪 ``particle.png`` 使用。 <p>  [(已解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/2) ~~``Soung_FlipAddtive.shader`` (同AlphaBlend) 使用 ``ASE`` ``Flipbook`` 节点制作，若出现边缘有无法消除的白线，请使用*SampleTex*中的修复遮罩 ``FlipMask.png``.~~ 已增加程序遮罩修复功能，更新shader即可。</p>
 
 4. [(待解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/1) 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
 
 5. ``Post-Processing Scan`` 为脚本驱动的后处理屏幕扫描特效，使用方法详见 [Post-Processing-Scan - MirzaBeig](https://github.com/MirzaBeig/Post-Processing-Scan)
 
-## 鸣谢
+6. ``Soung_UICustom_Liuguang.shader`` 是用于UI通用流光材质的UI着色器，请使用*SampleTex*中的``saomiao.png``预览效果。(该着色器实现自定义间隔时间有一定性能开销，请注意)
+
+## 特别鸣谢
 
 [UnityURPToonLitShader](https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample)
 
@@ -113,6 +115,38 @@ A201-Shaders Collection  ///  Personal Usage
 ****
 
 ## 更新日志
+
+### 2023.12.13 | 更新说明 | Standard 1.8
+
+**重要更新：新增 UI 分类**
+
+*新增：*
+
+Buit-in | 序列帧屏幕扭曲、通用程序粒子材质、Flowmap软溶解
+
+UI | 叠加纹理流动、*间隔流光、遮罩扰动与溶解等
+
+URP | 序列帧屏幕扭曲、遮罩流动
+
+*修复：*
+
+修复简易菲尼尔护盾在切换渲染管线后显示不正确的问题 (Built-in&URP)
+
+*优化：*
+
+优化了部分shader的材质属性，清理了未使用的节点
+
+去除了重复的风格化水面包 (URP)
+
+*其它：*
+
+考虑到目前 个人制作 分类下的shader较多，在未来会删除此分类并将shaders分配到对应分类下
+
+目前Release分类较多 (Built-in、UI、URP)，在未来可能以更合理的方式重新分类。
+
+因目前shader较多，功能较复杂，在未来会编写一份对应使用说明。目前请暂时通过 [更新说明](#更新日志) 查看使用方法
+
+*间隔流光：请使用黑底图用以流光纹理，在 [说明](#说明) 处已给出了一张示例图。
 
 ### 2023.11.7 | 更新说明 | Standard 1.7
 
