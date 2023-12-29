@@ -24,7 +24,7 @@ Shader "A201-Shader/个人制作/FlowMap软溶解"
 	{
 		
 		
-		Tags { "RenderType"="Opaque" "Queue"="Transparent" }
+		Tags { "RenderType"="Transparent" "Queue"="Transparent" }
 	LOD 100
 
 		CGINCLUDE
@@ -180,7 +180,6 @@ Node;AmplifyShaderEditor.DynamicAppendNode;12;-1113.499,-25;Inherit;False;FLOAT2
 Node;AmplifyShaderEditor.TextureCoordinatesNode;8;-1319.499,-179.9998;Inherit;False;0;1;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.RangedFloatNode;28;-1471.126,424.6002;Inherit;False;Property;_UseDisOrCustom;溶解控制模式;7;1;[Enum];Create;False;0;2;Material;0;Custom1x;1;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.TextureCoordinatesNode;27;-1523.844,285.6051;Inherit;False;0;-1;3;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.RangedFloatNode;13;-1580.891,212.0363;Inherit;False;Property;_Dissolve;溶解进度;5;0;Create;False;0;0;0;False;0;False;0.08407054;0;0;1;0;1;FLOAT;0
 Node;AmplifyShaderEditor.LerpOp;25;-1291.228,334.0141;Inherit;False;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;18;-715.4103,537.8694;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode;17;-849.878,556.6014;Inherit;False;Constant;_Float2;Float 2;4;0;Create;True;0;0;0;False;0;False;-2;0;0;0;0;1;FLOAT;0
@@ -190,11 +189,11 @@ Node;AmplifyShaderEditor.ComponentMaskNode;4;67.31671,-74.31483;Inherit;False;Tr
 Node;AmplifyShaderEditor.SmoothstepOpNode;20;-120.508,289.9027;Inherit;True;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;1;False;1;FLOAT;0
 Node;AmplifyShaderEditor.DynamicAppendNode;5;344.1734,-68.77293;Inherit;True;FLOAT4;4;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT4;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;6;136.5168,27.58517;Inherit;True;5;5;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;0;563.5978,-68.31482;Float;False;True;-1;2;ASEMaterialInspector;100;5;ASE/FlowMap;0770190933193b94aaa3065e307002fa;True;Unlit;0;0;Unlit;2;True;True;2;5;False;;10;False;;0;1;False;;0;False;;True;0;False;;0;False;;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;True;True;2;False;;True;3;False;;True;True;0;False;;0;False;;True;2;RenderType=Opaque=RenderType;Queue=Transparent=Queue=0;True;2;False;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;0;;0;0;Standard;1;Vertex Position,InvertActionOnDeselection;1;0;0;1;True;False;;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;0;563.5978,-68.31482;Float;False;True;-1;2;ASEMaterialInspector;100;5;A201-Shader/个人制作/FlowMap软溶解;0770190933193b94aaa3065e307002fa;True;Unlit;0;0;Unlit;2;True;True;2;5;False;;10;False;;0;1;False;;0;False;;True;0;False;;0;False;;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;True;True;2;False;;True;3;False;;True;True;0;False;;0;False;;True;2;RenderType=Transparent=RenderType;Queue=Transparent=Queue=0;True;2;False;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;0;;0;0;Standard;1;Vertex Position,InvertActionOnDeselection;1;0;0;1;True;False;;False;0
 Node;AmplifyShaderEditor.ColorNode;65;-287.261,118.9775;Inherit;False;Property;_MainTColor;主纹理颜色;1;1;[HDR];Create;False;0;0;0;False;0;False;1,1,1,1;1,1,1,1;True;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.OneMinusNode;22;-265.7416,312.6208;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.LerpOp;67;-515.3772,-1.12146;Inherit;True;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;68;-661.3772,109.8785;Inherit;False;Property;_Float3;使用A通道;2;1;[Enum];Create;False;0;2;R;0;A;1;0;False;0;False;0;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;68;-661.3772,109.8785;Inherit;False;Property;_Float3;使用A通道;2;1;[Enum];Create;False;0;2;R;0;A;1;0;False;0;False;0;1;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.TextureCoordinatesNode;46;-1259.438,699.4;Inherit;False;0;-1;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.TextureCoordinatesNode;47;-1260.548,818.1416;Inherit;False;0;-1;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.SaturateNode;48;-1047.435,754.3983;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
@@ -203,25 +202,26 @@ Node;AmplifyShaderEditor.OneMinusNode;52;-922.1359,683.905;Inherit;False;1;0;FLO
 Node;AmplifyShaderEditor.OneMinusNode;53;-921.433,753.3984;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SaturateNode;56;-467.3948,733.9941;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SaturateNode;51;-1046.545,888.1421;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;54;-921.8232,824.0669;Inherit;False;Property;_Fixval;方形遮罩强度;9;0;Create;False;0;0;0;False;0;False;13.02583;150;1;200;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;54;-921.8232,824.0669;Inherit;False;Property;_Fixval;方形遮罩强度;9;0;Create;False;0;0;0;False;0;False;13.02583;50;1;200;0;1;FLOAT;0
 Node;AmplifyShaderEditor.SaturateNode;50;-1047.138,817.905;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.DistanceOpNode;30;-1042.292,1043.851;Inherit;True;2;0;FLOAT2;0,0;False;1;FLOAT2;0,0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.TextureCoordinatesNode;29;-1257.949,1043.463;Inherit;False;0;-1;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.Vector2Node;31;-1213.695,1163.215;Inherit;False;Constant;_Vector0;Vector 0;6;0;Create;True;0;0;0;False;0;False;0.5,0.5;0,0;0;3;FLOAT2;0;FLOAT;1;FLOAT;2
 Node;AmplifyShaderEditor.SimpleSubtractOpNode;71;-706.3715,1044.008;Inherit;False;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.OneMinusNode;32;-846.4902,1044.217;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;34;-1054.492,1258.215;Inherit;False;Property;_MaskSub;圆形遮罩范围;10;0;Create;False;0;0;0;False;0;False;0.4800681;0;0;1;0;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;72;-839.3715,1138.008;Inherit;False;Property;_Float0;圆形遮罩强度;11;0;Create;False;0;0;0;False;0;False;1.8;1.5;0;10;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;34;-1054.492,1258.215;Inherit;False;Property;_MaskSub;圆形遮罩范围;10;0;Create;False;0;0;0;False;0;False;0.4800681;0.4800681;0;1;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;72;-839.3715,1138.008;Inherit;False;Property;_Float0;圆形遮罩强度;11;0;Create;False;0;0;0;False;0;False;1.8;1.8;0;10;0;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;37;-569.4913,1044.217;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SaturateNode;40;-444.0715,1044.99;Inherit;True;1;0;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;21;-537.9698,455.6991;Inherit;False;Property;_SoftDis;溶解平滑度;6;0;Create;False;0;0;0;False;0;False;0.8216482;0;0.5;1;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;21;-537.9698,455.6991;Inherit;False;Property;_SoftDis;溶解平滑度;6;0;Create;False;0;0;0;False;0;False;0.8216482;0.667;0.5;1;0;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode;15;-720.7305,452.7795;Inherit;False;Constant;_Float1;Float 1;4;0;Create;True;0;0;0;False;0;False;1;0;0;0;0;1;FLOAT;0
-Node;AmplifyShaderEditor.SamplerNode;10;-1395.499,-53.99991;Inherit;True;Property;_FlowMap;FlowMap贴图;3;1;[Header];Create;False;1;FlowMap (UseRnG);0;0;False;0;False;-1;c5e136738c936ff41b9a74e73c141944;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.SamplerNode;1;-807.6022,-77.31483;Inherit;True;Property;_MainTextu;主纹理;0;1;[Header];Create;False;1;MainTex;0;0;False;0;False;-1;201b5292b9e490248a032c247372b5d1;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.SamplerNode;10;-1395.499,-53.99991;Inherit;True;Property;_FlowMap;FlowMap贴图;3;1;[Header];Create;False;1;FlowMap (UseRnG);0;0;False;0;False;-1;None;d1446785ec2d6d248b8498ac06e40d06;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.SamplerNode;1;-807.6022,-77.31483;Inherit;True;Property;_MainTextu;主纹理;0;1;[Header];Create;False;1;MainTex;0;0;False;0;False;-1;None;87dc39f413249c84b8ab834b36eb7e3e;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;55;-662.11,734.0908;Inherit;True;5;5;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.SamplerNode;14;-828.6608,261.3694;Inherit;True;Property;_DissloveTex;溶解贴图;4;1;[Header];Create;False;1;SoftDissolve;0;0;False;0;False;-1;ef4eb6d271748b4478d1a301146f7faa;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.StaticSwitch;69;-141.2776,732.6913;Inherit;False;Property;_UseCirOrSqa;遮罩模式;8;0;Create;False;0;0;0;False;0;False;0;2;2;True;;KeywordEnum;3;SquareMask;GlowMask;None;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.SamplerNode;14;-828.6608,261.3694;Inherit;True;Property;_DissloveTex;溶解贴图;4;1;[Header];Create;False;1;SoftDissolve;0;0;False;0;False;-1;None;ace1b3ce760c86143b3bcbf4d61986f1;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.StaticSwitch;69;-141.2776,732.6913;Inherit;False;Property;_UseCirOrSqa;遮罩模式;8;0;Create;False;0;0;0;False;0;False;0;2;0;True;;KeywordEnum;3;SquareMask;GlowMask;None;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode;70;-303.3882,781.2935;Inherit;False;Constant;_DefaultMask;DefaultMask;11;0;Create;True;0;0;0;False;0;False;1;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;13;-1580.891,212.0363;Inherit;False;Property;_Dissolve;溶解进度;5;0;Create;False;0;0;0;False;0;False;0.08407054;0;0;1;0;1;FLOAT;0
 WireConnection;16;0;14;1
 WireConnection;16;1;15;0
 WireConnection;16;2;18;0
@@ -280,4 +280,4 @@ WireConnection;69;1;56;0
 WireConnection;69;0;40;0
 WireConnection;69;2;70;0
 ASEEND*/
-//CHKSM=005019442B690D12D9CD61735E78F6FBFC12C368
+//CHKSM=4F420C9F20CDE4905AC5A674D261DCFD08F154C2
