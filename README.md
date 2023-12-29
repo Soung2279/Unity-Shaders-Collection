@@ -48,6 +48,7 @@ A201-Shaders Collection  ///  Personal Usage
 - [x] ``Unity 2019:`` 3.0f6 // ……
 - [x] ``Unity 2020:`` 3.38f1c1 // 3.47f1c1 // 3.48f1c1 //……
 - [x] ``Unity 2021:`` 3.5 // 3.18f1c1 // 3.22f1 // 3.26f1c1 //……
+- [x] ``Unity 2022:`` 3.14f1c1 //……
 - [ ] 理论上支持 ``Unity 2018+``，推荐 ``Unity 2020`` 及以上系列。
 
 您可在 [Unity下载存档](https://unity.cn/releases) 页面找到以上版本。
@@ -65,7 +66,7 @@ A201-Shaders Collection  ///  Personal Usage
 
 - (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
 
-#### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，并在Unity中导入 ``ASE`` 包
+#### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，（非必须）并在Unity中导入 ``ASE`` 包
 
 - (双击"Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
 - (本仓库大部分Shader使用ASE 1.9.1.5版制作/编辑，建议ASE环境不低于1.8)
@@ -116,6 +117,17 @@ A201-Shaders Collection  ///  Personal Usage
 
 ## 更新日志
 
+### 2023.12.29 | 更新说明 | Preview - Standard V1.8.7
+
+*新增：*
+
+新增 **个人制作** 分类下的全部shader URP版本
+
+新增带ShaderGUI的全功能着色器（双管线）
+
+*说明：*
+此次更新仅作临时备份上传，非正式更新。（但所有已上传shader均通过可行性验证）
+另，此次更新较为完整，将作为最新Release包
 
 ### 2023.12.20 | 更新说明 | Preview - Standard V1.8.4
 
