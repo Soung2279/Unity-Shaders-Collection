@@ -15,21 +15,41 @@ A201-Shaders Collection  ///  Personal Usage
 简介
 ===========================
 
-收录适用于``Unity 2018+``，``Built-in`` & ``URP`` 环境的 **特效着色器合集**。
+收录用于``Unity``的``Built-in`` & ``URP`` 适用的 **着色器合集**。若您有一定技术美术知识，您可读取着色器中的片段代码，并将其迁移到其它引擎(如UE，GoDot等)中。
 
-不同于常见的shader仓库，本仓库对所收录的shader均作了大量 **汉化** 处理，同时为了方便使用，将着色器目录路径(Shader Path)均 **统一**在了 **A201-Shader/** 路径下，并按着色器的使用类型进行了 **分类** 。这使得使用着色器变得异常简单。
+### 仓库来源
 
-目前存在的分类如下：
-- URP：适用于URP的shader
-- 个人制作：本人编写的shader
-- 全面功能：包含溶解、遮罩、扭曲、偏移、菲涅尔等多项功能的全面shader
-- 基本效果：基础的additive或alphablend着色器
-- 后期处理：用于屏幕特效、色散、黑白闪、晕影等
-- 进阶功能：多遮罩或多功能的单项shader
-- 特殊制作：视差地裂、流麻、分层纹理、渐变等特殊需求shader
-- 未知类型：未知用途的shader
+本仓库是[个人](https://github.com/Soung2279)在学习与工作生涯中，对制作、收集的各种shader进行的统一收录。本仓库收录的shader适用于[Unity](https://unity.com/cn)引擎，绝大部分用于*特效制作*。均作了大量 **汉化** 处理。
 
-*暂时不支持 ``HDRP`` 或其他渲染管线。*
+### 文件说明
+
+为了方便使用，本人将所有的着色器目录路径(Shader Path)均 **统一**在了 **Soung/** 路径下，并按着色器的使用类型进行了 **分类** 。方便特效艺术家、技术美术等进在编辑器中进行直观的shader切换。
+
+因游戏美术行业发展迅速，技术日新月异，本仓库收录的shader适用的环境为：
+
+[![Unity](https://img.shields.io/badge/Unity%20-2018%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
+[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-7%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
+
+
+- [x] ``Unity 2018-2023``, ``ALL Built-in``, ``Universal Render Pipeline 7.0-16.0``
+
+- [ ] 理论上支持 ``Unity 6.000`` 和 ``TuanJie 1.0``, ``Universal Render Pipeline 17.0`` 及以上系列。
+
+*暂时未收录 ``HDRP`` 可用的shader。*
+
+
+<details>
+
+<summary>(V1) 以往的shader分类</summary>
+
+~~目前存在的分类如下:~~
+- ~~全面功能：包含溶解、遮罩、扭曲、偏移、菲涅尔等多项功能的全面shader~~
+- ~~基本效果：基础的additive或alphablend着色器~~
+- ~~后期处理：用于屏幕特效、色散、黑白闪、晕影等~~
+- ~~进阶功能：多遮罩或多功能的单项shader~~
+- ~~特殊制作：视差地裂、流麻、分层纹理、渐变等特殊需求shader~~
+- ~~未知类型：未知用途的shader~~
+
 
 本合集包含如下内容：
 - 基本粒子 **Additive/Alpha Blend** 着色器
@@ -42,20 +62,15 @@ A201-Shaders Collection  ///  Personal Usage
 - **简易描边、BA式卡通渲染与标准PBR** 着色器
 - **序列帧动画材质、RenderTexture折射** 着色器
 
-着色器已经过下列Unity环境测试并可正常使用：
-- [x] ``Windows 10`` & ``Windows 11``
-- [x] ``Unity 2018:`` 4.36f1 //……
-- [x] ``Unity 2019:`` 3.0f6 // ……
-- [x] ``Unity 2020:`` 3.38f1c1 // 3.47f1c1 // 3.48f1c1 //……
-- [x] ``Unity 2021:`` 3.5 // 3.18f1c1 // 3.22f1 // 3.26f1c1 //……
-- [x] ``Unity 2022:`` 3.14f1c1 //……
-- [ ] 理论上支持 ``Unity 2018+``，推荐 ``Unity 2020`` 及以上系列。
+</details>
+
+> 在漫长的工作生涯中
+
 
 您可在 [Unity下载存档](https://unity.cn/releases) 页面找到以上版本。
 
-> 声明：本仓库收录的大多数shader均来源于网络，如有侵权请联系本人删除。本仓库仅做学习分享之用，请勿用于商业项目。
 
-[![OS](https://img.shields.io/badge/Windows10-0078d6?style=flat-square&logo=windows&logoColor=fff)](https://www.microsoft.com/zh-cn/windows)  [![Unity](https://img.shields.io/badge/Unity-black?style=flat-square&logo=unity)](https://unity.com/cn)
+
 
 
 
