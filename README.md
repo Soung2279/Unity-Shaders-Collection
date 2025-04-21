@@ -11,7 +11,8 @@ A201-Shaders Collection  ///  Personal Usage
 
 →→ **[查看更新日志](#更新日志)**    →→ **[前往下载地址](https://github.com/Soung2279/Unity-Shaders-Collection/releases)**
 
-  
+
+
 简介
 ===========================
 
@@ -64,25 +65,20 @@ A201-Shaders Collection  ///  Personal Usage
 
 </details>
 
-> 在漫长的工作生涯中
-
-
-您可在 [Unity下载存档](https://unity.cn/releases) 页面找到以上版本。
+> 在漫长的工作生涯中，我认识到，shader并不在于多，而在于精、兼容性强和泛用性广。毕竟能跑就不要动它。同时，虽然以往收集的shader数量很多，但是大部分功能都重合了，并且由于代码风格不一，不便于功能迁移。所以，V2.0及以后的版本，会秉持简约的理念，尽可能收录一些通用的，快速上手的shader。同时我会对收集和个人制作的shader进行优化处理，使其能在部分中小型项目中直接使用。因为涉及到对Shader Path和部分shader代码的调整，所以V1与V2完全不互通。但是本质的业务代码都是可用的，只是V2更贴近项目需求。
 
 
 
-
-
-
-着色器导入
+开始使用
 ===========================
 
-#### 1.确认您的项目渲染管线为 ``Built-in`` 或 ``URP``，根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
+#### 1. 确认您的项目环境
 
-- (本仓库暂未收录 HDRP 或其他渲染管线适用的着色器。)
+- 确认您的Unity项目为何种渲染管线（通常为 ``Built-in`` 或 ``URP``，本仓库shader也仅支持这两种），根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
 
-#### 2.将已下载包解压到您的Unity项目 ``Asset`` 目录下，（非必须）并在Unity中导入 ``ASE`` 包
+#### 2.解压已下载包
 
+- 将下载好的Release包解压在任意目录，并将解压后的文件夹全部复制到您的Unity项目中，如果您不知道放哪个位置，请直接放在 ``Asset/`` 目录下。
 - (双击"Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
 - (本仓库大部分Shader使用ASE 1.9.1.5版制作/编辑，建议ASE环境不低于1.8)
 
