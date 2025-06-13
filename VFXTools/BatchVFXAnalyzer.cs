@@ -8,7 +8,8 @@ using System.IO;
 public class BatchVFXAnalyzer : EditorWindow
 {
     private List<GameObject> prefabsList = new List<GameObject>();
-    private Vector2 scrollPosition;
+    private Vector2 scrollPosition; // 用于预制体列表
+    private Vector2 resultsScrollPosition; // 新增：用于结果列表的滚动位置
     private bool analyzing = false;
     private int currentIndex = 0;
     private List<VFXAnalysisResult> results = new List<VFXAnalysisResult>();
@@ -49,7 +50,7 @@ public class BatchVFXAnalyzer : EditorWindow
         public List<string> performanceIssues = new List<string>();
     }
 
-    [MenuItem("工具/VFX批量性能分析器")]
+    [MenuItem("工具/VFXTools/VFX批量性能分析器")]
     public static void ShowWindow()
     {
         GetWindow<BatchVFXAnalyzer>("特效批量性能分析");
@@ -889,6 +890,10 @@ public class BatchVFXAnalyzer : EditorWindow
 
         EditorGUILayout.EndHorizontal();
 
+        // 在这里开始结果列表的滚动视图
+        resultsScrollPosition = EditorGUILayout.BeginScrollView(resultsScrollPosition, 
+            GUILayout.Height(Mathf.Min(position.height - 350, results.Count * 20 + 50)));
+
         // 显示每个预制体的分析结果
         foreach (var result in results)
         {
@@ -900,15 +905,13 @@ public class BatchVFXAnalyzer : EditorWindow
                     continue;
                 }
 
-                // 原有的结果显示代码...
-                // (保持原样)
                 EditorGUILayout.BeginHorizontal();
 
                 // 添加颜色高亮（根据性能指标）
-                bool hasHighDrawCalls = result.drawCallsEstimate > 5;
-                bool hasManyParticleSystems = result.particleSystemCount > 8;
-                bool hasHighGPUMemory = result.gpuMemoryEstimate > 10;
-                bool hasIssues = result.performanceIssues.Count > 0;
+                bool hasHighDrawCalls = result.drawCallsEstimate > 50;
+                bool hasManyParticleSystems = result.particleSystemCount > 25;
+                bool hasHighGPUMemory = result.gpuMemoryEstimate > 20;
+                bool hasIssues = result.performanceIssues.Count > 5;
 
                 if (hasHighDrawCalls || hasManyParticleSystems || hasHighGPUMemory || hasIssues)
                 {
@@ -926,20 +929,37 @@ public class BatchVFXAnalyzer : EditorWindow
                 }
 
                 EditorGUILayout.LabelField(result.particleSystemCount.ToString(), GUILayout.Width(50));
-                EditorGUILayout.LabelField(result.emitterCount.ToString(), GUILayout.Width(50)); // 新增
+                EditorGUILayout.LabelField(result.emitterCount.ToString(), GUILayout.Width(50));
                 EditorGUILayout.LabelField(result.materialCount.ToString(), GUILayout.Width(40));
                 EditorGUILayout.LabelField(result.textureCount.ToString(), GUILayout.Width(40));
                 EditorGUILayout.LabelField(result.drawCallsEstimate.ToString(), GUILayout.Width(60));
                 EditorGUILayout.LabelField(result.vertexCount.ToString(), GUILayout.Width(60));
                 EditorGUILayout.LabelField(result.triangleCount.ToString(), GUILayout.Width(60));
-                EditorGUILayout.LabelField(result.gpuMemoryEstimate.ToString("F1") + "MB", GUILayout.Width(60)); // 新增
+                EditorGUILayout.LabelField(result.gpuMemoryEstimate.ToString("F1") + "MB", GUILayout.Width(60));
 
+                // 问题数
+                if (result.performanceIssues.Count > 0)
+                {
+                    GUI.color = new Color(1.0f, 0.5f, 0.5f);
+                    if (GUILayout.Button(result.performanceIssues.Count.ToString(), EditorStyles.label, GUILayout.Width(40)))
+                    {
+                        // 显示问题详情
+                        ShowPerformanceIssues(result);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.LabelField("0", GUILayout.Width(40));
+                }
 
                 GUI.color = Color.white;
 
                 EditorGUILayout.EndHorizontal();
             }
         }
+
+        // 结束滚动视图
+        EditorGUILayout.EndScrollView();
 
         EditorGUILayout.Space();
 
@@ -1054,5 +1074,17 @@ public class BatchVFXAnalyzer : EditorWindow
 
         // 重绘窗口以显示排序结果
         Repaint();
+    }
+
+    // 添加显示性能问题详情的方法
+    private void ShowPerformanceIssues(VFXAnalysisResult result)
+    {
+        if (result.performanceIssues.Count == 0)
+            return;
+
+        string title = result.prefabName + " 的性能问题";
+        string message = string.Join("\n\n", result.performanceIssues);
+        
+        EditorUtility.DisplayDialog(title, message, "确定");
     }
 }

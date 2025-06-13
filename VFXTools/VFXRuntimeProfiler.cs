@@ -32,7 +32,7 @@ public class VFXRuntimeProfiler : EditorWindow
     private Vector2 scrollPosition;
     private bool showGpuTimeWarning = true; // 是否显示GPU时间监控警告
 
-    [MenuItem("工具/VFX运行时监控")]
+    [MenuItem("工具/VFXTools/VFX运行时监控")]
     public static void ShowWindow()
     {
         GetWindow<VFXRuntimeProfiler>("特效运行时数据监控");

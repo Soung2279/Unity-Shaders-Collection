@@ -39,7 +39,7 @@ public class VFXPerformanceAnalyzer : EditorWindow
     private int currentDrawCalls = 0;
     private int currentBatches = 0;
 
-    [MenuItem("工具/VFX性能分析器")]
+    [MenuItem("工具/VFXTools/VFX性能分析器")]
     public static void ShowWindow()
     {
         GetWindow<VFXPerformanceAnalyzer>("特效性能分析器");
