@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 
-//Edited by Soung, 2025.6.12
+//Edited by Soung, 2025.7.2
 
 //创建一个GUI类, 在ASE中填写Custome Editor或直接在shader源码中加入下行
 //CustomEditor "ShaderGUI_AllEffect"
@@ -14,10 +14,10 @@ using System.IO;
 //简陋的版本信息
 static class ConstantInfo
 {
-    public const string Sd_Version = "URP_V2.5.0_Project";
+    public const string Sd_Version = "URP_V2.5.4_Project";
     public const string Sd_Model = "4.5";
     public const string Sd_Type = "UniversalRenderPipeline/Unlit";
-    public const string UpdateTime = "2025.6.12";
+    public const string UpdateTime = "2025.7.2";
     public const string UpdateWebSite = "https://github.com/Soung2279/Unity-Shaders-Collection";
 }
 
@@ -80,21 +80,21 @@ public class ShaderGUI_AllEffect : ShaderGUI
         //字体大小
         style.fontSize = 12;
         //字体颜色
-        style.normal.textColor = new Color(0.75f, 0.85f, 0.95f);
+        style.normal.textColor = new Color(0.5f, 0.7f, 1.0f);
         //宽高
         var rect = GUILayoutUtility.GetRect(16f, 25f, style);
         GUI.Box(rect, title, style);
         //当前事件
-        var e = Event.current;
+        var e = UnityEngine.Event.current;
         //创建矩形  左上角X坐标 右上角X坐标  矩形的宽 矩形的高
         var toggleRect = new Rect(rect.x + 4f, rect.y + 2f, 13f, 13f);
         //绘制三角形
-        if (e.type == EventType.Repaint)
+        if (e.type == UnityEngine.EventType.Repaint)
         {
             EditorStyles.foldout.Draw(toggleRect, false, false, display, false);
         }
         //鼠标点击了  并且鼠标在矩形范围内
-        if (e.type == EventType.MouseDown && rect.Contains(e.mousePosition))
+        if (e.type == UnityEngine.EventType.MouseDown && rect.Contains(e.mousePosition))
         {
             display = !display;
             e.Use();
@@ -122,16 +122,16 @@ public class ShaderGUI_AllEffect : ShaderGUI
         var rect = GUILayoutUtility.GetRect(16f, 25f, style);
         GUI.Box(rect, title, style);
         //当前事件
-        var e = Event.current;
+        var e = UnityEngine.Event.current;
         //创建矩形  左上角X坐标 右上角X坐标  矩形的宽 矩形的高
         var toggleRect = new Rect(rect.x + 4f, rect.y + 2f, 13f, 13f);
         //绘制三角形
-        if (e.type == EventType.Repaint)
+        if (e.type == UnityEngine.EventType.Repaint)
         {
             EditorStyles.foldout.Draw(toggleRect, false, false, display, false);
         }
         //鼠标点击了  并且鼠标在矩形范围内
-        if (e.type == EventType.MouseDown && rect.Contains(e.mousePosition))
+        if (e.type == UnityEngine.EventType.MouseDown && rect.Contains(e.mousePosition))
         {
             display = !display;
             e.Use();
@@ -141,6 +141,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
     //自定义变量  非真即假的布尔 真的时候打开下拉菜单  假的时候收起下拉框 默认为真，是假的时候切换成foldout2
     static bool _Base_Foldout = true;
+    //默认打开基础贴图
     static bool _Main_Foldout = true;
     static bool _Noise_Foldout = false;
     static bool _Gam_Foldout = false;
@@ -159,7 +160,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
     private ShaderDetailInfo GetShaderInfo(Shader shader)
     {
         ShaderDetailInfo info = new ShaderDetailInfo();
-        
+
         try
         {
             // 获取着色器路径
@@ -169,10 +170,10 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 info.errorMessage = "未找到Shader文件路径";
                 return info;
             }
-                
+
             // 读取着色器文件内容
             string content = File.ReadAllText(path);
-            
+
             // 匹配 Pass 块名称
             Regex passNameRegex = new Regex(@"Pass\s*{[^}]*Name\s*""([^""]+)""");
             var passNameMatch = passNameRegex.Match(content);
@@ -180,7 +181,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
             {
                 info.passName = passNameMatch.Groups[1].Value;
             }
-            
+
             // 匹配 LightMode 标签
             Regex lightModeRegex = new Regex(@"Tags\s*{\s*""LightMode""\s*=\s*""([^""]+)""");
             var lightModeMatch = lightModeRegex.Match(content);
@@ -198,17 +199,17 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     info.lightMode = lightModeMatch.Groups[1].Value;
                 }
             }
-            
+
             // 检查是否支持GPU Instancing
-            info.supportsInstancing = content.Contains("#pragma multi_compile_instancing") || 
+            info.supportsInstancing = content.Contains("#pragma multi_compile_instancing") ||
                                     content.Contains("#pragma instancing_options") ||
                                     content.Contains("UNITY_INSTANCING_BUFFER_START");
-            
+
             // 检查是否支持SRP Batching
             info.supportsSRPBatching = content.Contains("_SUPPORT_SRP_BATCHING") ||
                                     content.Contains("#pragma prefer_hlslcc gles") ||
                                     (content.Contains("CBUFFER_START") && content.Contains("CBUFFER_END"));
-            
+
             return info;
         }
         catch (System.Exception ex)
@@ -260,12 +261,15 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty MainTexUVMode = null;
     //贴图极坐标采样模式设置
     MaterialProperty MainTexPolarSets = null;
+    //极坐标模式下的扭曲强度
+    MaterialProperty MainTexPolarDistortionPower = null;
+    //极坐标模式下的UV缩放
+    MaterialProperty MainTexPolarDistortionUVScale = null;
     //贴图U流动速度
     MaterialProperty MainTexUspeed = null;
     //贴图V流动速度
     MaterialProperty MainTexVspeed = null;
-
-    #endregion 
+    #endregion
 
     #region [Noise贴图按钮命名]
     //- 扭曲部分 -
@@ -510,6 +514,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
         MainTexUVMode = FindProperty("_MainTexUVMode", props);
         MainTexPolarSets = FindProperty("_MainTexPolarSets", props);
         MainTexUspeed = FindProperty("_MainTexUspeed", props);
+        MainTexPolarDistortionPower = FindProperty("_MainTexPolarDistortionPower", props);
+        MainTexPolarDistortionUVScale = FindProperty("_MainTexPolarDistortionUVScale", props);
         MainTexVspeed = FindProperty("_MainTexVspeed", props);
         #endregion
 
@@ -651,14 +657,25 @@ public class ShaderGUI_AllEffect : ShaderGUI
     //将上面定义的属性显示在面板上
     public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
     {
+        //声明需要用到的提示信息
+        string TipsBase = "";
+        string TipsNoise = "";
+        string TipsLiuguang = "";
+        string TipsDissolve = "";
+        string TipsVertex = "";
+        string TipsFresnel = "";
+
         //获取材质球上的参数
         FindProperties(props);
         m_MaterialEditor = materialEditor;
         //获取材质球上的参数
         Material material = materialEditor.target as Material;
 
-        //提供更新说明
-        GUILayout.Label($"由Soung制作, 更新时间{ConstantInfo.UpdateTime}", GUILayout.Width(300), GUILayout.Height(20)); //提示语句
+        //made by Soung
+        GUIStyle SStyle = new GUIStyle(GUI.skin.label);
+        SStyle.fontSize = 9;              // 设置字体大小
+        SStyle.fontStyle = FontStyle.Italic; // 设置为斜体
+        GUILayout.Label($"Made by Soung, UpdateDate:{ConstantInfo.UpdateTime}", SStyle, GUILayout.Width(300), GUILayout.Height(15)); //提示语句
 
         if (GUILayout.Button($"检查更新:{ConstantInfo.Sd_Version}"))
         {
@@ -707,10 +724,18 @@ public class ShaderGUI_AllEffect : ShaderGUI
         }
 
 
+
         //基础设置下拉菜单
         #region [基础设置部分]
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        _Base_Foldout = Foldout(_Base_Foldout, "基础设置 | BasicSets");
+
+        //仅当软粒子是启用状态，且软粒子值为0时，才提示用户关闭软粒子以获得更好的性能。
+        if ((material.GetFloat("_SoftParticle") == 0.0f) && (material.GetFloat("_SOFT_PARTICLES_ON") == 0))
+        {
+            TipsBase = "##软粒子值为0, 建议关闭软粒子##";
+        }
+
+        _Base_Foldout = Foldout(_Base_Foldout, $"基础设置 | BasicSets  {TipsBase}");
         if (_Base_Foldout)
         {
             EditorGUI.indentLevel++;
@@ -760,7 +785,13 @@ public class ShaderGUI_AllEffect : ShaderGUI
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            _Noise_Foldout = Foldout(_Noise_Foldout, "扭曲贴图 | NoiseTex");
+            //当扭曲强度为0时，提示用户关闭扭曲功能以获得更好的性能。
+            if (material.GetFloat("_NoisePower") == 0)
+            {
+                TipsNoise = "##扭曲强度为0, 建议关闭扭曲并删除贴图##";
+            }
+
+            _Noise_Foldout = Foldout(_Noise_Foldout, $"扭曲贴图 | NoiseTex  {TipsNoise}");
             if (_Noise_Foldout)
             {
                 EditorGUI.indentLevel++;
@@ -822,16 +853,32 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
         //程序遮罩下拉菜单
         #region [程序遮罩部分]
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-        _ProMask_Foldout = Foldout(_ProMask_Foldout, "程序遮罩 | ProgramMask");
-        if (_ProMask_Foldout)
+        if (ProMaskSwitch.floatValue != 1)
         {
-            EditorGUI.indentLevel++;
-            GUI_MaskPro(material);
-            EditorGUI.indentLevel--;
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            _ProMask_Foldout = Foldout(_ProMask_Foldout, "程序遮罩 | ProgramMask");
+            if (_ProMask_Foldout)
+            {
+                EditorGUI.indentLevel++;
+                GUI_MaskPro(material);
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.EndVertical();
         }
-        EditorGUILayout.EndVertical();
+        else
+        { 
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            _ProMask_Foldout = Foldout2(_ProMask_Foldout, "程序遮罩 | ProgramMask");
+            if (_ProMask_Foldout)
+            {
+                EditorGUI.indentLevel++;
+                GUI_MaskPro(material);
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.EndVertical();
+        }
         #endregion
 
 
@@ -907,7 +954,13 @@ public class ShaderGUI_AllEffect : ShaderGUI
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            _Liuguang_Foldout = Foldout(_Liuguang_Foldout, "流光纹理 | LiuguangTex");
+            //当流光颜色为纯黑时，提示用户关闭流光功能以获得更好的性能。
+            if (material.GetColor("_LiuguangColor") == Color.black)
+            {
+                TipsLiuguang = "##流光颜色为纯黑, 建议关闭流光并删除贴图##";
+            }
+
+            _Liuguang_Foldout = Foldout(_Liuguang_Foldout, $"流光纹理 | LiuguangTex  {TipsLiuguang}");
             if (_Liuguang_Foldout)
             {
                 EditorGUI.indentLevel++;
@@ -940,7 +993,13 @@ public class ShaderGUI_AllEffect : ShaderGUI
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            _Dissolve_Foldout = Foldout(_Dissolve_Foldout, "溶解贴图 | DissolveTex");
+            //当溶解值为0且不使用Custom值控制时，提示用户关闭溶解功能以获得更好的性能。
+            if (material.GetFloat("_DissolvePower") == 0 && (material.GetFloat("_DissolveMode") == 0))
+            {
+                TipsDissolve = "##溶解值为0且不为Custom模式, 建议关闭溶解并删除贴图##";
+            }
+
+            _Dissolve_Foldout = Foldout(_Dissolve_Foldout, $"溶解贴图 | DissolveTex  {TipsDissolve}");
             if (_Dissolve_Foldout)
             {
                 EditorGUI.indentLevel++;
@@ -973,7 +1032,13 @@ public class ShaderGUI_AllEffect : ShaderGUI
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            _DissolvePlus_Foldout = Foldout(_DissolvePlus_Foldout, "定向溶解 | DissolveTexPlus");
+            //当溶解值为0且不使用Custom值控制时，提示用户关闭溶解功能以获得更好的性能。
+            if (material.GetFloat("_DissolvePower") == 0 && (material.GetFloat("_DissolveMode") == 0))
+            {
+                TipsDissolve = "##主溶解值为0且不为Custom模式, 建议关闭溶解并删除贴图##";
+            }
+
+            _DissolvePlus_Foldout = Foldout(_DissolvePlus_Foldout, $"定向溶解 | DissolveTexPlus  {TipsDissolve}");
             if (_DissolvePlus_Foldout)
             {
                 EditorGUI.indentLevel++;
@@ -1006,7 +1071,13 @@ public class ShaderGUI_AllEffect : ShaderGUI
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            _Vertex_Foldout = Foldout(_Vertex_Foldout, "顶点偏移贴图 | Vertex");
+            //当偏移强度为0时，提示用户关闭顶点偏移功能以获得更好的性能。
+            if (material.GetFloat("_VertexPower") == 0)
+            {
+                TipsVertex = "##偏移强度为0, 建议关闭顶点偏移并删除贴图##";
+            }
+
+            _Vertex_Foldout = Foldout(_Vertex_Foldout, $"顶点偏移贴图 | Vertex  {TipsVertex}");
             if (_Vertex_Foldout)
             {
                 EditorGUI.indentLevel++;
@@ -1035,17 +1106,37 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
         //菲涅尔下拉菜单
         #region [菲涅尔部分]
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-        _Fresnel_Foldout = Foldout2(_Fresnel_Foldout, "菲涅尔 | Fresnel");
-        if (_Fresnel_Foldout)
+        if (FresnelSwitch.floatValue != 0)
         {
-            EditorGUI.indentLevel++;
-            GUI_Fresnel(material);
-            EditorGUI.indentLevel--;
-        }
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            //当菲涅尔颜色为纯黑时，提示用户关闭菲涅尔功能以获得更好的性能。
+            if (material.GetColor("_FresnelColor") == Color.black)
+            {
+                TipsFresnel = "##菲涅尔颜色为纯黑, 建议关闭菲涅尔功能##";
+            }
 
-        EditorGUILayout.EndVertical();
+            _Fresnel_Foldout = Foldout(_Fresnel_Foldout, $"菲涅尔 | Fresnel  {TipsFresnel}");
+            if (_Fresnel_Foldout)
+            {
+                EditorGUI.indentLevel++;
+                GUI_Fresnel(material);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+        else
+        { 
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            _Fresnel_Foldout = Foldout2(_Fresnel_Foldout, $"菲涅尔 | Fresnel");
+            if (_Fresnel_Foldout)
+            {
+                EditorGUI.indentLevel++;
+                GUI_Fresnel(material);
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.EndVertical(); 
+        }
         #endregion
 
         //------------------------------------函数引用----------------------------------------------
@@ -1343,12 +1434,21 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     }
 
                 }
-                else
+                else if (material.GetFloat("_MainTexUVMode") == 1)
                 {
                     if (GUILayout.Button("极坐标Polar", shortButtonStyle))
                     {
-                        material.SetFloat("_MainTexUVMode", 0);
+                        material.SetFloat("_MainTexUVMode", 2);
                         string warn_mainpolar = $"Soung Shader INFO: UV sample LOCAL\n>>>UV采样设置为默认模式";
+                        Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
+                    }
+                }
+                else if (material.GetFloat("_MainTexUVMode") == 2)
+                {
+                    if (GUILayout.Button("极坐标扭曲", shortButtonStyle))
+                    {
+                        material.SetFloat("_MainTexUVMode", 0);
+                        string warn_mainpolar = $"Soung Shader INFO: UV sample POLAR DISTORTION\n>>>UV采样设置为极坐标扭曲模式";
                         Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
                     }
                 }
@@ -1364,9 +1464,17 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     EditorGUILayout.EndVertical();
                 }
 
+                //使用UV采样模式 - 极坐标Polar 时，调整相关参数
+                if (material.GetFloat("_MainTexUVMode") == 2)
+                {
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
+                    m_MaterialEditor.ShaderProperty(MainTexPolarDistortionPower, "极坐标扭曲强度");
+                    m_MaterialEditor.ShaderProperty(MainTexPolarDistortionUVScale, "极坐标扭曲段数");
+                    EditorGUILayout.EndVertical();
+                }
 
-                //使用UV流动模式 - 材质默认 时，调整相关参数
-                if (material.GetFloat("_MainTexFlowMode") == 0)
+                //当材质不为 不重铺/自定义Custom 时，才显示速度选项
+                if ((material.GetFloat("_MainTexFlowMode") == 0) && (material.GetFloat("_MainTexClamp") == 0))
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                     m_MaterialEditor.ShaderProperty(MainTexUspeed, "横向流动速度");
@@ -1379,8 +1487,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
 
         //- 扭曲部分的GUI -
-        #region [扭曲部分GUI]
-        void GUI_Noise(Material material)
+    #region [扭曲部分GUI]
+    void GUI_Noise(Material material)
         {
             //功能说明
             EditorGUILayout.LabelField("功能说明：使用一张扭曲贴图来改变主帖图的UV，使材质具有纹理扭动的效果");
@@ -1441,7 +1549,6 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
             //绘制开关框
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            //EditorGUILayout.PrefixLabel("颜色叠加开关");
             if (material.GetFloat("_GamTexSwitch") == 0)
             {
                 if (GUILayout.Button("已关闭"))
@@ -1527,7 +1634,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     //功能区结束
 
                     //不使用跟随流动时，展示相关参数
-                    if (material.GetFloat("_GamTexFollowMainTex") == 0)
+                    if ((material.GetFloat("_GamTexFollowMainTex") == 0) && (material.GetFloat("_GamTexClamp") == 0))
                     {
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                         m_MaterialEditor.ShaderProperty(GamTexUspeed, "横向流动速度");
@@ -1677,7 +1784,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
 
                     //材质流动模式时才显示UV流动
-                    if (material.GetFloat("_MaskTexFlowMode") == 0)
+                    if ((material.GetFloat("_MaskTexFlowMode") == 0) && (material.GetFloat("_MaskTexClamp") == 0))
                     {
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                         m_MaterialEditor.ShaderProperty(MaskTexUspeed, "横向流动速度");
@@ -1765,12 +1872,12 @@ public class ShaderGUI_AllEffect : ShaderGUI
                         //功能区结束
 
 
-                        //材质默认模式时才显示UV流动
+                        //非CLAMP才显示流动选项
                         if (material.GetFloat("_MaskTexPlusClamp") == 0)
                         {
                             EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                             m_MaterialEditor.ShaderProperty(MaskTexPlusUspeed, "横向流动速度");
-                            m_MaterialEditor.ShaderProperty(MaskTexPlusUspeed, "纵向流动速度");
+                            m_MaterialEditor.ShaderProperty(MaskTexPlusVspeed, "纵向流动速度");
                             EditorGUILayout.EndVertical();
                         }
                     }
@@ -1996,14 +2103,11 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     }
 
 
-                    //使用材质默认流动时展示后续内容
-                    if (material.GetFloat("_DissolveMode") == 0)
-                    {
-                        EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
-                        m_MaterialEditor.ShaderProperty(DissolveTexUspeed, "溶解U速度");
-                        m_MaterialEditor.ShaderProperty(DissolveTexVspeed, "溶解V速度");
-                        EditorGUILayout.EndVertical();
-                    }
+                    //任何时候都应该展示溶解流动选项
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
+                    m_MaterialEditor.ShaderProperty(DissolveTexUspeed, "溶解U速度");
+                    m_MaterialEditor.ShaderProperty(DissolveTexVspeed, "溶解V速度");
+                    EditorGUILayout.EndVertical();
                 }
             }
         }
@@ -2114,8 +2218,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
                         //功能区结束
 
 
-                        //材质默认模式时才显示UV流动
-                        if (material.GetFloat("_DissolveTexPlusFlowMode") == 0)
+                        //非CLAMP时才展示定向流动选项
+                        if (material.GetFloat("_DissolveTexPlusClamp") == 0)
                         {
                             EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                             m_MaterialEditor.ShaderProperty(DissolveTexPlusUspeed, "横向流动速度");
