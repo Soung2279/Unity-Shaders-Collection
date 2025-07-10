@@ -1,4 +1,4 @@
-//2025.6.12 optimized by Soung
+//2025.7.9 optimized by Soung
 Shader "Soung/Effect/FullFx"
 {
     Properties
@@ -154,7 +154,7 @@ Shader "Soung/Effect/FullFx"
             HLSLPROGRAM
 
             #pragma multi_compile_instancing
-            #define _SURFACE_TYPE_TRANSPARENT 1
+            #pragma instancing_options renderinglayer
 
             #pragma vertex vert
             #pragma fragment frag
@@ -208,106 +208,152 @@ Shader "Soung/Effect/FullFx"
             };
 
             CBUFFER_START(UnityPerMaterial)
-            float4 _DissolveTexPlus_ST;
-            float4 _GamTex_ST;
-            float4 _LiuguangScreenTilingOffset;
-            float4 _LiuguangPolarScale;
-            float4 _MainTexPolarSets;
-            float4 _MainTex_ST;
-            float4 _MaskTex_ST;
-            float4 _LiuguangTex_ST;
-            float4 _NoiseTex_ST;
-            float4 _FresnelSet;
-            float4 _MainColor;
-            float4 _LiuguangColor;
-            float4 _VertexTexDir;
-            float4 _DissolveEdgeColor;
-            float4 _DissolveTex_ST;
-            float4 _VertexTex_ST;
-            float4 _FresnelColor;
-            float4 _MaskTexPlus_ST;
-            float _FresnelColorMode;
-            float _LiuguangUSpeed;
-            float _LiuguangVSpeed;
-            float _LiuguangTexP;
-            float _DissolveTexSwitch;
-            float _DissolveEdgeSwitch;
-            float _DissolveEdgeWide;
-            float _LiuguangTexRotator;
-            float _DissolveTexPlusPower;
-            float _DissolveTexPlusSwitch;
-            float _FresnelSwitch;
-            float _FresnelMode;
-            float _MaskTexUspeed;
-            float _LiuguangSwitch;
-            float _GamTexP;
-            float _SoftParticle;
-            float _MaskTexPlusSwitch;
-            float _MaskPlusUsePro;
-            float _MaskTexPlusP;
-            float _MaskTexPlusClamp;
-            float _MaskTexPlusRotator;
-            float _MaskTexPlusVspeed;
-            float _UseLGTexColor;
-            float _MaskTexPlusUspeed;
-            float _OneMinusMask;
-            float _MaskTexP;
-            float _MaskTexClamp;
-            float _MaskTexRotator;
-            float _MaskTexFlowMode;
-            float _MaskTexVspeed;
-            float _DissolveTexPlusUsePro;
-            float _MainTexP;
-            float _MaskSwitch;
-            float _ProMaskSwitch;
-            float _BlendMode;
-            float _DissolveTexPlusP;
-            float _MainTexFlowMode;
-            float _MainTexUVMode;
-            float _MainTexVspeed;
-            float _MainTexUspeed;
-            float _NoiseSwitch;
-            float _NoisePower;
-            float _NoiseTexP;
-            float _NoiseTexVspeed;
-            float _NoiseTexUspeed;
-            float _MainTexHue;
-            float _VertexSwitch;
-            float _VertexTexRotator;
-            float _VertexTexVspeed;
-            float _VertexTexUspeed;
-            float _VertexMode;
-            float _VertexPower;
-            float _ZTestMode;
-            float _CullingMode;
-            float _Zwrite;
-            float _MainTexRotator;
-            float _ProMaskRange;
-            float _MainTexClamp;
-            float _GamTexUspeed;
-            float _DissolveTexPlusClamp;
-            float _DissolveTexPlusRotator;
-            float _GamAlphaMode;
-            float _DissolveTexPlusFlowMode;
-            float _DissolveTexPlusVspeed;
-            float _DissolveTexPlusUspeed;
-            float _DissolveTexP;
-            float _DissolveTexRotator;
-            float _DissolveTexVspeed;
-            float _DissolveTexUspeed;
-            float _DissolveSmooth;
-            float _DissolveMode;
-            float _DissolvePower;
-            float _GamTexSwitch;
-            float _GamTexDesaturate;
-            float _GamTexClamp;
-            float _GamTexRotator;
-            float _GamTexFollowMainTex;
-            float _GamTexVspeed;
-            float _MainTexSaturation;
-            float _FresnelAlphaMode;
-            float _MainTexPolarDistortionPower;
-			float _MainTexPolarDistortionUVScale;
+                // === 所有float4属性（已经是16字节对齐）===
+                float4 _MainTex_ST;
+                float4 _MainColor;
+                float4 _MainTexPolarSets;
+                float4 _NoiseTex_ST;
+                float4 _GamTex_ST;
+                float4 _MaskTex_ST;
+                float4 _MaskTexPlus_ST;
+                float4 _LiuguangTex_ST;
+                float4 _LiuguangColor;
+                float4 _LiuguangPolarScale;
+                float4 _LiuguangScreenTilingOffset;
+                float4 _DissolveTex_ST;
+                float4 _DissolveEdgeColor;
+                float4 _DissolveTexPlus_ST;
+                float4 _VertexTex_ST;
+                float4 _VertexTexDir;
+                float4 _FresnelColor;
+                float4 _FresnelSet;
+                
+                // === 所有float属性重新按4个一组排列 ===
+                // 组1: 基础设置
+                float _CullingMode;
+                float _Zwrite;
+                float _ZTestMode;
+                float _BlendMode;
+                
+                // 组2: 主纹理
+                float _MainTexP;
+                float _MainTexRotator;
+                float _MainTexHue;
+                float _MainTexSaturation;
+                
+                // 组3: 主纹理控制
+                float _MainTexFlowMode;
+                float _MainTexClamp;
+                float _MainTexUVMode;
+                float _MainTexUspeed;
+                
+                // 组4: 主纹理速度和扭曲
+                float _MainTexVspeed;
+                float _MainTexPolarDistortionPower;
+                float _MainTexPolarDistortionUVScale;
+                float _SoftParticle;
+                
+                // 组5: 噪声
+                float _NoiseSwitch;
+                float _NoisePower;
+                float _NoiseTexP;
+                float _NoiseTexUspeed;
+                
+                // 组6: 噪声和颜色叠加
+                float _NoiseTexVspeed;
+                float _GamTexSwitch;
+                float _GamTexP;
+                float _GamTexRotator;
+                
+                // 组7: 颜色叠加
+                float _GamTexDesaturate;
+                float _GamTexClamp;
+                float _GamTexFollowMainTex;
+                float _GamTexUspeed;
+                
+                // 组8: 颜色叠加和遮罩
+                float _GamTexVspeed;
+                float _GamAlphaMode;
+                float _MaskSwitch;
+                float _MaskTexP;
+                
+                // 组9: 遮罩
+                float _MaskTexRotator;
+                float _OneMinusMask;
+                float _MaskTexClamp;
+                float _MaskTexFlowMode;
+                
+                // 组10: 遮罩速度
+                float _MaskTexUspeed;
+                float _MaskTexVspeed;
+                float _MaskTexPlusSwitch;
+                float _MaskPlusUsePro;
+                
+                // 组11: 额外遮罩
+                float _MaskTexPlusP;
+                float _MaskTexPlusClamp;
+                float _MaskTexPlusRotator;
+                float _MaskTexPlusUspeed;
+                
+                // 组12: 额外遮罩和程序遮罩
+                float _MaskTexPlusVspeed;
+                float _ProMaskSwitch;
+                float _ProMaskRange;
+                float _LiuguangSwitch;
+                
+                // 组13: 流光
+                float _LiuguangTexP;
+                float _LiuguangTexRotator;
+                float _UseLGTexColor;
+                float _LiuguangUSpeed;
+                
+                // 组14: 流光速度
+                float _LiuguangVSpeed;
+                float _DissolveTexSwitch;
+                float _DissolveTexP;
+                float _DissolveTexRotator;
+                
+                // 组15: 溶解
+                float _DissolveSmooth;
+                float _DissolveMode;
+                float _DissolvePower;
+                float _DissolveEdgeSwitch;
+                
+                // 组16: 溶解边缘
+                float _DissolveEdgeWide;
+                float _DissolveTexUspeed;
+                float _DissolveTexVspeed;
+                float _DissolveTexPlusSwitch;
+                
+                // 组17: 定向溶解
+                float _DissolveTexPlusUsePro;
+                float _DissolveTexPlusP;
+                float _DissolveTexPlusRotator;
+                float _DissolveTexPlusPower;
+                
+                // 组18: 定向溶解控制
+                float _DissolveTexPlusFlowMode;
+                float _DissolveTexPlusClamp;
+                float _DissolveTexPlusUspeed;
+                float _DissolveTexPlusVspeed;
+                
+                // 组19: 顶点偏移
+                float _VertexSwitch;
+                float _VertexTexRotator;
+                float _VertexMode;
+                float _VertexPower;
+                
+                // 组20: 顶点偏移速度
+                float _VertexTexUspeed;
+                float _VertexTexVspeed;
+                float _FresnelSwitch;
+                float _FresnelMode;
+                
+                // 组21: 菲涅尔（最后一组，正好4个）
+                float _FresnelColorMode;
+                float _FresnelAlphaMode;
+                float _padding1;        // 如果需要，添加padding确保对齐
+                float _padding2;        // 如果需要，添加padding确保对齐
             CBUFFER_END
 
             sampler2D _VertexTex;

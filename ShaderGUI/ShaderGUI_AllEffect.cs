@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 
-//Edited by Soung, 2025.7.2
+//Edited by Soung, 2025.7.10
 
 //创建一个GUI类, 在ASE中填写Custome Editor或直接在shader源码中加入下行
 //CustomEditor "ShaderGUI_AllEffect"
@@ -17,7 +17,7 @@ static class ConstantInfo
     public const string Sd_Version = "URP_V2.5.4_Project";
     public const string Sd_Model = "4.5";
     public const string Sd_Type = "UniversalRenderPipeline/Unlit";
-    public const string UpdateTime = "2025.7.2";
+    public const string UpdateTime = "2025.7.10";
     public const string UpdateWebSite = "https://github.com/Soung2279/Unity-Shaders-Collection";
 }
 
@@ -1072,7 +1072,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             //当偏移强度为0时，提示用户关闭顶点偏移功能以获得更好的性能。
-            if (material.GetFloat("_VertexPower") == 0)
+            if ((material.GetFloat("_VertexPower") == 0) && (material.GetFloat("_VertexMode") == 0))
             {
                 TipsVertex = "##偏移强度为0, 建议关闭顶点偏移并删除贴图##";
             }
