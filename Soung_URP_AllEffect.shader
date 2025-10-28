@@ -1,4 +1,4 @@
-//2025.7.9 optimized by Soung
+//2025.9.28 optimized by Soung
 Shader "Soung/Effect/FullFx"
 {
     Properties
@@ -8,7 +8,7 @@ Shader "Soung/Effect/FullFx"
         [Enum(Less or Equal,4,Always,8)]_ZTestMode("深度测试", Float) = 4
         [Enum(Additive,1,AlphaBlend,10)]_BlendMode("混合模式", Float) = 1
 
-        [Header(DepthFade)][KeywordEnum(ON,OFF)]_SOFT_PARTICLES_ON("软粒子开关", Float) = 0
+        [Header(DepthFade)][KeywordEnum(ON,OFF)]_SOFT_PARTICLES_ON("软粒子开关", Float) = 1
         _SoftParticle("软粒子值", Range( 0 , 20)) = 0
 
         [Header(MainTex)]_MainTex("主贴图", 2D) = "white" {}
@@ -89,6 +89,7 @@ Shader "Soung/Effect/FullFx"
         [Enum(Material,0,Custom1z,1)]_DissolveMode("溶解控制模式", Float) = 0
         [Enum(Soft,0,Edge,1)]_DissolveEdgeSwitch("溶解边缘模式", Float) = 0
         [HDR]_DissolveEdgeColor("溶解边缘颜色", Color) = (1,0.4109318,0,1)
+        [Enum(Mult,0,Add,1)]_DissolveColorMode("溶解颜色混合模式", Float) = 0
         _DissolveEdgeWide("溶解边缘宽度", Range( 0 , 1)) = 0.1420648
         _DissolveTexUspeed("溶解U速度", Float) = 0
         _DissolveTexVspeed("溶解V速度", Float) = 0
@@ -161,10 +162,10 @@ Shader "Soung/Effect/FullFx"
 		
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
+            //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
 
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
+            //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 
             #define ASE_NEEDS_VERT_NORMAL
             #define ASE_NEEDS_FRAG_WORLD_VIEW_DIR
@@ -323,37 +324,37 @@ Shader "Soung/Effect/FullFx"
                 float _DissolveEdgeWide;
                 float _DissolveTexUspeed;
                 float _DissolveTexVspeed;
-                float _DissolveTexPlusSwitch;
+                float _DissolveColorMode;
                 
                 // 组17: 定向溶解
+                float _DissolveTexPlusSwitch;
                 float _DissolveTexPlusUsePro;
                 float _DissolveTexPlusP;
                 float _DissolveTexPlusRotator;
-                float _DissolveTexPlusPower;
                 
                 // 组18: 定向溶解控制
+                float _DissolveTexPlusPower;
                 float _DissolveTexPlusFlowMode;
                 float _DissolveTexPlusClamp;
                 float _DissolveTexPlusUspeed;
-                float _DissolveTexPlusVspeed;
                 
                 // 组19: 顶点偏移
+                float _DissolveTexPlusVspeed;
                 float _VertexSwitch;
                 float _VertexTexRotator;
                 float _VertexMode;
-                float _VertexPower;
                 
                 // 组20: 顶点偏移速度
+                float _VertexPower;
                 float _VertexTexUspeed;
                 float _VertexTexVspeed;
                 float _FresnelSwitch;
-                float _FresnelMode;
                 
                 // 组21: 菲涅尔（最后一组，正好4个）
                 float _FresnelColorMode;
                 float _FresnelAlphaMode;
+                float _FresnelMode;
                 float _padding1;        // 如果需要，添加padding确保对齐
-                float _padding2;        // 如果需要，添加padding确保对齐
             CBUFFER_END
 
             sampler2D _VertexTex;
@@ -642,19 +643,33 @@ Shader "Soung/Effect/FullFx"
                 float temp_output_283_0 = saturate( ( ( lerpResult278 + ( lerpResult276 / _DissolveTexPlusPower ) ) / 2.0 ) );
                 float smoothstepResult286 = smoothstep( ( DissolveValue334 - _DissolveSmooth ) , DissolveValue334 , temp_output_283_0);
                 float4 temp_cast_7 = (smoothstepResult286).xxxx;
-                float4 lerpResult299 = lerp( temp_cast_7 , ( smoothstepResult286 + ( _DissolveEdgeColor * ( step( ( DissolveValue334 - _DissolveEdgeWide ) , temp_output_283_0 ) - step( DissolveValue334 , temp_output_283_0 ) ) ) ) , _DissolveEdgeSwitch);
+
+                float4 dissolvealphaEDGE = ( _DissolveEdgeColor * ( step( ( DissolveValue334 - _DissolveEdgeWide ) , temp_output_283_0 ) - step( DissolveValue334 , temp_output_283_0 ) ) );
+                float4 lerpResult299 = lerp( temp_cast_7 , ( smoothstepResult286 + dissolvealphaEDGE), _DissolveEdgeSwitch);
+
                 float3 appendResult301 = (float3(lerpResult299.rgb));
                 float3 lerpResult356 = lerp( temp_cast_6 , appendResult301 , _DissolveTexSwitch);
                 float3 DissolveColor304 = lerpResult356;
-                float4 temp_output_338_0 = ( MainTexColor113 * float4( GamColor103 , 0.0 ) * input.ase_color * float4( DissolveColor304 , 0.0 ) );
+
+                //float4 temp_output_338_0 = ( MainTexColor113 * float4( GamColor103 , 0.0 ) * input.ase_color * float4( DissolveColor304 , 0.0 ) );
+                
                 float4 temp_cast_10 = (Toggle168).xxxx;
                 float3 ase_normalWS = input.ase_texcoord9.xyz;
                 float fresnelNdotV124 = dot( ase_normalWS, WorldViewDirection );
-                float fresnelNode124 = ( _FresnelSet.x + _FresnelSet.y * pow( 1.0 - fresnelNdotV124, _FresnelSet.z ) );
+                float fresnelNode124 = ( _FresnelSet.x + _FresnelSet.y * pow( abs(1.0 - fresnelNdotV124), _FresnelSet.z ) );
                 float temp_output_126_0 = saturate( fresnelNode124 );
                 float lerpResult127 = lerp( temp_output_126_0 , ( 1.0 - temp_output_126_0 ) , _FresnelMode);
                 float4 lerpResult245 = lerp( temp_cast_10 , ( _FresnelColor * lerpResult127 ) , _FresnelSwitch);
                 float4 FresnelColor132 = lerpResult245;
+
+                float4 baseColor = ( MainTexColor113 * float4( GamColor103 , 0.0 ) * input.ase_color );
+                float4 dissolveBlendedColor = lerp( 
+                    ( baseColor * float4( DissolveColor304 , 0.0 ) ),  // 乘法混合
+                    ( baseColor + dissolvealphaEDGE),  // 加法混合
+                    _DissolveColorMode
+                );
+                float4 temp_output_338_0 = dissolveBlendedColor;
+
                 float4 lerpResult347 = lerp( ( temp_output_338_0 * FresnelColor132 ) , ( temp_output_338_0 + FresnelColor132 ) , _FresnelColorMode);
                 float4 temp_cast_13 = (ValueZero).xxxx;
                 float2 appendResult210 = (float2(_LiuguangUSpeed , _LiuguangVSpeed));
