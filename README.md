@@ -8,23 +8,61 @@ A201-Shaders Collection  ///  Personal Usage
 ===========================
 <div align="left">
 
+→→ **[查看更新日志](#更新日志)**    
 
-→→ **[查看更新日志](#更新日志)**    →→ **[前往下载地址](https://github.com/Soung2279/Unity-Shaders-Collection/releases)**
-
+→→ **[前往下载地址](https://github.com/Soung2279/Unity-Shaders-Collection/releases)**
 
 
 简介
 ===========================
 
-收录用于``Unity``的``Built-in`` & ``URP`` 适用的 **着色器合集**。若您有一定技术美术知识，您可读取着色器中的片段代码，并将其迁移到其它引擎(如UE，GoDot等)中。
+本仓库是为``Unity``的 ``URP`` 环境下使用的 **着色器合集**。其中，大部分着色器(下称shader)与粒子**特效**制作相关。  *(此处的粒子特效特指Unity内置的Shuriken粒子系统及其团结引擎的升级版Infinity粒子系统，不适用于Unity VEG)*
 
-### 仓库来源
+本仓库的shader基本基于Unity插件 ``ASE`` 生成，部分特殊shader进行了性能调优和可读化调整。这对于切换渲染管线或是移植到其它引擎有利。
 
-本仓库是[个人](https://github.com/Soung2279)在学习与工作生涯中，对制作、收集的各种shader进行的统一收录。本仓库收录的shader适用于[Unity](https://unity.com/cn)引擎，绝大部分用于*特效制作*。均作了大量 **汉化** 处理。
+若您有一定技术美术知识，您可自行查阅shader中的片段代码，并将其迁移到其它引擎或是适配不同的渲染管线。
+
+查阅此仓库，您可以快捷的获取Unity特效制作相关的shader，同时可参考一些特殊效果的实现案例。
+
+### 仓库前身
+
+<details>
+
+<summary>一些碎碎念</summary>
+
+本仓库建立之初，是[本人](https://github.com/Soung2279)对学习和工作生涯中，对制作、收集的各种shader进行统一收录。其初衷是方便自用存取，同时也想分享一些技术案例。
+
+在一开始的特效学习中，美术出身的我对于特效shader中的功能和模块不满意，想要实现一个效果需要若干个单项功能的shader和不同材质来实现，这使得我有了制作自己的通用shader的想法。有了这个苗头后，我便开始陆续收集相关的shader。
+
+但是，在漫长的工作生涯中，我认识到，shader并不在于多，而在于精。兼容性强、泛用性广和性能平衡是尤为常见的特效shader需求。
+
+虽然以往 [V1](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/StandardV1.8.7) 收集的shader数量很多，但是大部分功能都重合了，并且由于代码风格不一，不便于功能迁移。所以，V2.0及以后的版本，会秉持简约的理念，尽可能收录一些通用的，快速上手的shader。
+
+此仓库发展到现在，已经有了一个经历4个项目迭代，历时3年的通用特效shader，同时仍然有各种特殊的shader不断收录。我想，这才是创建这个仓库的最终意义。
+
+ *特效艺术家应该回归到对美术效果本身的钻研，降低对shader等技术向内容的学习成本。*
+
+</details>
 
 ### 文件说明
 
-为了方便使用，本人将所有的着色器目录路径(Shader Path)均 **统一**在了 **Soung/** 路径下，并按着色器的使用类型进行了 **分类** 。方便特效艺术家、技术美术等进在编辑器中进行直观的shader切换。
+- [V1](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/StandardV1.8.7) 版本已进行归档。不再维护。若无特殊说明，本仓库后续的相关内容均只适用于 [V2.0+]() 的整合包。
+
+```
+/Editor
+/Render
+/Scripts
+/Shaders
+ -/Soung_URP_AllEffect.shader
+ -/...
+```
+
+
+
+
+
+
+所有的着色器目录路径(Shader Path)均 **统一**在了 **Soung/** 路径下，并按着色器的使用类型进行了 **分类** 。方便特效艺术家、技术美术等进在编辑器中进行直观的shader切换。
 
 因游戏美术行业发展迅速，技术日新月异，本仓库收录的shader适用的环境为：
 
@@ -53,7 +91,6 @@ A201-Shaders Collection  ///  Personal Usage
 
 </details>
 
-> 在漫长的工作生涯中，我认识到，shader并不在于多，而在于精、兼容性强和泛用性广。毕竟能跑就不要动它。同时，虽然以往收集的shader数量很多，但是大部分功能都重合了，并且由于代码风格不一，不便于功能迁移。所以，V2.0及以后的版本，会秉持简约的理念，尽可能收录一些通用的，快速上手的shader。同时我会对收集和个人制作的shader进行优化处理，使其能在部分中小型项目中直接使用。因为涉及到对Shader Path和部分shader代码的调整，所以V1与V2完全不互通。但是本质的业务代码都是可用的，只是V2更贴近项目需求。
 
 本合集收录的shader大体分类为：
 - 特效用单贴图着色器
@@ -111,16 +148,37 @@ A201-Shaders Collection  ///  Personal Usage
 
 ## 特别鸣谢
 
-[UnityURPToonLitShader](https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample)
+在收录/整理/自编写过程中，参考并使用了以下开源内容和教程。
 
-[Post-Processing-Scan](https://github.com/MirzaBeig/Post-Processing-Scan)
+[![GitHub](https://img.shields.io/badge/Github-UnityURPToonLitShader-6666CC?style=flat-square&logo=github)](https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample)
+[![GitHub](https://img.shields.io/badge/Github-LearnUnityShader-6666CC?style=flat-square&logo=github)](https://github.com/csdjk/LearnUnityShader)
+[![GitHub](https://img.shields.io/badge/Github-Awesome_Unity_Shader-6666CC?style=flat-square&logo=github)](https://github.com/QianMo/Awesome-Unity-Shader)
+[![GitHub](https://img.shields.io/badge/Github-URP_ASE_Tutorial-6666CC?style=flat-square&logo=github)](https://github.com/xuetaolu/URP_ASE_Tutorial)
+[![BiliBili](https://img.shields.io/badge/BiliBili-多喝热水嗝嗝嗝-FB7299?style=flat-square&logo=bilibili)](https://space.bilibili.com/2537966)
+[![BiliBili](https://img.shields.io/badge/BiliBili-Cz_wang-FB7299?style=flat-square&logo=bilibili)](https://space.bilibili.com/15396626)
+[![BiliBili](https://img.shields.io/badge/BiliBili-永远的孤月-FB7299?style=flat-square&logo=bilibili)](https://space.bilibili.com/442123027)
 
-[Bilibili: 多喝热水嗝嗝嗝](https://space.bilibili.com/2537966)
-
-[Bilibili: Cz_wang](https://space.bilibili.com/15396626)
 ****
 
 ## 更新日志
+
+### 2025.11.4 | 更新说明 | Standard V2.0.0
+
+*新增：*
+
+新增 V2.0 的着色器集合。
+
+新增 VFXTool 小工具脚本。用于检查特效性能、模型大小等。
+
+
+*说明：*
+为方便维护，V2.0 版本**不再适配内置管线(Bulit-in)**。此版本的着色器将只支持[![Unity](https://img.shields.io/badge/Unity%20-2022%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-14%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
+
+*在低于此版本的Unity编辑器和URP环境中运行shader不会完全失效，但不保证显示效果无误。*
+
+<details>
+
+<summary>(V1) 查看先前的更新日志</summary>
 
 ### 2025.4.9 | 更新说明 | Obsoleted V1.9.0
 
@@ -290,3 +348,5 @@ URP | 序列帧屏幕扭曲、遮罩流动
 更新：新增三个URP特供卡通着色Shader。
 
 完善：完善了README，重归类文件目录结构。
+
+</details>
