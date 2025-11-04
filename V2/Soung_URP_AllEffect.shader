@@ -1,4 +1,4 @@
-//2025.10.31 optimized by Soung
+//2025.9.28 optimized by Soung
 Shader "Soung/Effect/FullFx"
 {
     Properties
@@ -25,6 +25,7 @@ Shader "Soung/Effect/FullFx"
         _MainTexPolarDistortionUVScale("主帖图Polar扭曲段数", Float) = 1
         _MainTexUspeed("主帖图U速率", Float) = 0
         _MainTexVspeed("主帖图V速率", Float) = 0
+
 
         [Header(NoiseTex)][Enum(OFF,0,ON,1)]_NoiseSwitch("扭曲开关", Float) = 0
         _NoiseTex("扭曲贴图", 2D) = "white" {}
@@ -161,7 +162,15 @@ Shader "Soung/Effect/FullFx"
 		
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl"
+            //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
 
+            //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
+
+            #define ASE_NEEDS_VERT_NORMAL
+            #define ASE_NEEDS_FRAG_WORLD_VIEW_DIR
+            #define ASE_NEEDS_FRAG_COLOR
+            #define ASE_NEEDS_FRAG_SCREEN_POSITION
             #pragma shader_feature_local _PROMASKDIR_UP _PROMASKDIR_DOWN _PROMASKDIR_LEFT _PROMASKDIR_RIGHT
             #pragma shader_feature_local _LIUGUANGTEXUVMODE_LOCAL _LIUGUANGTEXUVMODE_POLAR _LIUGUANGTEXUVMODE_SCREEN
 
@@ -411,17 +420,34 @@ Shader "Soung/Effect/FullFx"
                 float2 rotator394 = mul( panner137 - float2( 0.5,0.5 ) , float2x2( cos394 , -sin394 , sin394 , cos394 )) + float2( 0.5,0.5 );
                 float4 lerpResult154 = lerp( temp_cast_0 , ( lerpResult139 * float4( input.normalOS , 0.0 ) * tex2Dlod( _VertexTex, float4( rotator394, 0, 0.0) ).r * _VertexTexDir ) , _VertexSwitch);
                 float4 VertexTexOffset157 = lerpResult154;
+                
                 float3 ase_normalWS = TransformObjectToWorldNormal( input.normalOS );
                 output.ase_texcoord9.xyz = ase_normalWS;
+                
                 output.ase_texcoord6.xy = input.texcoord.xy;
                 output.ase_texcoord7 = input.texcoord1;
                 output.ase_color = input.ase_color;
                 output.ase_texcoord8 = input.texcoord2;
+                
                 output.ase_texcoord6.zw = 0;
                 output.ase_texcoord9.w = 0;
+
+                #ifdef ASE_ABSOLUTE_VERTEX_POS
+                    float3 defaultVertexValue = input.positionOS.xyz;
+                #else
+                    float3 defaultVertexValue = float3(0, 0, 0);
+                #endif
+
                 float3 vertexValue = VertexTexOffset157.xyz;
-                input.positionOS.xyz += vertexValue;
+
+                #ifdef ASE_ABSOLUTE_VERTEX_POS
+                    input.positionOS.xyz = vertexValue;
+                #else
+                    input.positionOS.xyz += vertexValue;
+                #endif
+
                 input.normalOS = input.normalOS;
+
                 VertexPositionInputs vertexInput = GetVertexPositionInputs( input.positionOS.xyz );
 
                 output.positionCS = vertexInput.positionCS;
@@ -442,14 +468,23 @@ Shader "Soung/Effect/FullFx"
                 return VertexFunction( input );
             }
 
-            half4 frag ( PackedVaryings input ) : SV_Target
+            half4 frag ( PackedVaryings input
+                        #ifdef ASE_DEPTH_WRITE_ON
+                        ,out float outputDepth : ASE_SV_DEPTH
+                        #endif
+                         ) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                 float3 WorldPosition = input.positionWS;
                 float3 WorldViewDirection = GetWorldSpaceNormalizeViewDir( WorldPosition );
+                float4 ShadowCoords = float4( 0, 0, 0, 0 );
+                float4 ClipPos = input.clipPosV;
                 float4 ScreenPos = ComputeScreenPos( input.clipPosV );
+
+                float2 NormalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+
 
                 float ValueZero = 0.0;
                 float2 appendResult54 = (float2(_NoiseTexUspeed , _NoiseTexVspeed));
@@ -608,11 +643,16 @@ Shader "Soung/Effect/FullFx"
                 float temp_output_283_0 = saturate( ( ( lerpResult278 + ( lerpResult276 / _DissolveTexPlusPower ) ) / 2.0 ) );
                 float smoothstepResult286 = smoothstep( ( DissolveValue334 - _DissolveSmooth ) , DissolveValue334 , temp_output_283_0);
                 float4 temp_cast_7 = (smoothstepResult286).xxxx;
+
                 float4 dissolvealphaEDGE = ( _DissolveEdgeColor * ( step( ( DissolveValue334 - _DissolveEdgeWide ) , temp_output_283_0 ) - step( DissolveValue334 , temp_output_283_0 ) ) );
                 float4 lerpResult299 = lerp( temp_cast_7 , ( smoothstepResult286 + dissolvealphaEDGE), _DissolveEdgeSwitch);
+
                 float3 appendResult301 = (float3(lerpResult299.rgb));
                 float3 lerpResult356 = lerp( temp_cast_6 , appendResult301 , _DissolveTexSwitch);
                 float3 DissolveColor304 = lerpResult356;
+
+                //float4 temp_output_338_0 = ( MainTexColor113 * float4( GamColor103 , 0.0 ) * input.ase_color * float4( DissolveColor304 , 0.0 ) );
+                
                 float4 temp_cast_10 = (Toggle168).xxxx;
                 float3 ase_normalWS = input.ase_texcoord9.xyz;
                 float fresnelNdotV124 = dot( ase_normalWS, WorldViewDirection );
@@ -621,6 +661,7 @@ Shader "Soung/Effect/FullFx"
                 float lerpResult127 = lerp( temp_output_126_0 , ( 1.0 - temp_output_126_0 ) , _FresnelMode);
                 float4 lerpResult245 = lerp( temp_cast_10 , ( _FresnelColor * lerpResult127 ) , _FresnelSwitch);
                 float4 FresnelColor132 = lerpResult245;
+
                 float4 baseColor = ( MainTexColor113 * float4( GamColor103 , 0.0 ) * input.ase_color );
                 float4 dissolveBlendedColor = lerp( 
                     ( baseColor * float4( DissolveColor304 , 0.0 ) ),  // 乘法混合
@@ -726,9 +767,15 @@ Shader "Soung/Effect/FullFx"
                     {
                         float4 screenPos = input.scrPos / input.scrPos.w;
                         screenPos.z = ( UNITY_NEAR_CLIP_VALUE >= 0 ) ? screenPos.z : screenPos.z * 0.5 + 0.5;
+                        //float2 screenUV = screenPos.xy;
                         float screenDepth399 = LinearEyeDepth(SampleSceneDepth( screenPos.xy ),_ZBufferParams);
                         float distanceDepth399 = abs( ( screenDepth399 - LinearEyeDepth(screenPos.z,_ZBufferParams ) ) / ( _SoftParticle ) );
                         SoftParticleAlpha402 = saturate( distanceDepth399 );
+                        // float sceneDepth = SampleSceneDepth(screenUV);
+                        // float linearEyeDepth = LinearEyeDepth(sceneDepth, _ZBufferParams);
+                        // float linearParticleDepth = LinearEyeDepth(screenPos.z, _ZBufferParams);
+                        // float depthDiff = linearEyeDepth - linearParticleDepth;
+                        // SoftParticleAlpha402 = saturate(depthDiff / _SoftParticle);
                     }
                 #endif
 
@@ -740,8 +787,26 @@ Shader "Soung/Effect/FullFx"
                 float FresnelAlpha389 = ( _FresnelColor.a * lerpResult127 );
                 float lerpResult392 = lerp( lerpResult371 , ( lerpResult371 * FresnelAlpha389 ) , _FresnelAlphaMode);
                 
+                float3 BakedAlbedo = 0;
+                float3 BakedEmission = 0;
                 float3 Color = (( lerpResult347 + LiuguangColor223 )).rgb;
                 float Alpha = saturate( lerpResult392 );
+
+                #ifdef ASE_DEPTH_WRITE_ON
+                    float DepthValue = input.positionCS.z;
+                #endif
+
+
+                InputData inputData = (InputData)0;
+                inputData.positionWS = WorldPosition;
+                inputData.viewDirectionWS = WorldViewDirection;
+
+                inputData.normalizedScreenSpaceUV = NormalizedScreenSpaceUV;
+
+
+                #ifdef ASE_DEPTH_WRITE_ON
+                    outputDepth = DepthValue;
+                #endif
 
                 return half4( Color, Alpha );
             }
