@@ -157,6 +157,8 @@ A201-Shaders Collection  ///  Personal Usage
 
 3. ``Soung_URP_AllEffect.shader`` 是 **特效通用着色器**，因其参数复杂，推荐配合Editor中的shaderGUI使用。
 
+4. 所有的屏幕后效shader，必须配合Render中的 ``GrabPassFeature.cs`` 使用。使用方式是：导入后，在URP管线中的RenderAsset中启用此 RenderFeature 。
+
 ## 特别鸣谢
 
 在收录/整理/自编写过程中，参考并使用了以下开源内容和教程。
