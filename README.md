@@ -40,111 +40,122 @@ A201-Shaders Collection  ///  Personal Usage
 
 此仓库发展到现在，已经有了一个经历4个项目迭代，历时3年的通用特效shader，同时仍然有各种特殊的shader不断收录。我想，这才是创建这个仓库的最终意义。
 
- *特效艺术家应该回归到对美术效果本身的钻研，降低对shader等技术向内容的学习成本。*
+ ##### *特效艺术家应该回归到对美术效果本身的钻研，降低对shader等技术向内容的学习成本。*
+
+ ###### *A201指我最早开始接触特效学习的学校工作室门牌号。在这个几十平方的工作室中，我踏上了特效制作与技术美术学习的道路。*
 
 </details>
 
 ### 文件说明
 
-- [V1](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/StandardV1.8.7) 版本已进行归档。不再维护。若无特殊说明，本仓库后续的相关内容均只适用于 [V2.0+]() 的整合包。
+- [V1](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/StandardV1.8.7) 版本已进行归档。不再维护。若无特殊说明，本仓库后续的相关内容均只适用于 [V2.0+]() 的内容。
 
+
+文件的路径结构应该如下所示：
 ```
-/Editor
-/Render
-/Scripts
-/Shaders
- -/Soung_URP_AllEffect.shader
- -/...
+/V2
+ -/Editor
+ -/Render
+ -/Scripts
+ -/Shaders
+   -/Soung_URP_AllEffect.shader
+   -/...
 ```
 
+其中，``/Shaders`` 里存放的是整合的shader内容。本仓库的核心内容位于此目录。
+
+``/Editor`` 里存放的是shader相关材质面板GUI的脚本文件。此内容可以优化shader的材质面板显示，提高可读性。
+
+``/Render`` 里存放的是一些特殊效果的Render Feature。此内容提供了一些特殊的效果需求，例如URP下的热扭曲、深度高度雾等。
+
+``/Scripts`` 里存放的是与特殊效果的Render Feature相关的脚本。此内容提供了一些必要搭配使用的脚本。
 
 
+所有的shader目录路径(Shader Path)均 **统一** 为 **Soung/** 路径下，并按着色器的使用类型进行了分类。
+- 目前存在的分类有如下：
+/Effect：用于粒子特效制作的相关shader
+/Post：用于全屏后处理特效相关的shader
+/Geometry：用于3d模型渲染相关的shader
+/UI：用于UI动效相关的shader
+/...
+
+因游戏行业发展迅速，技术日新月异，本仓库的shader仅在以下环境适用：
+
+- [x] // **推荐** //
+[![Unity](https://img.shields.io/badge/Unity%20-2022%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
+[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-14%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
 
 
-
-所有的着色器目录路径(Shader Path)均 **统一**在了 **Soung/** 路径下，并按着色器的使用类型进行了 **分类** 。方便特效艺术家、技术美术等进在编辑器中进行直观的shader切换。
-
-因游戏美术行业发展迅速，技术日新月异，本仓库收录的shader适用的环境为：
-
+- [ ] // 最低 //
 [![Unity](https://img.shields.io/badge/Unity%20-2018%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
 [![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-7%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
 
 
-- [x] ``Unity 2018-2023``, ``ALL Built-in``, ``Universal Render Pipeline 7.0-16.0``
-
-- [ ] 理论上支持 ``Unity 6.000`` 和 ``TuanJie 1.0``, ``Universal Render Pipeline 17.0`` 及以上系列。
-
-*暂时未收录 ``HDRP`` 可用的shader。*
+- 理论上支持 ``Unity 6.000`` 和 ``TuanJie 1.0+``, ``Universal Render Pipeline 17.0`` 及以上。
 
 
-<details>
-
-<summary>(V1) 以往的shader分类</summary>
-
-~~目前存在的分类如下:~~
-- ~~全面功能：包含溶解、遮罩、扭曲、偏移、菲涅尔等多项功能的全面shader~~
-- ~~基本效果：基础的additive或alphablend着色器~~
-- ~~后期处理：用于屏幕特效、色散、黑白闪、晕影等~~
-- ~~进阶功能：多遮罩或多功能的单项shader~~
-- ~~特殊制作：视差地裂、流麻、分层纹理、渐变等特殊需求shader~~
-- ~~未知类型：未知用途的shader~~
-
-</details>
-
-
-本合集收录的shader大体分类为：
+本仓库收录的shader可实现下列需求：
 - 特效用单贴图着色器
-- 多种溶解、扭曲、流光等着色器
-- 复合功能特效着色器
+- 程序化粒子着色器
+- 通用特效着色器
 - 后期处理 **屏幕扭曲/色差/晕影/黑白闪** 着色器
-- 部分PBR相关着色器
-- 简易卡通渲染着色器
+
+并且，[V2.0+]() 版本的shader均进行过性能调优和中文参数适配，**可直接用于大部分移动端项目和PC项目**。对于小程序项目，请根据 ``WebGL`` 或 ``OpenGL ES2.0`` 的相关限制自行适配。
+
 
 开始使用
 ===========================
 
-#### 1. 确认您的项目环境
+##### 太长不看一句话描述
 
-- 确认您的Unity项目为何种渲染管线（通常为 ``Built-in`` 或 ``URP``，本仓库shader也仅支持这两种），根据对应管线在本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处下载对应发布包。
+*下载Release包，解压，直接导入Unity工程中即可。*
 
-#### 2. 解压已下载包
+<details>
 
-- 将下载好的Release包解压在任意目录，并将解压后的文件夹全部复制到您的Unity项目中，如果您不知道放哪个位置，请直接放在 ``Asset/`` 目录下。
-- (可选)(将 "Amplify Shader Editor v1.9.1.5.unitypackage"，如项目中已有ASE则无需额外导入。)
-- (本仓库大部分Shader使用ASE 1.9.1.5版制作/编辑，建议ASE环境不低于1.8)
+ **<summary> 0. 确认您的项目需求 </summary>**
 
-#### 3. 检查控制台 ``Colsole`` 信息，若无意外，仅会产生黄色警告信息，不影响使用。
+- 在使用本仓库提供的shader前，请先确认您的Unity项目是否支持可使用第三方shader (请询问项目组的技美大佬/客户端)，并确认您的Unity项目使用通用渲染管线 (Universal Render Pipeline, 简称URP)。请在确认后进行后续步骤。
 
-- (如有红色错误信息，可尝试检查错误来源或重新导入。)
+</details>
 
+#### 1. 下载本仓库整合包
 
-> *额外：预制环境>>>
-> 本仓库 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/RESOURCES_1) 提供了一个基础的特效制作环境（Unity项目压缩包），下载后即开即用，已预先配置好了着色器、后处理配置等（Shader包版本V1.5）。
+- A - 请查看本仓库的 [Release列表](https://github.com/Soung2279/Unity-Shaders-Collection/releases/) ，并下载最新的 Release包 。正确的包 应该是 "``A201-Shader.V.2.x.x_20xx_xx_xx_Full.zip``" 这类命名的 ``.zip`` 压缩包。
 
-#### 4. 着色器更新：
+- B - 将下载的包解压，并将其复制到您的Unity项目中。如果您不知道放哪个目录下，请直接放在 ``Asset/`` 目录下。
 
-- 通常情况下，本合集目录不会有较大变更，在 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处选择对应文件下载后，直接**覆盖更新**即可。覆盖后，请手动删除Unity对应路径下的 ``.meta`` 文件。
+> (可选) 下载后的包可按需导入项目。如果您只想使用基本的shader功能，请只将 ``/Shaders`` 内的文件导入进项目。其它目录的文件都是对此部分功能的扩展与优化。
 
-- 特殊情况下，在 [更新日志](#更新日志) 中应有对应的更新指南，按指南操作即可。若日志中没有给出更新方法，请备份上一版本的shader后，覆盖更新，并使用 ``notepad++``, ``Windows记事本`` 或 ``VSCode`` 等IDE打开shader，查看新的着色器目录路径(Shader Path)（通常在文件的前5行）。
+#### 2. 打开Unity工程确认
 
-- 自行更新：若您有更高版本或适用于新效果的着色器，推荐自行统一着色器目录路径(Shader Path)为 **A201-Shader/** 。
+- A - 正常情况下，导入包并打开工程并后，控制台窗口(Console)仅会出现黄色警告信息，**不会出现红色错误信息**。 如果出现红色报错，请先点击报错日志查看来源。如果无法处理，请 **直接删除** **除 -/Shaders** 之外的包内容。仅保留基本功能。
 
-- 使用ASE编辑：若您想使用ASE自行编辑现有着色器，则可能出现汉化还原的情况，不影响使用，但建议 [此问题](https://github.com/Soung2279/Unity-Shaders-Collection/issues/1) 修复前避免使用ASE重复编辑 。
+- B - 如果想在保留完整功能的前提下使用shader包，请先检查下载过程中是否有错误。然后检查当前Unity使用的 **何种版本渲染管线** 。绝大部分错误都是由于版本不适配而导致的。推荐的版本为 [![Unity](https://img.shields.io/badge/Unity%20-2022%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-14%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
+
+#### 3. 开始使用
+
+- 所有的shader都可以在材质窗口处，切换着色器时，选择 ``Soung/`` 使用。具体的分类说明，请查看 **[文件说明](#文件说明)** 。
+
+> 包中附带了供特效通用shader使用的shaderGUI，如果发现shaderGUI失效，请先查看 **工程中有无其它脚本相关报错** 。因脚本执行顺序原因，工程中存在错误时，可能会导致shaderGUI不工作。
+
+#### 4. 后续更新
+
+- 通常情况下，本仓库整合包不会有较大变更，在 [Release](https://github.com/Soung2279/Unity-Shaders-Collection/releases) 处选择对应文件下载，解压后直接 **覆盖原文件更新** 即可。
+
+- 特殊情况下，在 [更新日志](#更新日志) 中应有对应的更新指南，按指南操作即可。
+
+- 若日志中没有给出更新方法，而您更新后在Unity材质面板中找不到shader。请使用 ``notepad++``, ``Windows记事本`` 或 ``VSCode`` 等IDE打开shader，查看新的shader目录路径(Shader Path)（通常在文件的前5行）。
+
+- 使用ASE编辑：若您想使用ASE编辑现有shader (包括但不限于切换管线、增减功能、更改变量名等)，推荐的 ``ASE`` 版本为 V1.9.9.4+ 。
 
 说明
 ========================
 
-1. Shader使用：在Unity材质球处切换Shader时，选择"A201-Shader/"目录下的Shader即可，Shader已做分类处理。
+1. Shader使用：在Unity材质球处切换Shader时，选择"Soung/"目录下的Shader即可，Shader已做分类处理。
 
-2. 若部分ShaderGUI缺失，请检查包内的 ``Editor`` 是否正常导入。
+2. 部分shader可能存在变体较多的情况。请根据您的需求自行取舍。
 
-3. 特殊说明：<p> ``PPX_BA_shader.shader`` (A201-Shader/特殊制作/BA式卡通着色器_PPX_BA)：需配合*SampleTex*中的嘴型遮罩 ``Mouth_mask.png`` 使用。 <p> ``流麻flow.shader`` (A201-Shader/特殊制作/URP视差流麻_Jiji)：需配合*SampleTex*中的粒子点噪 ``particle.png`` 使用。 <p>  [(已解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/2) ~~``Soung_FlipAddtive.shader`` (同AlphaBlend) 使用 ``ASE`` ``Flipbook`` 节点制作，若出现边缘有无法消除的白线，请使用*SampleTex*中的修复遮罩 ``FlipMask.png``.~~ 已增加程序遮罩修复功能，更新shader即可。</p>
-
-4. [(待解决)](https://github.com/Soung2279/Unity-Shaders-Collection/issues/1) 对于所有的汉化Shader来说，应尽可能**避免**使用 ``ASE`` 二次编辑，这会导致汉化失效。``ShaderGraph`` 则不受影响。
-
-5. ``Post-Processing Scan`` 为脚本驱动的后处理屏幕扫描特效，使用方法详见 [Post-Processing-Scan - MirzaBeig](https://github.com/MirzaBeig/Post-Processing-Scan)
-
-6. ``Soung_UICustom_Liuguang.shader`` 是用于UI通用流光材质的UI着色器，请使用*SampleTex*中的``saomiao.png``预览效果。(该着色器实现自定义间隔时间有一定性能开销，请注意)
+3. ``Soung_URP_AllEffect.shader`` 是 **特效通用着色器**，因其参数复杂，推荐配合Editor中的shaderGUI使用。
 
 ## 特别鸣谢
 
