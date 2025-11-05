@@ -12,6 +12,7 @@ A201-Shaders Collection  ///  Personal Usage
 
 →→ **[前往下载地址](https://github.com/Soung2279/Unity-Shaders-Collection/releases)**
 
+→→ **[通过包管理器安装(推荐)](#通过包管理器安装)**
 
 简介
 ===========================
@@ -106,17 +107,14 @@ A201-Shaders Collection  ///  Personal Usage
 开始使用
 ===========================
 
-##### 太长不看一句话描述
-
-*下载Release包，解压，直接导入Unity工程中即可。*
-
-<details>
-
- **<summary> 0. 确认您的项目需求 </summary>**
+#### 开始前：确认您的项目需求
 
 - 在使用本仓库提供的shader前，请先确认您的Unity项目是否支持可使用第三方shader (请询问项目组的技美大佬/客户端)，并确认您的Unity项目使用通用渲染管线 (Universal Render Pipeline, 简称URP)。请在确认后进行后续步骤。
 
-</details>
+
+<details>
+
+ **<summary> 方式一：手动安装 </summary>**
 
 #### 1. 下载本仓库整合包
 
@@ -147,6 +145,48 @@ A201-Shaders Collection  ///  Personal Usage
 - 若日志中没有给出更新方法，而您更新后在Unity材质面板中找不到shader。请使用 ``notepad++``, ``Windows记事本`` 或 ``VSCode`` 等IDE打开shader，查看新的shader目录路径(Shader Path)（通常在文件的前5行）。
 
 - 使用ASE编辑：若您想使用ASE编辑现有shader (包括但不限于切换管线、增减功能、更改变量名等)，推荐的 ``ASE`` 版本为 V1.9.9.4+ 。
+
+</details>
+
+<details>
+
+ **<summary> 方式二：通过包管理器安装(推荐) </summary>**
+
+#### 通过包管理器安装
+ #### 1. 通过包管理器安装
+
+- A - 打开您的Unity工程 - 包管理器 ，在左上角点击 **“添加来自 git URL 的包”**，然后填入下列链接：
+
+```git
+https://gitee.com/soung2279/SoungFXShaders.git
+# 国内镜像  更新可能不及时
+```
+或
+```git
+https://github.com/Soung2279/SoungFXShaders.git
+# Github源
+```
+
+#### 2. 设置Always Include
+
+- A - 打开您的Unity工程 - 项目设置 ，在 **图形** 选项卡中找到 **始终包括着色器**，适当增加行数，并将包中的shader添加进来。包体的位置应该位于：
+```
+.../Packages/Soung FXShaders/Runtime/Shaders
+```
+
+#### 3. 开始使用
+
+- 所有的shader都可以在材质窗口处，切换着色器时，选择 ``Soung/`` 使用。具体的分类说明，请查看 **[文件说明](#文件说明)** 。
+
+> 包中附带了供特效通用shader使用的shaderGUI，如果发现shaderGUI失效，请先查看 **工程中有无其它脚本相关报错** 。因脚本执行顺序原因，工程中存在错误时，可能会导致shaderGUI不工作。
+
+#### 4. 后续更新
+
+- 在包管理器中，直接点击更新即可。
+
+- 使用ASE编辑：若您想使用ASE编辑现有shader (包括但不限于切换管线、增减功能、更改变量名等)，推荐的 ``ASE`` 版本为 V1.9.9.4+ 。
+
+ </details>
 
 说明
 ========================
@@ -182,6 +222,8 @@ A201-Shaders Collection  ///  Personal Usage
 新增 V2.0 的着色器集合。
 
 新增 VFXTool 小工具脚本。用于检查特效性能、模型大小等。
+
+添加了包管理器导入方式，方便远程导入。
 
 
 *说明：*
