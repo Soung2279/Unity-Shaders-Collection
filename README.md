@@ -215,6 +215,12 @@ https://github.com/Soung2279/SoungFXShaders.git
 
 ## 更新日志
 
+### 2025.11.19 | 更新说明 | Standard V2.0.2
+
+#### 新增
+
+新增 定制化的Spine 相关shader。
+
 ### 2025.11.10 | 更新说明 | Standard V2.0.1
 
 #### 新增
