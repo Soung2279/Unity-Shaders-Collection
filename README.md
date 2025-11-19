@@ -215,6 +215,12 @@ https://github.com/Soung2279/SoungFXShaders.git
 
 ## 更新日志
 
+### 2025.11.10 | 更新说明 | Standard V2.0.1
+
+#### 新增
+
+新增 Skybox 相关的 shader。
+
 ### 2025.11.4 | 更新说明 | Standard V2.0.0
 
 *新增：*
@@ -403,5 +409,6 @@ URP | 序列帧屏幕扭曲、遮罩流动
 更新：新增三个URP特供卡通着色Shader。
 
 完善：完善了README，重归类文件目录结构。
+
 
 </details>
