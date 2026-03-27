@@ -24,7 +24,6 @@ public class VFXRuntimeProfiler : EditorWindow
     private List<float> batchesHistory = new List<float>();
     private List<float> trianglesHistory = new List<float>();
     private List<float> cpuTimeHistory = new List<float>();
-    private List<float> gpuTimeHistory = new List<float>(); // 保留这个以便将来可能实现GPU时间监控
     private List<float> gpuMemoryHistory = new List<float>();
     private List<float> particleCountHistory = new List<float>();
     private int maxHistoryPoints = 60; // 历史数据最大点数
@@ -36,6 +35,32 @@ public class VFXRuntimeProfiler : EditorWindow
     public static void ShowWindow()
     {
         GetWindow<VFXRuntimeProfiler>("特效运行时数据监控");
+    }
+
+    void OnEnable()
+    {
+        EditorApplication.playModeStateChanged += OnPlayModeChanged;
+    }
+
+    void OnDisable()
+    {
+        EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+        if (isMonitoring)
+        {
+            isMonitoring = false;
+            EditorApplication.update -= UpdateMonitoring;
+        }
+    }
+
+    void OnPlayModeChanged(PlayModeStateChange state)
+    {
+        if (state == PlayModeStateChange.ExitingPlayMode && isMonitoring)
+        {
+            isMonitoring = false;
+            EditorApplication.update -= UpdateMonitoring;
+            ClearHistory();
+            Repaint();
+        }
     }
 
     void OnGUI()
@@ -132,18 +157,15 @@ public class VFXRuntimeProfiler : EditorWindow
         currentCPUTime = Time.deltaTime * 1000f; // 毫秒
 
         // 获取当前活跃的粒子数量
-        if (targetVFX != null)
+        var particleSystems = targetVFX.GetComponentsInChildren<ParticleSystem>(true);
+        currentActiveParticles = 0;
+        foreach (var ps in particleSystems)
         {
-            var particleSystems = targetVFX.GetComponentsInChildren<ParticleSystem>(true);
-            currentActiveParticles = 0;
-            foreach (var ps in particleSystems)
-            {
-                currentActiveParticles += ps.particleCount;
-            }
-
-            // 估算GPU内存使用（基于纹理和网格）
-            currentGPUMemory = EstimateGPUMemoryUsage(targetVFX);
+            currentActiveParticles += ps.particleCount;
         }
+
+        // 估算GPU内存使用（基于纹理和网格）
+        currentGPUMemory = EstimateGPUMemoryUsage(targetVFX);
 
         // 更新历史数据
         drawCallHistory.Add(currentDrawCalls);
@@ -162,10 +184,6 @@ public class VFXRuntimeProfiler : EditorWindow
             cpuTimeHistory.RemoveAt(0);
             gpuMemoryHistory.RemoveAt(0);
             particleCountHistory.RemoveAt(0);
-            if (gpuTimeHistory.Count > maxHistoryPoints)
-            {
-                gpuTimeHistory.RemoveAt(0);
-            }
         }
     }
 
@@ -238,8 +256,8 @@ public class VFXRuntimeProfiler : EditorWindow
             ParticleSystemRenderer psr = ps.GetComponent<ParticleSystemRenderer>();
             if (psr != null && psr.renderMode == ParticleSystemRenderMode.Mesh && psr.mesh != null)
             {
-                // 考虑实际的活跃粒子数
-                float memorySizeMB = (psr.mesh.vertexCount * 100f * ps.particleCount) / (1024f * 1024f);
+                // 网格只上传GPU一次，不随粒子数量倍增
+                float memorySizeMB = (psr.mesh.vertexCount * 100f) / (1024f * 1024f);
                 estimatedMemory += memorySizeMB;
             }
         }
@@ -378,7 +396,6 @@ public class VFXRuntimeProfiler : EditorWindow
         batchesHistory.Clear();
         trianglesHistory.Clear();
         cpuTimeHistory.Clear();
-        gpuTimeHistory.Clear();
         gpuMemoryHistory.Clear();
         particleCountHistory.Clear();
     }

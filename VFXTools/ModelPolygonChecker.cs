@@ -1,3 +1,9 @@
+// 模型面数检查器已合并到 VFXToolsWindow（见 AssetReferenceFinder.cs）
+// 合并日期: 2026.3.27, 使用 Claude Sonnet 4.6
+//
+// 此文件保留为占位符，功能入口：工具/VFXTools/VFX综合工具箱 → "模型面数" 标签页
+
+#if false // ---- 已合并，暂停编译 ----
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -304,3 +310,4 @@ public class ModelPolygonChecker : EditorWindow
         }
     }
 }
+#endif // ---- 已合并 ----

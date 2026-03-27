@@ -1,10 +1,16 @@
+// VFX性能分析器已合并到 VFXToolsWindow（见 AssetReferenceFinder.cs）
+// 原始作者: Soung, 2025.6.13
+// 合并日期: 2026.3.27, 使用 Claude Sonnet 4.6
+//
+// 此文件保留为占位符，功能入口：工具/VFXTools/VFX综合工具箱 → "VFX性能" 标签页
+
+#if false // ---- 已合并，暂停编译 ----
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Rendering;
 
-//Made by Soung, 2025.6.13, Using Claude 3.7
 public class VFXPerformanceAnalyzer : EditorWindow
 {
     private GameObject targetPrefab;
@@ -751,3 +757,4 @@ public class VFXPerformanceAnalyzer : EditorWindow
         triangleCount = 0;
     }
 }
+#endif // ---- 已合并 ----
