@@ -59,7 +59,7 @@ public class LootBootVFXtoExcel : EditorWindow
             excelPath = Path.Combine(Application.dataPath, "VFXTemp", "Effect.xls").Replace('\\', '/');
 
         // Python 脚本固定在项目内 VFXTools 目录，与 Excel 文件位置无关
-        scriptPath = Path.Combine(Application.dataPath, "GameAsset/VFXTemp/VFXTools", "vfx_excel_tool.py").Replace('\\', '/');
+        scriptPath = Path.Combine(Application.dataPath, "GameAsset/VFXTemp/VFXTools/Editor", "vfx_excel_tool.py").Replace('\\', '/');
 
         // 设置窗口标签图标
         var iconContent = EditorGUIUtility.IconContent("ParticleSystem Icon");
@@ -778,7 +778,7 @@ public class LootBootVFXtoExcel : EditorWindow
             return;
         }
 
-        VFXSearchResultWindow.Open(new List<VFXRowData>(list.items), FillFromRowData);
+        VFXSearchResultWindow.Open(new List<VFXRowData>(list.items), FillFromRowData, searchKeyword, excelPath, scriptPath);
     }
 
     /// <summary>

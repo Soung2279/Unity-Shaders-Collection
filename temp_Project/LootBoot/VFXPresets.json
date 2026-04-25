@@ -1,0 +1,172 @@
+{
+    "presets": [
+        {
+            "function": "受击",
+            "attribute": "无属性",
+            "weapon": "通用",
+            "prefabName": "eft_hit_01_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Common/eft_hit_01_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "火",
+            "weapon": "刀剑",
+            "prefabName": "eft_hit_blade_normal_fire_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_hit_blade_normal_fire_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "冰",
+            "weapon": "刀剑",
+            "prefabName": "eft_hit_blade_normal_ice_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_hit_blade_normal_ice_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "毒",
+            "weapon": "刀剑",
+            "prefabName": "eft_staff_lxl_03_DuHit",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_DuHit.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "无属性",
+            "weapon": "刀剑",
+            "prefabName": "eft_staff_lxl_03_PuHit",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuHit.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "冰",
+            "weapon": "弓弩",
+            "prefabName": "eft_hit_bow_ice_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/JianYuZhiNu/eft_hit_bow_ice_P.prefab"
+        },
+        {
+            "function": "爆炸",
+            "attribute": "毒",
+            "weapon": "弓弩",
+            "prefabName": "eft_hit_bow_poison_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/JianYuZhiNu/eft_hit_bow_poison_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "电",
+            "weapon": "弓弩",
+            "prefabName": "eft_hit_arrow_jy_a_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/JianYuZhiNu/eft_hit_arrow_jy_a_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "无属性",
+            "weapon": "弓弩",
+            "prefabName": "eft_hit_arrow_change_c_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/JianYuZhiNu/eft_hit_arrow_change_c_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "毒",
+            "weapon": "法器",
+            "prefabName": "eft_hit_Staff_02_b_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_b_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "电",
+            "weapon": "法器",
+            "prefabName": "eft_hit_Staff_02_a_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_a_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "无属性",
+            "weapon": "法器",
+            "prefabName": "eft_hit_Staff_02_c_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_c_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "火",
+            "weapon": "枪棍",
+            "prefabName": "eft_hit_longjuan_b_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "电",
+            "weapon": "枪棍",
+            "prefabName": "eft_hit_longjuan_c_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_c_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "无属性",
+            "weapon": "枪棍",
+            "prefabName": "eft_hit_longjuan_a_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_a_P.prefab"
+        },
+        {
+            "function": "爆炸",
+            "attribute": "火",
+            "weapon": "通用",
+            "prefabName": "eft_hit_longjuan_b_01_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_01_P.prefab"
+        },
+        {
+            "function": "爆炸",
+            "attribute": "电",
+            "weapon": "通用",
+            "prefabName": "eft_hit_longjuan_c_01_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_c_01_P.prefab"
+        },
+        {
+            "function": "爆炸",
+            "attribute": "冰",
+            "weapon": "通用",
+            "prefabName": "eft_staff_hxlh_02_b_hit_Particle",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_b_hit_Particle.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "火",
+            "weapon": "弓弩",
+            "prefabName": "eft_staff_slzn_hit_A",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/ShouLieZhiNu/eft_staff_slzn_hit_A.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "毒",
+            "weapon": "弓弩",
+            "prefabName": "eft_staff_xzzg_hit_B",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/XueZheZhiGun/eft_staff_xzzg_hit_B.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "冰",
+            "weapon": "法器",
+            "prefabName": "eft_staff_Xzzz_hit_B",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/XianZheZhiZhang/eft_staff_Xzzz_hit_B.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "毒",
+            "weapon": "枪棍",
+            "prefabName": "eft_spear_qianji_hit_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/MoJiaQianJiGun/eft_spear_qianji_hit_P.prefab"
+        },
+        {
+            "function": "受击",
+            "attribute": "冰",
+            "weapon": "枪棍",
+            "prefabName": "eft_spear_qianji_hit_P_01",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/MoJiaQianJiGun/eft_spear_qianji_hit_P_01.prefab"
+        },
+        {
+            "function": "爆炸",
+            "attribute": "毒",
+            "weapon": "法器",
+            "prefabName": "eft_spear_qianji_boom_P",
+            "prefabPath": "Assets/GameAsset/Effect/Particle/Weapon/MoJiaQianJiGun/eft_spear_qianji_boom_P.prefab"
+        }
+    ]
+}
