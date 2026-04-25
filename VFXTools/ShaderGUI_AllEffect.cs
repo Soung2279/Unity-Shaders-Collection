@@ -194,6 +194,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
     static bool _Liuguang_Foldout = false;
     static bool _Dissolve_Foldout = false;
     static bool _DissolvePlus_Foldout = false;
+    static bool _Outline_Foldout = false;
 
     MaterialEditor m_MaterialEditor;
 
@@ -276,6 +277,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty MainTexHue = null;
     //贴图饱和度
     MaterialProperty MainTexSaturation = null;
+    //HSV开关
+    MaterialProperty UseHSV = null;
     //贴图极坐标采样模式设置
     MaterialProperty MainTexPolarSets = null;
     //极坐标模式下的扭曲强度
@@ -433,6 +436,33 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty DissolveTexPlusVspeed = null;
     #endregion
 
+
+    #region [Outline按钮命名]
+    //- 描边部分 -
+    //描边开关
+    MaterialProperty EnableOutline = null;
+    //描边宽度
+    MaterialProperty OutlineWidth = null;
+    //描边颜色
+    MaterialProperty OutlineColor = null;
+    //笔触贴图
+    MaterialProperty OutlineTex = null;
+    //笔触通道
+    MaterialProperty OutlineTexP = null;
+    //笔触U速度
+    MaterialProperty OutlineTexUspeed = null;
+    //笔触V速度
+    MaterialProperty OutlineTexVspeed = null;
+    //噪波缩放
+    MaterialProperty OutlineNoiseScale = null;
+    //噪波强度
+    MaterialProperty OutlineNoiseStrength = null;
+    //噪波U速率
+    MaterialProperty OutlineNoiseSpeedU = null;
+    //噪波V速率
+    MaterialProperty OutlineNoiseSpeedV = null;
+    #endregion
+
     //引用参数部分(从引擎的按钮里面提取数值，以便下面随时取用)
     public void FindProperties(MaterialProperty[] props)
     {
@@ -444,6 +474,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
         MainTexRotator = FindProperty("_MainTexRotator", props);
         MainTexHue = FindProperty("_MainTexHue", props);
         MainTexSaturation = FindProperty("_MainTexSaturation", props);
+        UseHSV = FindProperty("_UseHSV", props);
         MainTexPolarSets = FindProperty("_MainTexPolarSets", props);
         MainTexUspeed = FindProperty("_MainTexUspeed", props);
         MainTexPolarDistortionPower = FindProperty("_MainTexPolarDistortionPower", props);
@@ -541,6 +572,22 @@ public class ShaderGUI_AllEffect : ShaderGUI
         DissolveTexPlusPower = FindProperty("_DissolveTexPlusPower", props);
         DissolveTexPlusUspeed = FindProperty("_DissolveTexPlusUspeed", props);
         DissolveTexPlusVspeed = FindProperty("_DissolveTexPlusVspeed", props);
+        #endregion
+
+
+        #region [Outline按钮参数引用]
+        //描边属性
+        EnableOutline = FindProperty("_EnableOutline", props);
+        OutlineWidth = FindProperty("_OutlineWidth", props);
+        OutlineColor = FindProperty("_OutlineColor", props);
+        OutlineTex = FindProperty("_OutlineTex", props);
+        OutlineTexP = FindProperty("_OutlineTexP", props);
+        OutlineTexUspeed = FindProperty("_OutlineTexUspeed", props);
+        OutlineTexVspeed = FindProperty("_OutlineTexVspeed", props);
+        OutlineNoiseScale = FindProperty("_OutlineNoiseScale", props);
+        OutlineNoiseStrength = FindProperty("_OutlineNoiseStrength", props);
+        OutlineNoiseSpeedU = FindProperty("_OutlineNoiseSpeedU", props);
+        OutlineNoiseSpeedV = FindProperty("_OutlineNoiseSpeedV", props);
         #endregion
     }
 
@@ -954,6 +1001,39 @@ public class ShaderGUI_AllEffect : ShaderGUI
         #endregion
 
 
+        //描边下拉菜单
+        #region [描边部分]
+        if (material.GetFloat("_EnableOutline") == 1)
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            _Outline_Foldout = Foldout(_Outline_Foldout, "描边 | Outline");
+            if (_Outline_Foldout)
+            {
+                EditorGUI.indentLevel++;
+                GUI_Outline(material);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+        else
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            _Outline_Foldout = Foldout2(_Outline_Foldout, "描边 | Outline");
+            if (_Outline_Foldout)
+            {
+                EditorGUI.indentLevel++;
+                GUI_Outline(material);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+        #endregion
+
+
         //------------------------------------函数引用----------------------------------------------
 
         //- 基础设置部分的GUI -
@@ -1164,8 +1244,14 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
                 m_MaterialEditor.ShaderProperty(MainTexP, "切换通道");
                 m_MaterialEditor.ShaderProperty(MainTexRotator, "贴图旋转");
-                m_MaterialEditor.ShaderProperty(MainTexHue, "贴图色相变换");
-                m_MaterialEditor.ShaderProperty(MainTexSaturation, "贴图饱和度变更");
+                m_MaterialEditor.ShaderProperty(UseHSV, "启用HSV色相调整");
+                if (material.GetFloat("_UseHSV") == 1)
+                {
+                    EditorGUI.indentLevel++;
+                    m_MaterialEditor.ShaderProperty(MainTexHue, "贴图色相变换");
+                    m_MaterialEditor.ShaderProperty(MainTexSaturation, "贴图饱和度变更");
+                    EditorGUI.indentLevel--;
+                }
 
                 //UV流动模式功能区
                 EditorGUILayout.BeginHorizontal();
@@ -1226,6 +1312,9 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     if (GUILayout.Button("材质默认", shortButtonStyle))
                     {
                         SetMat("_MainTexUVMode", 1);
+                        material.EnableKeyword("_MAINTEXUVMODE_POLAR");
+                        material.DisableKeyword("_MAINTEXUVMODE_LOCAL");
+                        material.DisableKeyword("_MAINTEXUVMODE_POLARDISTORTION");
                         string warn_mainpolar = $"Soung Shader INFO: UV sample POLAR\n>>>UV采样设置为极坐标模式";
                         Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
                     }
@@ -1236,7 +1325,10 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     if (GUILayout.Button("极坐标Polar", shortButtonStyle))
                     {
                         SetMat("_MainTexUVMode", 2);
-                        string warn_mainpolar = $"Soung Shader INFO: UV sample LOCAL\n>>>UV采样设置为默认模式";
+                        material.EnableKeyword("_MAINTEXUVMODE_POLARDISTORTION");
+                        material.DisableKeyword("_MAINTEXUVMODE_LOCAL");
+                        material.DisableKeyword("_MAINTEXUVMODE_POLAR");
+                        string warn_mainpolar = $"Soung Shader INFO: UV sample POLAR DISTORTION\n>>>UV采样设置为极坐标扭曲模式";
                         Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
                     }
                 }
@@ -1245,7 +1337,10 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     if (GUILayout.Button("极坐标扭曲", shortButtonStyle))
                     {
                         SetMat("_MainTexUVMode", 0);
-                        string warn_mainpolar = $"Soung Shader INFO: UV sample POLAR DISTORTION\n>>>UV采样设置为极坐标扭曲模式";
+                        material.EnableKeyword("_MAINTEXUVMODE_LOCAL");
+                        material.DisableKeyword("_MAINTEXUVMODE_POLAR");
+                        material.DisableKeyword("_MAINTEXUVMODE_POLARDISTORTION");
+                        string warn_mainpolar = $"Soung Shader INFO: UV sample LOCAL\n>>>UV采样设置为默认模式";
                         Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
                     }
                 }
@@ -2033,6 +2128,78 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     m_MaterialEditor.ShaderProperty(DissolveTexPlusPower, "定向溶解强度");
                     EditorGUILayout.HelpBox("此值越大, 定向溶解效果越明显", MessageType.None, false);
                 }
+            }
+        }
+        #endregion
+
+
+        //- 描边部分的GUI -
+        #region [描边部分GUI]
+        void GUI_Outline(Material material)
+        {
+            //功能说明
+            EditorGUILayout.LabelField("功能说明：基于主贴图Alpha的外轮廓描边，支持手绘抖动和笔触贴图");
+
+            //绘制开关框
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            if (material.GetFloat("_EnableOutline") == 0)
+            {
+                if (GUILayout.Button("已关闭"))
+                {
+                    SetMat("_EnableOutline", 1);
+                    material.EnableKeyword("_USE_OUTLINE");
+                    Debug.Log($"<color=#66ccff><b><size=10>Soung Shader INFO: Outline Enable\n>>>描边启用中</size></b></color>");
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("已开启"))
+                {
+                    SetMat("_EnableOutline", 0);
+                    material.DisableKeyword("_USE_OUTLINE");
+                    Debug.Log($"<color=#66ccff><b><size=10>Soung Shader INFO: Outline Disable\n>>>描边禁用中</size></b></color>");
+                }
+            }
+            EditorGUILayout.EndVertical();
+            //结束绘制开关框
+
+            //开关启用时，展示后续内容
+            if (material.GetFloat("_EnableOutline") == 1)
+            {
+                m_MaterialEditor.ShaderProperty(OutlineWidth, "描边宽度");
+                EditorGUILayout.HelpBox("描边基于主贴图Alpha的外轮廓，宽度以UV空间为单位", MessageType.None, false);
+                m_MaterialEditor.ShaderProperty(OutlineColor, "描边颜色 (支持HDR发光)");
+
+                EditorGUILayout.Space(4);
+
+                //笔触贴图区域
+                m_MaterialEditor.TexturePropertySingleLine(new GUIContent("笔触贴图"), OutlineTex);
+                EditorGUILayout.HelpBox("使用白色贴图或不赋图时为纯色描边。使用带笔触纹理的贴图可增强手绘感", MessageType.None, false);
+                if (OutlineTex.textureValue != null)
+                {
+                    m_MaterialEditor.TextureScaleOffsetProperty(OutlineTex);
+                    m_MaterialEditor.ShaderProperty(OutlineTexP, "切换通道");
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    m_MaterialEditor.ShaderProperty(OutlineTexUspeed, "笔触横向流动速度");
+                    m_MaterialEditor.ShaderProperty(OutlineTexVspeed, "笔触纵向流动速度");
+                    EditorGUILayout.EndVertical();
+                }
+
+                EditorGUILayout.Space(4);
+
+                //噪波抖动区域
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField("手绘抖动 | 噪波扰动", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox("通过ValueNoise扰动描边宽度，使边缘产生手绘颤抖感。将强度设为0可关闭抖动", MessageType.None, false);
+                m_MaterialEditor.ShaderProperty(OutlineNoiseStrength, "抖动强度");
+                if (OutlineNoiseStrength.floatValue > 0f)
+                {
+                    m_MaterialEditor.ShaderProperty(OutlineNoiseScale, "噪波缩放");
+                    EditorGUILayout.HelpBox("值越大，抖动频率越高（颗粒感越强）", MessageType.None, false);
+                    m_MaterialEditor.ShaderProperty(OutlineNoiseSpeedU, "噪波横向速率");
+                    m_MaterialEditor.ShaderProperty(OutlineNoiseSpeedV, "噪波纵向速率");
+                }
+                EditorGUILayout.EndVertical();
             }
         }
         #endregion

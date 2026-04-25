@@ -26,6 +26,23 @@ Shader "Soung/Effect/ToonFirePro"
 		[Toggle] _CustomeZ( "CustomeZ控制溶解", Float ) = 0
 		[Header(Mask)] _manuMask( "刀光遮罩", 2D ) = "white" {}
 		[KeywordEnum( A,R )] _switchmaskp( "切换遮罩通道", Float ) = 0
+		[Enum(Default,0,Flipbook,1)] _MaskTexUVMode( "遮罩贴图UV模式", Float ) = 0
+		_FlipbookSets( "遮罩序列X/Y/速度/首帧", Vector ) = ( 2, 2, 2, 0 )
+
+
+		//_TessPhongStrength( "Tess Phong Strength", Range( 0, 1 ) ) = 0.5
+		//_TessValue( "Tess Max Tessellation", Range( 1, 32 ) ) = 16
+		//_TessMin( "Tess Min Distance", Float ) = 10
+		//_TessMax( "Tess Max Distance", Float ) = 25
+		//_TessEdgeLength ( "Tess Edge length", Range( 2, 50 ) ) = 16
+		//_TessMaxDisp( "Tess Max Displacement", Float ) = 25
+
+		[HideInInspector] _QueueOffset("_QueueOffset", Float) = 0
+        [HideInInspector] _QueueControl("_QueueControl", Float) = -1
+
+        [HideInInspector][NoScaleOffset] unity_Lightmaps("unity_Lightmaps", 2DArray) = "" {}
+        [HideInInspector][NoScaleOffset] unity_LightmapsInd("unity_LightmapsInd", 2DArray) = "" {}
+        [HideInInspector][NoScaleOffset] unity_ShadowMasks("unity_ShadowMasks", 2DArray) = "" {}
 
 		[HideInInspector][ToggleOff] _ReceiveShadows("Receive Shadows", Float) = 0
 	}
@@ -44,6 +61,13 @@ Shader "Soung/Effect/ToonFirePro"
 		
 
 		HLSLINCLUDE
+		#pragma target 4.5
+		#pragma prefer_hlslcc gles
+		// ensure rendering platforms toggle list is visible
+
+		#if ( SHADER_TARGET > 35 ) && defined( SHADER_API_GLES3 )
+			#error For WebGL2/GLES3, please set your shader target to 3.5 via SubShader options. URP shaders in ASE use target 4.5 by default.
+		#endif
 
 		#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 		#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Filtering.hlsl"
@@ -174,6 +198,7 @@ Shader "Soung/Effect/ToonFirePro"
             #define ASE_VERSION 19904
             #define ASE_SRP_VERSION 130109
 
+            #pragma multi_compile _ DOTS_INSTANCING_ON
 
 			#pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
 
@@ -241,23 +266,25 @@ Shader "Soung/Effect/ToonFirePro"
 
 			CBUFFER_START(UnityPerMaterial)
 			float4 _Color0;
-			float4 _TillSpeed02;
-			float4 _TillSpeed;
-			float4 _manuMask_ST;
-			float4 _Color2;
 			float4 _Color1;
+			float4 _Color2;
+			float4 _manuMask_ST;
+			float4 _TillSpeed02;
+			float4 _FlipbookSets;
+			float4 _TillSpeed;
 			float2 _Vector1;
-			float _Float1;
-			float _Float0;
-			float _CustomeZ;
-			float _Float7;
 			float _Float10;
-			float _Float4;
-			float _Float5;
-			float _Float6;
 			float _Float8;
-			float _Float2;
+			float _Float6;
+			float _Float4;
 			float _Float3;
+			float _Float7;
+			float _CustomeZ;
+			float _Float0;
+			float _Float1;
+			float _Float2;
+			float _Float5;
+			float _MaskTexUVMode;
 			#ifdef ASE_TESSELLATION
 				float _TessPhongStrength;
 				float _TessValue;
@@ -557,7 +584,38 @@ Shader "Soung/Effect/ToonFirePro"
 				float4 lerpResult11 = lerp( _Color0 , lerpResult17 , step( ( temp_output_8_0 * _Float7 ) , temp_output_41_0 ));
 				
 				float2 uv_manuMask = input.ase_texcoord3.xy * _manuMask_ST.xy + _manuMask_ST.zw;
-				float4 tex2DNode81 = tex2D( _manuMask, uv_manuMask );
+				// *** BEGIN Flipbook UV Animation vars ***
+				// Total tiles of Flipbook Texture
+				float fbtotaltiles112 = _FlipbookSets.x * _FlipbookSets.y;
+				// Offsets for cols and rows of Flipbook Texture
+				float fbcolsoffset112 = 1.0f / _FlipbookSets.x;
+				float fbrowsoffset112 = 1.0f / _FlipbookSets.y;
+				// Speed of animation
+				float fbspeed112 = _Time[ 1 ] * _FlipbookSets.z;
+				// UV Tiling (col and row offset)
+				float2 fbtiling112 = float2(fbcolsoffset112, fbrowsoffset112);
+				// UV Offset - calculate current tile linear index, and convert it to (X * coloffset, Y * rowoffset)
+				// Calculate current tile linear index
+				float fbcurrenttileindex112 = floor( fmod( fbspeed112 + _FlipbookSets.w, fbtotaltiles112) );
+				fbcurrenttileindex112 += ( fbcurrenttileindex112 < 0) ? fbtotaltiles112 : 0;
+				// Obtain Offset X coordinate from current tile linear index
+				float fblinearindextox112 = round ( fmod ( fbcurrenttileindex112, _FlipbookSets.x ) );
+				// Multiply Offset X by coloffset
+				float fboffsetx112 = fblinearindextox112 * fbcolsoffset112;
+				// Obtain Offset Y coordinate from current tile linear index
+				float fblinearindextoy112 = round( fmod( ( fbcurrenttileindex112 - fblinearindextox112 ) / _FlipbookSets.x, _FlipbookSets.y ) );
+				// Reverse Y to get tiles from Top to Bottom
+				fblinearindextoy112 = (int)(_FlipbookSets.y-1) - fblinearindextoy112;
+				// Multiply Offset Y by rowoffset
+				float fboffsety112 = fblinearindextoy112 * fbrowsoffset112;
+				// UV Offset
+				float2 fboffset112 = float2(fboffsetx112, fboffsety112);
+				// Flipbook UV
+				float2 fbuv112 = uv_manuMask * fbtiling112 + fboffset112;
+				// *** END Flipbook UV Animation vars ***
+				int flipbookFrame112 = ( ( int )fbcurrenttileindex112);
+				float2 lerpResult113 = lerp( uv_manuMask , fbuv112 , _MaskTexUVMode);
+				float4 tex2DNode81 = tex2D( _manuMask, lerpResult113 );
 				#if defined( _SWITCHMASKP_A )
 				float staticSwitch89 = tex2DNode81.a;
 				#elif defined( _SWITCHMASKP_R )
@@ -688,22 +746,26 @@ Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, 
 Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;66;-2345.558,2083.629;Inherit;False;Property;_SwitchUP;火焰方向 (使用遮罩时关闭);12;0;Create;False;0;0;0;False;0;False;0;0;0;True;;KeywordEnum;5;Up;Down;Left;Right;OFF;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;44;-1564.9,560.0438;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0.1;False;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;9;-1701.044,481.1504;Inherit;False;Property;_Float1;描边宽度;4;0;Create;False;0;0;0;False;0;False;0;0.95;0;1;0;1;FLOAT;0
+Node;AmplifyShaderEditor.CommentaryNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;92;-3330.757,1702.71;Inherit;False;1219.953;282.8169;使用遮罩图控制火焰形状 (刀光);5;81;82;112;113;114;;1,1,1,1;0;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;59;-1907.028,1559.697;Inherit;True;4;4;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;54;-1844.02,962.337;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleAddOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;8;-1435.304,485.6538;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;15;-1699.808,403.208;Inherit;False;Property;_Float2;外焰宽度;2;0;Create;False;0;0;0;False;0;False;0;0.656;0;1;0;1;FLOAT;0
-Node;AmplifyShaderEditor.CommentaryNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;92;-2947.757,1702.71;Inherit;False;836.9529;276.8169;使用遮罩图控制火焰形状 (刀光);5;82;89;81;83;85;;1,1,1,1;0;0
+Node;AmplifyShaderEditor.TextureCoordinatesNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;82;-3295.949,1753.735;Inherit;False;0;81;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.Vector4Node, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;115;-3303.786,1881.173;Inherit;False;Property;_FlipbookSets;遮罩序列X/Y/速度/首帧;21;0;Create;False;0;0;0;False;0;False;2,2,2,0;0,0,0,0;0;5;FLOAT4;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.SimpleAddOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;61;-1594.454,1118.09;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleAddOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;14;-1307.437,412.0349;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.TextureCoordinatesNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;82;-2933.949,1746.735;Inherit;False;0;81;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.TFHCFlipBookUVAnimation, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;112;-3016.786,1759.173;Inherit;False;0;0;7;0;FLOAT2;0,0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;-1;False;4;FLOAT2;0;FLOAT;1;FLOAT;2;INT;3
+Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;114;-2768.786,1915.173;Inherit;False;Property;_MaskTexUVMode;遮罩贴图UV模式;20;1;[Enum];Create;False;0;2;Default;0;Flipbook;1;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.SaturateNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;41;-1331.09,762.4279;Inherit;True;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.CommentaryNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;99;-901.2678,73.30051;Inherit;False;935.67;422.4238;颜色控制;8;86;6;13;18;11;17;110;111;;1,1,1,1;0;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;46;-1171.692,413.2107;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0.1;False;1;FLOAT;0
-Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;81;-2587.698,1785.881;Inherit;True;Property;_manuMask;刀光遮罩;18;1;[Header];Create;False;1;Mask;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;False;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
+Node;AmplifyShaderEditor.LerpOp, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;113;-2728.786,1777.173;Inherit;False;3;0;FLOAT2;0,0;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;1;FLOAT2;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;45;-1314.172,511.8225;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0.1;False;1;FLOAT;0
 Node;AmplifyShaderEditor.StepOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;16;-1032.312,414.5871;Inherit;False;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.ColorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;13;-888.0302,143.686;Inherit;False;Property;_Color1;外焰颜色;1;1;[HDR];Create;False;0;0;0;False;0;False;1,0,0,1;1,0,0,1;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.ColorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;18;-863.8007,322.8125;Inherit;False;Property;_Color2;内焰颜色;0;2;[HDR];[Header];Create;False;1;FireColor;0;0;False;0;False;1,0.639221,0,1;1,0.639221,0,1;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
+Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;81;-2581.698,1765.881;Inherit;True;Property;_manuMask;刀光遮罩;18;1;[Header];Create;False;1;Mask;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;False;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.StepOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;4;-1033.18,560.1241;Inherit;False;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;89;-2298.34,1786.483;Inherit;False;Property;_switchmaskp;切换遮罩通道;19;0;Create;False;0;0;0;False;0;False;0;0;0;True;;KeywordEnum;2;A;R;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.StepOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;10;-1163.631,511.7232;Inherit;False;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
@@ -712,8 +774,6 @@ Node;AmplifyShaderEditor.ColorNode, AmplifyShaderEditor, Version=0.0.0.0, Cultur
 Node;AmplifyShaderEditor.VertexColorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;86;-431.2079,240.7836;Inherit;False;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;84;-869.9875,559.5509;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.LerpOp, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;11;-437.5346,123.7942;Inherit;False;3;0;COLOR;0,0,0,0;False;1;COLOR;0,0,0,0;False;2;FLOAT;0;False;1;COLOR;0
-Node;AmplifyShaderEditor.DynamicAppendNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;83;-2856.819,1868.147;Inherit;False;FLOAT2;4;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT2;0
-Node;AmplifyShaderEditor.SimpleSubtractOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;85;-2727.776,1848.418;Inherit;False;2;0;FLOAT2;0,0;False;1;FLOAT2;0,0;False;1;FLOAT2;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;110;-207.5704,143.8596;Inherit;False;2;2;0;COLOR;0,0,0,0;False;1;COLOR;0,0,0,0;False;1;COLOR;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;111;-213.5704,340.8596;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;100;111.814,367.8737;Float;False;False;-1;3;UnityEditor.ShaderGraphUnlitGUI;0;1;New Amplify Shader;2992e84f91cbeb14eab234972e07ea9d;True;ExtraPrePass;0;0;ExtraPrePass;5;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;False;False;False;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Unlit;True;5;True;12;all;0;False;True;1;1;False;;0;False;;0;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;0;False;False;0;;0;0;Standard;0;False;0
@@ -792,14 +852,22 @@ WireConnection;61;0;54;0
 WireConnection;61;1;59;0
 WireConnection;14;0;15;0
 WireConnection;14;1;8;0
+WireConnection;112;0;82;0
+WireConnection;112;1;115;1
+WireConnection;112;2;115;2
+WireConnection;112;3;115;3
+WireConnection;112;4;115;4
 WireConnection;41;0;61;0
 WireConnection;46;0;14;0
 WireConnection;46;1;47;0
-WireConnection;81;1;82;0
+WireConnection;113;0;82;0
+WireConnection;113;1;112;0
+WireConnection;113;2;114;0
 WireConnection;45;0;8;0
 WireConnection;45;1;47;0
 WireConnection;16;0;46;0
 WireConnection;16;1;41;0
+WireConnection;81;1;113;0
 WireConnection;4;0;44;0
 WireConnection;4;1;41;0
 WireConnection;89;1;81;4
@@ -814,10 +882,6 @@ WireConnection;84;1;89;0
 WireConnection;11;0;6;0
 WireConnection;11;1;17;0
 WireConnection;11;2;10;0
-WireConnection;83;0;80;1
-WireConnection;83;1;80;2
-WireConnection;85;0;82;0
-WireConnection;85;1;83;0
 WireConnection;110;0;11;0
 WireConnection;110;1;86;0
 WireConnection;111;0;86;4
@@ -825,4 +889,4 @@ WireConnection;111;1;84;0
 WireConnection;101;2;110;0
 WireConnection;101;3;111;0
 ASEEND*/
-//CHKSM=88DAFA70A17FB55C315A716FC052895D277A0C49
+//CHKSM=2489F1232988CF30E0EF2493286234ACB878438C

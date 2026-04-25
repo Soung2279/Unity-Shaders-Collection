@@ -1,5 +1,5 @@
 // 修改于2026.4.11
-Shader "Soung/Effect/BreathHalo_UI"
+Shader "Soung/UI/BreathHalo_UI"
 {
     Properties
     {

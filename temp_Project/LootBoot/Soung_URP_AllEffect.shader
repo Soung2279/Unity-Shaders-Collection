@@ -103,6 +103,18 @@ Shader "Soung/Effect/FullFx"
         _DissolveTexPlusUspeed("定向溶解U速度", Float) = 0
         _DissolveTexPlusVspeed("定向溶解V速度", Float) = 0
 
+        [Header(Outline)][Toggle(_USE_OUTLINE)]_EnableOutline("描边开关", Float) = 0
+        _OutlineWidth("描边宽度", Range(0, 0.1)) = 0.02
+        [HDR]_OutlineColor("描边颜色", Color) = (1,1,1,1)
+        _OutlineTex("笔触贴图 (白色=无贴图)", 2D) = "white" {}
+        [Enum(R,0,A,1)]_OutlineTexP("笔触贴图通道", Float) = 0
+        _OutlineTexUspeed("笔触U速率", Float) = 0
+        _OutlineTexVspeed("笔触V速率", Float) = 0
+        _OutlineNoiseScale("描边噪波缩放", Range(0.1, 20)) = 5
+        _OutlineNoiseStrength("描边噪波强度 (手绘抖动)", Range(0, 0.05)) = 0.01
+        _OutlineNoiseSpeedU("描边噪波U速率", Float) = 1
+        _OutlineNoiseSpeedV("描边噪波V速率", Float) = 0
+
     }
 
     SubShader
@@ -147,6 +159,7 @@ Shader "Soung/Effect/FullFx"
             #pragma shader_feature_local _LIUGUANGTEXUVMODE_LOCAL _LIUGUANGTEXUVMODE_POLAR _LIUGUANGTEXUVMODE_SCREEN
             #pragma shader_feature_local _MAINTEXUVMODE_LOCAL _MAINTEXUVMODE_POLAR _MAINTEXUVMODE_POLARDISTORTION
             #pragma shader_feature_local _USE_HSV_ON
+            #pragma shader_feature_local _USE_OUTLINE
 
             struct Attributes
             {
@@ -186,6 +199,8 @@ Shader "Soung/Effect/FullFx"
                 float4 _DissolveTex_ST;
                 float4 _DissolveEdgeColor;
                 float4 _DissolveTexPlus_ST;
+                float4 _OutlineTex_ST;
+                float4 _OutlineColor;
                 // === float属性 ===
                 // 组1: 基础设置
                 float _CullingMode;
@@ -292,8 +307,20 @@ Shader "Soung/Effect/FullFx"
                 float _DissolveTexPlusFlowMode;
                 float _DissolveTexPlusClamp;
                 float _DissolveTexPlusUspeed;
-                
+
+                // 组19: 定向溶解尾 + 描边基础
                 float _DissolveTexPlusVspeed;
+                float _OutlineWidth;
+                float _OutlineTexP;
+                float _OutlineTexUspeed;
+
+                // 组20: 描边噪波
+                float _OutlineTexVspeed;
+                float _OutlineNoiseScale;
+                float _OutlineNoiseStrength;
+                float _OutlineNoiseSpeedU;
+
+                float _OutlineNoiseSpeedV;
             CBUFFER_END
 
             sampler2D _MainTex;
@@ -304,6 +331,7 @@ Shader "Soung/Effect/FullFx"
             sampler2D _LiuguangTex;
             sampler2D _MaskTex;
             sampler2D _MaskTexPlus;
+            sampler2D _OutlineTex;
 
 
             #if defined(_USE_HSV_ON)
@@ -332,6 +360,28 @@ Shader "Soung/Effect/FullFx"
                 float s = sin(rad);
                 return mul(uv - float2(0.5, 0.5), float2x2(c, -s, s, c)) + float2(0.5, 0.5);
             }
+
+            #if defined(_USE_OUTLINE)
+            // Value Noise 用于描边手绘抖动效果
+            float outlineHash(float2 p)
+            {
+                p = frac(p * float2(127.1, 311.7));
+                p += dot(p, p + 45.32);
+                return frac(p.x * p.y);
+            }
+
+            float outlineValueNoise(float2 uv)
+            {
+                float2 i = floor(uv);
+                float2 f = frac(uv);
+                float2 u = f * f * (3.0 - 2.0 * f);
+                float a = outlineHash(i);
+                float b = outlineHash(i + float2(1.0, 0.0));
+                float c = outlineHash(i + float2(0.0, 1.0));
+                float d = outlineHash(i + float2(1.0, 1.0));
+                return lerp(lerp(a, b, u.x), lerp(c, d, u.x), u.y);
+            }
+            #endif
 
             inline float4 ASE_ComputeGrabScreenPos( float4 pos )
             {
@@ -624,6 +674,52 @@ Shader "Soung/Effect/FullFx"
                 float lerpResult371 = lerp( temp_output_365_0 , ( temp_output_365_0 * GamAlpha123 ) , _GamAlphaMode);
                 float3 Color = (( temp_output_338_0 + LiuguangColor223 )).rgb;
                 float Alpha = saturate( lerpResult371 );
+
+                #if defined(_USE_OUTLINE)
+                if (_OutlineWidth > 0.0001)
+                {
+                    // ValueNoise 扶动描边宽度，实现手绘抖动感
+                    float2 noiseUV = lerpResult40 * _OutlineNoiseScale
+                                   + float2(_Time.y * _OutlineNoiseSpeedU, _Time.y * _OutlineNoiseSpeedV);
+                    float noiseVal = outlineValueNoise(noiseUV);
+                    float perturbedWidth = max(_OutlineWidth + (noiseVal * 2.0 - 1.0) * _OutlineNoiseStrength, 0.0);
+                    float diagW = perturbedWidth * 0.7071;
+
+                    // 8方向采样主贴图 Alpha，检测外轮廓
+                    float mainA = lerp(tex2DNode15.r, tex2DNode15.a, _MainTexP);
+                    float4 sUp  = tex2D(_MainTex, lerpResult40 + float2(0,          perturbedWidth));
+                    float4 sDn  = tex2D(_MainTex, lerpResult40 + float2(0,         -perturbedWidth));
+                    float4 sLt  = tex2D(_MainTex, lerpResult40 + float2(-perturbedWidth, 0        ));
+                    float4 sRt  = tex2D(_MainTex, lerpResult40 + float2( perturbedWidth, 0        ));
+                    float4 sUL  = tex2D(_MainTex, lerpResult40 + float2(-diagW,  diagW));
+                    float4 sUR  = tex2D(_MainTex, lerpResult40 + float2( diagW,  diagW));
+                    float4 sDL  = tex2D(_MainTex, lerpResult40 + float2(-diagW, -diagW));
+                    float4 sDR  = tex2D(_MainTex, lerpResult40 + float2( diagW, -diagW));
+
+                    float maxNbrA = max(max(max(max(max(max(max(
+                        lerp(sUp.r, sUp.a, _MainTexP),
+                        lerp(sDn.r, sDn.a, _MainTexP)),
+                        lerp(sLt.r, sLt.a, _MainTexP)),
+                        lerp(sRt.r, sRt.a, _MainTexP)),
+                        lerp(sUL.r, sUL.a, _MainTexP)),
+                        lerp(sUR.r, sUR.a, _MainTexP)),
+                        lerp(sDL.r, sDL.a, _MainTexP)),
+                        lerp(sDR.r, sDR.a, _MainTexP));
+
+                    // 近似溶解压制：当前像素已被溶解时不显示描边
+                    float dissolveMask = step(0.01, DissolveAlpha305);
+                    float isOutline = step(0.01, maxNbrA) * (1.0 - step(0.01, mainA)) * dissolveMask;
+
+                    // 笔触贴图调制描边形状和颜色
+                    float2 outlineTexUV = lerpResult40 * _OutlineTex_ST.xy + _OutlineTex_ST.zw
+                                       + float2(_Time.y * _OutlineTexUspeed, _Time.y * _OutlineTexVspeed);
+                    float4 brushSample = tex2D(_OutlineTex, outlineTexUV);
+                    float brushVal = lerp(brushSample.r, brushSample.a, _OutlineTexP);
+
+                    Color = lerp(Color, _OutlineColor.rgb * brushVal, isOutline);
+                    Alpha = max(Alpha, isOutline * _OutlineColor.a * brushVal);
+                }
+                #endif
 
                 return half4( Color, Alpha );
             }

@@ -14,13 +14,18 @@ VFX Excel 写入工具
 import sys
 import json
 import os
-from xlwt import XFStyle, Font, Alignment, Borders, Pattern
 
 # ── 依赖检查 ──────────────────────────────────────────────────
 try:
     import xlrd
 except ImportError:
     print("错误：缺少 xlrd 库，请运行: pip install xlrd==1.2.0")
+    sys.exit(99)
+
+try:
+    from xlwt import XFStyle, Font, Alignment, Borders, Pattern
+except ImportError:
+    print("错误：缺少 xlwt 库，请运行: pip install xlwt")
     sys.exit(99)
 
 try:
