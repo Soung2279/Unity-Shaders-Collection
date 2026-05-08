@@ -52,6 +52,35 @@ public class VFXToolsWindow : EditorWindow
     private bool hasSearched = false;
     private string searchScope = "Assets/";
 
+    // 静态引用缓存（跨窗口刷新持久）
+    internal static Dictionary<string, HashSet<string>> refCachePrefabs = new Dictionary<string, HashSet<string>>();
+    internal static Dictionary<string, HashSet<string>> refCacheMats    = new Dictionary<string, HashSet<string>>();
+    internal static bool   refCacheIsBuilt    = false;
+    internal static string refCacheBuiltScope = "";
+    internal static int    refCachePrefabCount = 0;
+    internal static int    refCacheMatCount    = 0;
+    private bool isBuildingCache = false;
+    private Object lastSearchedAsset = null; // 记录上次实际搜索的资产
+
+    // 未使用资源查找器
+    [System.Flags]
+    public enum UnusedAssetTypeFlags
+    {
+        贴图   = 1 << 0,
+        材质   = 1 << 1,
+        模型   = 1 << 2,
+        Shader = 1 << 3,
+        动画   = 1 << 4,
+        音频   = 1 << 5,
+    }
+    private string unusedScanScope = "Assets/";
+    private UnusedAssetTypeFlags unusedAssetTypeFlags = UnusedAssetTypeFlags.贴图 | UnusedAssetTypeFlags.材质;
+    private List<string> unusedResults = new List<string>();
+    private bool unusedHasScanned = false;
+    private bool unusedIsScanning = false;
+    private Vector2 unusedScrollPos;
+    private bool unusedFinderExpanded = true;
+
     void DrawRefFinderTab()
     {
         GUILayout.Label("资产引用查找器", EditorStyles.boldLabel);
@@ -59,13 +88,61 @@ public class VFXToolsWindow : EditorWindow
 
         EditorGUILayout.Space();
 
+        var prevAsset = targetAsset;
         targetAsset = EditorGUILayout.ObjectField("目标资产", targetAsset, typeof(Object), false);
+        // 目标资产发生变更时清空旧结果，避免显示过期列表
+        if (targetAsset != prevAsset)
+        {
+            referencingPrefabs.Clear();
+            referencingMaterials.Clear();
+            hasSearched = false;
+        }
 
-        searchScope = EditorGUILayout.TextField("搜索范围（路径前缀）", searchScope);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel("搜索范围");
+        EditorGUILayout.LabelField(searchScope, EditorStyles.textField, GUILayout.ExpandWidth(true));
+        if (GUILayout.Button("浏览...", GUILayout.Width(60)))
+        {
+            string selected = EditorUtility.OpenFolderPanel("选择搜索范围", Application.dataPath, "");
+            if (!string.IsNullOrEmpty(selected))
+            {
+                string dataPath = Application.dataPath.Replace('\\', '/');
+                selected = selected.Replace('\\', '/');
+                if (selected.StartsWith(dataPath))
+                    searchScope = "Assets" + selected.Substring(dataPath.Length);
+                else
+                    EditorUtility.DisplayDialog("路径错误", "请选择项目 Assets 文件夹内的目录。", "确定");
+            }
+        }
+        EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space();
 
-        EditorGUI.BeginDisabledGroup(isSearching || targetAsset == null);
+        // 缓存状态显示
+        if (refCacheIsBuilt && refCacheBuiltScope == searchScope)
+        {
+            EditorGUILayout.BeginHorizontal();
+            string cacheInfo = $"引用缓存已就绪  预制体: {refCachePrefabCount} 个  材质: {refCacheMatCount} 个";
+            EditorGUILayout.LabelField(cacheInfo, EditorStyles.helpBox);
+            if (GUILayout.Button("重建缓存", GUILayout.Width(72)))
+                BuildRefCache();
+            EditorGUILayout.EndHorizontal();
+        }
+        else
+        {
+            EditorGUILayout.BeginHorizontal();
+            string hint = refCacheIsBuilt ? "搜索范围已变更，需重建缓存" : "尚未构建引用缓存，首次查找会自动构建";
+            EditorGUILayout.LabelField(hint, EditorStyles.helpBox);
+            EditorGUI.BeginDisabledGroup(isBuildingCache);
+            if (GUILayout.Button(isBuildingCache ? "构建中...": "预构建缓存", GUILayout.Width(90)))
+                BuildRefCache();
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.Space();
+
+        EditorGUI.BeginDisabledGroup(isSearching || isBuildingCache || targetAsset == null);
         if (GUILayout.Button("开始查找引用", GUILayout.Height(30)))
         {
             FindReferences();
@@ -76,6 +153,58 @@ public class VFXToolsWindow : EditorWindow
         {
             EditorGUILayout.Space();
             DisplayRefResults();
+        }
+
+        // ── 未使用资源查找器 ──────────────────────────────────────
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
+        unusedFinderExpanded = EditorGUILayout.Foldout(unusedFinderExpanded, "未使用资源查找器", true, EditorStyles.foldoutHeader);
+        if (unusedFinderExpanded)
+        {
+            EditorGUILayout.Space(2);
+            EditorGUILayout.HelpBox(
+                "扫描指定目录中的美术资源，找出在整个项目（所有场景、预制体、ScriptableObject）中均未被引用的资源。\n" +
+                "⚠ Resources/ 目录下的资产会被自动排除（可能被动态加载）。\n" +
+                "⚠ 请在删除前务必人工复核结果！",
+                MessageType.Warning);
+
+            EditorGUILayout.Space(2);
+
+            // 资源所在目录
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("资源目录");
+            EditorGUILayout.LabelField(unusedScanScope, EditorStyles.textField, GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("浏览...", GUILayout.Width(60)))
+            {
+                string sel = EditorUtility.OpenFolderPanel("选择资源目录", Application.dataPath, "");
+                if (!string.IsNullOrEmpty(sel))
+                {
+                    string dp = Application.dataPath.Replace('\\', '/');
+                    sel = sel.Replace('\\', '/');
+                    if (sel.StartsWith(dp))
+                        unusedScanScope = "Assets" + sel.Substring(dp.Length);
+                    else
+                        EditorUtility.DisplayDialog("路径错误", "请选择项目 Assets 文件夹内的目录。", "确定");
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // 资源类型（多选）
+            unusedAssetTypeFlags = (UnusedAssetTypeFlags)EditorGUILayout.EnumFlagsField("资源类型", unusedAssetTypeFlags);
+
+            EditorGUILayout.Space(4);
+
+            EditorGUI.BeginDisabledGroup(unusedIsScanning || (int)unusedAssetTypeFlags == 0);
+            if (GUILayout.Button("扫描未使用资源", GUILayout.Height(28)))
+                ScanUnusedAssets();
+            EditorGUI.EndDisabledGroup();
+
+            if (unusedHasScanned && !unusedIsScanning)
+            {
+                EditorGUILayout.Space(4);
+                DisplayUnusedResults();
+            }
         }
     }
 
@@ -92,60 +221,21 @@ public class VFXToolsWindow : EditorWindow
         referencingMaterials.Clear();
         isSearching = true;
         hasSearched = false;
+        lastSearchedAsset = targetAsset;
 
         try
         {
-            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { searchScope });
-            string[] materialGuids = AssetDatabase.FindAssets("t:Material", new[] { searchScope });
+            // 若缓存有效，直接查表，无需再遍历全部资产
+            if (!refCacheIsBuilt || refCacheBuiltScope != searchScope)
+                BuildRefCache();
 
-            int total = prefabGuids.Length + materialGuids.Length;
-            int processed = 0;
-
-            foreach (string guid in prefabGuids)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (path == assetPath)
-                {
-                    processed++;
-                    continue;
-                }
-
-                EditorUtility.DisplayProgressBar(
-                    "查找资产引用",
-                    $"[{processed}/{total}] 检查预制体: {path}",
-                    (float)processed / total);
-
-                string[] deps = AssetDatabase.GetDependencies(path, true);
-                if (deps.Contains(assetPath))
-                    referencingPrefabs.Add(path);
-
-                processed++;
-            }
-
-            foreach (string guid in materialGuids)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (path == assetPath)
-                {
-                    processed++;
-                    continue;
-                }
-
-                EditorUtility.DisplayProgressBar(
-                    "查找资产引用",
-                    $"[{processed}/{total}] 检查材质: {path}",
-                    (float)processed / total);
-
-                string[] deps = AssetDatabase.GetDependencies(path, true);
-                if (deps.Contains(assetPath))
-                    referencingMaterials.Add(path);
-
-                processed++;
-            }
+            if (refCachePrefabs.TryGetValue(assetPath, out var prefabRefs))
+                referencingPrefabs.AddRange(prefabRefs);
+            if (refCacheMats.TryGetValue(assetPath, out var matRefs))
+                referencingMaterials.AddRange(matRefs);
         }
         finally
         {
-            EditorUtility.ClearProgressBar();
             isSearching = false;
             hasSearched = true;
         }
@@ -153,6 +243,68 @@ public class VFXToolsWindow : EditorWindow
         Debug.Log($"[资产引用查找器] 查找完成：{assetPath}\n" +
                   $"  预制体引用: {referencingPrefabs.Count} 个\n" +
                   $"  材质引用:   {referencingMaterials.Count} 个");
+    }
+
+    void BuildRefCache()
+    {
+        isBuildingCache = true;
+        refCachePrefabs.Clear();
+        refCacheMats.Clear();
+        refCacheIsBuilt = false;
+
+        try
+        {
+            string[] prefabGuids   = AssetDatabase.FindAssets("t:Prefab",   new[] { searchScope });
+            string[] materialGuids = AssetDatabase.FindAssets("t:Material", new[] { searchScope });
+            int total     = prefabGuids.Length + materialGuids.Length;
+            int processed = 0;
+
+            foreach (string guid in prefabGuids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (processed % 50 == 0)
+                    EditorUtility.DisplayProgressBar("构建引用缓存",
+                        $"[{processed}/{total}] 预制体: {System.IO.Path.GetFileName(path)}",
+                        (float)processed / total);
+
+                foreach (string dep in AssetDatabase.GetDependencies(path, true))
+                {
+                    if (!refCachePrefabs.TryGetValue(dep, out var set))
+                        refCachePrefabs[dep] = set = new HashSet<string>();
+                    set.Add(path);
+                }
+                processed++;
+            }
+
+            foreach (string guid in materialGuids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (processed % 50 == 0)
+                    EditorUtility.DisplayProgressBar("构建引用缓存",
+                        $"[{processed}/{total}] 材质: {System.IO.Path.GetFileName(path)}",
+                        (float)processed / total);
+
+                foreach (string dep in AssetDatabase.GetDependencies(path, true))
+                {
+                    if (!refCacheMats.TryGetValue(dep, out var set))
+                        refCacheMats[dep] = set = new HashSet<string>();
+                    set.Add(path);
+                }
+                processed++;
+            }
+
+            refCacheBuiltScope  = searchScope;
+            refCachePrefabCount = prefabGuids.Length;
+            refCacheMatCount    = materialGuids.Length;
+            refCacheIsBuilt     = true;
+            Debug.Log($"[资产引用缓存] 构建完成：范围={searchScope}，预制体 {prefabGuids.Length} 个，材质 {materialGuids.Length} 个");
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+            isBuildingCache = false;
+            Repaint();
+        }
     }
 
     void DisplayRefResults()
@@ -198,13 +350,6 @@ public class VFXToolsWindow : EditorWindow
         }
 
         EditorGUILayout.EndScrollView();
-
-        EditorGUILayout.Space();
-
-        if (GUILayout.Button("复制结果到剪贴板"))
-        {
-            CopyRefResultsToClipboard(assetPath);
-        }
     }
 
     void DrawAssetRow<T>(string path) where T : Object
@@ -223,23 +368,141 @@ public class VFXToolsWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
-    void CopyRefResultsToClipboard(string assetPath)
+    void ScanUnusedAssets()
     {
-        var sb = new StringBuilder();
-        sb.AppendLine($"资产引用查找结果: {assetPath}");
-        sb.AppendLine();
+        unusedResults.Clear();
+        unusedIsScanning = true;
+        unusedHasScanned = false;
 
-        sb.AppendLine($"预制体引用 ({referencingPrefabs.Count}):");
-        foreach (string path in referencingPrefabs)
-            sb.AppendLine($"  {path}");
+        try
+        {
+            EditorUtility.DisplayProgressBar("查找未使用资源", "收集全项目根资产...", 0f);
 
-        sb.AppendLine();
-        sb.AppendLine($"材质引用 ({referencingMaterials.Count}):");
-        foreach (string path in referencingMaterials)
-            sb.AppendLine($"  {path}");
+            // Step 1: 收集全项目中所有会"引用"美术资源的根资产
+            var rootPaths = AssetDatabase.FindAssets("t:Scene t:Prefab t:ScriptableObject t:AnimatorController", new[] { "Assets" })
+                .Select(g => AssetDatabase.GUIDToAssetPath(g))
+                .Distinct()
+                .ToArray();
 
-        GUIUtility.systemCopyBuffer = sb.ToString();
-        Debug.Log("[资产引用查找器] 结果已复制到剪贴板");
+            EditorUtility.DisplayProgressBar("查找未使用资源", $"分析 {rootPaths.Length} 个根资产的依赖关系...", 0.1f);
+
+            // Step 2: 一次性获取所有依赖，构建引用集合（比逐个调用快得多）
+            string[] allDeps = AssetDatabase.GetDependencies(rootPaths, true);
+            var referencedSet = new HashSet<string>(allDeps);
+            foreach (var p in rootPaths)
+                referencedSet.Add(p);
+
+            EditorUtility.DisplayProgressBar("查找未使用资源", "扫描目标目录中的候选资产...", 0.65f);
+
+            // Step 3: 在指定目录下找出所选类型的资产
+            var typeFilters = GetUnusedTypeFilters();
+            var candidates = new HashSet<string>();
+            foreach (string filter in typeFilters)
+            {
+                foreach (string g in AssetDatabase.FindAssets(filter, new[] { unusedScanScope }))
+                    candidates.Add(AssetDatabase.GUIDToAssetPath(g));
+            }
+
+            EditorUtility.DisplayProgressBar("查找未使用资源", $"筛选 {candidates.Count} 个候选资产...", 0.85f);
+
+            // Step 4: 过滤——排除已被引用、在 Resources/ 或 StreamingAssets/ 中的资产、以及 Sprite/EditorGUI 类型贴图
+            bool checkingTextures = (unusedAssetTypeFlags & UnusedAssetTypeFlags.贴图) != 0;
+            foreach (string path in candidates)
+            {
+                if (path.Contains("/Resources/")) continue;                       // 动态加载目录，不确定是否使用
+                if (path.StartsWith("Assets/StreamingAssets/")) continue;          // StreamingAssets 始终视为使用
+                if (referencedSet.Contains(path)) continue;                        // 被引用
+
+                // 贴图类型过滤：忽略 Sprite 和 Editor GUI 类型（通常由 UI 系统隐式使用）
+                if (checkingTextures)
+                {
+                    var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                    if (importer != null &&
+                        (importer.textureType == TextureImporterType.Sprite ||
+                         importer.textureType == TextureImporterType.GUI))
+                        continue;
+                }
+
+                unusedResults.Add(path);
+            }
+
+            // 按资产类型 / 路径排序，方便查看
+            unusedResults.Sort();
+            Debug.Log($"[未使用资源查找] 完成：在 {unusedScanScope} 下发现 {unusedResults.Count} 个未被引用的资源（候选 {candidates.Count} 个，项目根资产 {rootPaths.Length} 个）。");
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+            unusedIsScanning = false;
+            unusedHasScanned = true;
+            Repaint();
+        }
+    }
+
+    List<string> GetUnusedTypeFilters()
+    {
+        var filters = new List<string>();
+        if ((unusedAssetTypeFlags & UnusedAssetTypeFlags.贴图)   != 0) filters.Add("t:Texture2D");
+        if ((unusedAssetTypeFlags & UnusedAssetTypeFlags.材质)   != 0) filters.Add("t:Material");
+        if ((unusedAssetTypeFlags & UnusedAssetTypeFlags.模型)   != 0) filters.Add("t:Model");
+        if ((unusedAssetTypeFlags & UnusedAssetTypeFlags.Shader) != 0) filters.Add("t:Shader");
+        if ((unusedAssetTypeFlags & UnusedAssetTypeFlags.动画)   != 0) filters.Add("t:AnimationClip");
+        if ((unusedAssetTypeFlags & UnusedAssetTypeFlags.音频)   != 0) filters.Add("t:AudioClip");
+        return filters;
+    }
+
+    void DisplayUnusedResults()
+    {
+        if (unusedResults.Count == 0)
+        {
+            EditorGUILayout.HelpBox("✓ 未发现未使用的资源，指定目录中所有匹配资产均已被项目引用。", MessageType.Info);
+            return;
+        }
+
+        EditorGUILayout.HelpBox(
+            $"发现 {unusedResults.Count} 个疑似未使用的资源。\n请人工复核后再决定是否删除！",
+            MessageType.Warning);
+
+        unusedScrollPos = EditorGUILayout.BeginScrollView(unusedScrollPos, GUILayout.MaxHeight(320));
+
+        foreach (string path in unusedResults)
+        {
+            EditorGUILayout.BeginHorizontal();
+            Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
+            if (asset != null)
+                EditorGUILayout.ObjectField(asset, typeof(Object), false);
+            else
+                EditorGUILayout.LabelField(path);
+
+            if (GUILayout.Button("定位", GUILayout.Width(44)))
+            {
+                if (asset != null)
+                {
+                    EditorGUIUtility.PingObject(asset);
+                    Selection.activeObject = asset;
+                }
+                else
+                {
+                    EditorUtility.RevealInFinder(path);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.EndScrollView();
+
+        EditorGUILayout.Space(4);
+
+        if (GUILayout.Button("复制列表到剪贴板"))
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"未使用资源列表（{unusedScanScope}）：");
+            sb.AppendLine();
+            foreach (string p in unusedResults)
+                sb.AppendLine(p);
+            GUIUtility.systemCopyBuffer = sb.ToString();
+            Debug.Log("[未使用资源查找] 列表已复制到剪贴板");
+        }
     }
 
     // ============================================================
@@ -253,75 +516,122 @@ public class VFXToolsWindow : EditorWindow
     private bool hasScanned = false;
     private bool isScanning = false;
     private Vector2 extScrollPos;
+    private int extTabMode = 0; // 0 = 格式后缀扫描, 1 = 非2次幂贴图扫描
+    private List<NpotTexInfo> npotResults = new List<NpotTexInfo>();
+    private bool npotHasScanned = false;
+    private bool npotIsScanning = false;
+    private Vector2 npotScrollPos;
 
     void DrawExtScannerTab()
     {
-        GUILayout.Label("特定格式文件扫描", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("扫描项目目录中指定后缀名的文件，帮助找出不受平台支持的格式（如 iOS 不支持 .dds）。", MessageType.Info);
-
+        // 扫描模式切换
+        string[] modeNames = { "格式后缀扫描", "非2次幂贴图扫描" };
+        extTabMode = GUILayout.Toolbar(extTabMode, modeNames);
         EditorGUILayout.Space();
 
-        // 预设快捷按钮
-        GUILayout.Label("常见预设:", EditorStyles.miniBoldLabel);
+        // 搜索范围（文件夹选择器）
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("iOS 不支持 (.dds .tif .tiff)"))
-            SetPresetExtensions(new[] { ".dds", ".tif", ".tiff" });
-        if (GUILayout.Button("不推荐格式 (.psd .psb .tga .bmp)"))
-            SetPresetExtensions(new[] { ".psd", ".psb", ".tga", ".bmp" });
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.Space(4);
-
-        // 手动添加
-        GUILayout.Label("添加自定义后缀:", EditorStyles.miniBoldLabel);
-        EditorGUILayout.BeginHorizontal();
-        extensionInput = EditorGUILayout.TextField(extensionInput);
-        if (GUILayout.Button("添加", GUILayout.Width(50)))
+        EditorGUILayout.PrefixLabel("搜索范围");
+        EditorGUILayout.LabelField(extScanScope, EditorStyles.textField, GUILayout.ExpandWidth(true));
+        if (GUILayout.Button("浏览...", GUILayout.Width(60)))
         {
-            string ext = extensionInput.Trim().ToLower();
-            if (!ext.StartsWith(".")) ext = "." + ext;
-            if (ext.Length > 1 && !extensionsToScan.Contains(ext))
-                extensionsToScan.Add(ext);
+            string selected = EditorUtility.OpenFolderPanel("选择搜索范围", Application.dataPath, "");
+            if (!string.IsNullOrEmpty(selected))
+            {
+                string dataPath = Application.dataPath.Replace('\\', '/');
+                selected = selected.Replace('\\', '/');
+                if (selected.StartsWith(dataPath))
+                    extScanScope = "Assets" + selected.Substring(dataPath.Length);
+                else
+                    EditorUtility.DisplayDialog("路径错误", "请选择项目 Assets 文件夹内的目录。", "确定");
+            }
         }
         EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space();
 
-        EditorGUILayout.Space(4);
-
-        // 当前后缀列表
-        GUILayout.Label("待扫描后缀:", EditorStyles.miniBoldLabel);
-        if (extensionsToScan.Count == 0)
+        if (extTabMode == 0)
         {
-            EditorGUILayout.HelpBox("请添加至少一个后缀名。", MessageType.Warning);
+            // ---- 格式后缀扫描 UI ----
+            GUILayout.Label("特定格式文件扫描", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("扫描项目目录中指定后缀名的文件，帮助找出不受平台支持的格式（如 iOS 不支持 .dds）。", MessageType.Info);
+            EditorGUILayout.Space();
+
+            // 预设快捷按钮
+            GUILayout.Label("常见预设:", EditorStyles.miniBoldLabel);
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("iOS 不支持 (.dds .tif .tiff)"))
+                SetPresetExtensions(new[] { ".dds", ".tif", ".tiff" });
+            if (GUILayout.Button("不推荐格式 (.psd .psb .tga .bmp)"))
+                SetPresetExtensions(new[] { ".psd", ".psb", ".tga", ".bmp" });
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(4);
+
+            // 手动添加
+            GUILayout.Label("添加自定义后缀:", EditorStyles.miniBoldLabel);
+            EditorGUILayout.BeginHorizontal();
+            extensionInput = EditorGUILayout.TextField(extensionInput);
+            if (GUILayout.Button("添加", GUILayout.Width(50)))
+            {
+                string ext = extensionInput.Trim().ToLower();
+                if (!ext.StartsWith(".")) ext = "." + ext;
+                if (ext.Length > 1 && !extensionsToScan.Contains(ext))
+                    extensionsToScan.Add(ext);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(4);
+
+            // 当前后缀列表
+            GUILayout.Label("待扫描后缀:", EditorStyles.miniBoldLabel);
+            if (extensionsToScan.Count == 0)
+            {
+                EditorGUILayout.HelpBox("请添加至少一个后缀名。", MessageType.Warning);
+            }
+            else
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                for (int i = extensionsToScan.Count - 1; i >= 0; i--)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label(extensionsToScan[i]);
+                    if (GUILayout.Button("×", GUILayout.Width(22)))
+                        extensionsToScan.RemoveAt(i);
+                    EditorGUILayout.EndHorizontal();
+                }
+                EditorGUILayout.EndVertical();
+            }
+            EditorGUILayout.Space();
+
+            EditorGUI.BeginDisabledGroup(isScanning || extensionsToScan.Count == 0);
+            if (GUILayout.Button("开始扫描", GUILayout.Height(30)))
+                ScanByExtension();
+            EditorGUI.EndDisabledGroup();
+
+            if (hasScanned && !isScanning)
+            {
+                EditorGUILayout.Space();
+                DisplayExtScanResults();
+            }
         }
         else
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            for (int i = extensionsToScan.Count - 1; i >= 0; i--)
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Label(extensionsToScan[i]);
-                if (GUILayout.Button("×", GUILayout.Width(22)))
-                    extensionsToScan.RemoveAt(i);
-                EditorGUILayout.EndHorizontal();
-            }
-            EditorGUILayout.EndVertical();
-        }
-
-        EditorGUILayout.Space();
-
-        extScanScope = EditorGUILayout.TextField("搜索范围（路径前缀）", extScanScope);
-
-        EditorGUILayout.Space();
-
-        EditorGUI.BeginDisabledGroup(isScanning || extensionsToScan.Count == 0);
-        if (GUILayout.Button("开始扫描", GUILayout.Height(30)))
-            ScanByExtension();
-        EditorGUI.EndDisabledGroup();
-
-        if (hasScanned && !isScanning)
-        {
+            // ---- 非2次幂贴图扫描 UI ----
+            GUILayout.Label("非2次幂贴图扫描", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "扫描指定范围内所有贴图，找出宽或高不是2的幂次方的贴图。(忽略Sprite)\n" +
+                "Unity 要求贴图尺寸为2的幂（如 64、128、256、512、1024、2048）才能启用 DXT/ETC/PVRTC 等硬件压缩格式，" +
+                "非2次幂贴图将无法使用压缩格式或 Repeat 平铺模式。", MessageType.Info);
             EditorGUILayout.Space();
-            DisplayExtScanResults();
+
+            EditorGUI.BeginDisabledGroup(npotIsScanning);
+            if (GUILayout.Button("开始扫描", GUILayout.Height(30)))
+                ScanNpotTextures();
+            EditorGUI.EndDisabledGroup();
+
+            if (npotHasScanned && !npotIsScanning)
+            {
+                EditorGUILayout.Space();
+                DisplayNpotResults();
+            }
         }
     }
 
@@ -472,6 +782,94 @@ public class VFXToolsWindow : EditorWindow
         }
         GUIUtility.systemCopyBuffer = sb.ToString();
         Debug.Log("[格式扫描] 结果已复制到剪贴板");
+    }
+
+    void ScanNpotTextures()
+    {
+        npotResults.Clear();
+        npotIsScanning = true;
+        npotHasScanned = false;
+
+        try
+        {
+            string scope = extScanScope.TrimEnd('/');
+            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { scope });
+            int total = guids.Length;
+
+            for (int i = 0; i < total; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                if (i % 50 == 0)
+                    EditorUtility.DisplayProgressBar("非2次幂贴图扫描",
+                        $"[{i}/{total}] {Path.GetFileName(path)}", (float)i / total);
+
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer == null) continue;
+                TextureImporterType texType = importer.textureType;
+                if (texType != TextureImporterType.Default &&
+                    texType != TextureImporterType.NormalMap &&
+                    texType != TextureImporterType.SingleChannel)
+                    continue;
+
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (tex != null && (!IsPowerOfTwo(tex.width) || !IsPowerOfTwo(tex.height)))
+                    npotResults.Add(new NpotTexInfo { path = path, width = tex.width, height = tex.height });
+            }
+
+            Debug.Log($"[非2次幂贴图扫描] 完成，共发现 {npotResults.Count} 张非2次幂贴图（共扫描 {total} 张）。");
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+            npotIsScanning = false;
+            npotHasScanned = true;
+        }
+    }
+
+    void DisplayNpotResults()
+    {
+        if (npotResults.Count == 0)
+        {
+            EditorGUILayout.HelpBox("未发现非2次幂尺寸贴图，扫描范围内所有贴图均符合压缩规则。", MessageType.Info);
+            return;
+        }
+
+        GUILayout.Label($"共发现 {npotResults.Count} 张非2次幂贴图", EditorStyles.boldLabel);
+        EditorGUILayout.Space(2);
+
+        npotScrollPos = EditorGUILayout.BeginScrollView(npotScrollPos);
+        foreach (var info in npotResults)
+        {
+            EditorGUILayout.BeginHorizontal();
+            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(info.path);
+            if (tex != null)
+                EditorGUILayout.ObjectField(tex, typeof(Texture2D), false);
+            else
+                EditorGUILayout.LabelField(info.path);
+            EditorGUILayout.LabelField($"{info.width} × {info.height}", GUILayout.Width(110));
+            if (GUILayout.Button("定位", GUILayout.Width(44)))
+            {
+                if (tex != null)
+                {
+                    EditorGUIUtility.PingObject(tex);
+                    Selection.activeObject = tex;
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndScrollView();
+
+        EditorGUILayout.Space();
+        if (GUILayout.Button("复制扫描结果到剪贴板"))
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("非2次幂贴图扫描结果：");
+            sb.AppendLine();
+            foreach (var info in npotResults)
+                sb.AppendLine($"  {info.path}  ({info.width}x{info.height})");
+            GUIUtility.systemCopyBuffer = sb.ToString();
+            Debug.Log("[非2次幂贴图扫描] 结果已复制到剪贴板");
+        }
     }
 
     // ============================================================
@@ -921,8 +1319,16 @@ public class VFXToolsWindow : EditorWindow
     private List<ModelInfo> highPolyModels = new List<ModelInfo>();
     private Vector2 modelScrollPos;
     private bool modelIsScanning = false;
+    private string modelScanScope = "Assets/";
     private Dictionary<string, List<string>> modelRefMap = new Dictionary<string, List<string>>();
     private bool[] modelFoldouts;
+
+    public class NpotTexInfo
+    {
+        public string path;
+        public int width;
+        public int height;
+    }
 
     public class ModelInfo
     {
@@ -939,6 +1345,24 @@ public class VFXToolsWindow : EditorWindow
 
         modelThreshold    = EditorGUILayout.IntField("面数阈值", modelThreshold);
         modelDisplayCount = EditorGUILayout.IntField("显示数量", modelDisplayCount);
+
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel("搜索范围");
+        EditorGUILayout.LabelField(modelScanScope, EditorStyles.textField, GUILayout.ExpandWidth(true));
+        if (GUILayout.Button("浏览...", GUILayout.Width(60)))
+        {
+            string selected = EditorUtility.OpenFolderPanel("选择搜索范围", Application.dataPath, "");
+            if (!string.IsNullOrEmpty(selected))
+            {
+                string dataPath = Application.dataPath.Replace('\\', '/');
+                selected = selected.Replace('\\', '/');
+                if (selected.StartsWith(dataPath))
+                    modelScanScope = "Assets" + selected.Substring(dataPath.Length);
+                else
+                    EditorUtility.DisplayDialog("路径错误", "请选择项目 Assets 文件夹内的目录。", "确定");
+            }
+        }
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
 
         EditorGUI.BeginDisabledGroup(modelIsScanning);
@@ -1036,7 +1460,7 @@ public class VFXToolsWindow : EditorWindow
 
     void ScanModels()
     {
-        string[] modelPaths = AssetDatabase.FindAssets("t:Model")
+        string[] modelPaths = AssetDatabase.FindAssets("t:Model", new[] { modelScanScope })
             .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
             .ToArray();
 
@@ -1165,7 +1589,23 @@ public class VFXToolsWindow : EditorWindow
         EditorGUILayout.HelpBox("扫描指定目录，将使用相同贴图的材质归组，找出可合并优化的重复材质。", MessageType.Info);
         EditorGUILayout.Space();
 
-        matTargetDir = EditorGUILayout.TextField("目标目录", matTargetDir);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel("搜索范围");
+        EditorGUILayout.LabelField(matTargetDir, EditorStyles.textField, GUILayout.ExpandWidth(true));
+        if (GUILayout.Button("浏览...", GUILayout.Width(60)))
+        {
+            string selected = EditorUtility.OpenFolderPanel("选择搜索范围", Application.dataPath, "");
+            if (!string.IsNullOrEmpty(selected))
+            {
+                string dataPath = Application.dataPath.Replace('\\', '/');
+                selected = selected.Replace('\\', '/');
+                if (selected.StartsWith(dataPath))
+                    matTargetDir = "Assets" + selected.Substring(dataPath.Length);
+                else
+                    EditorUtility.DisplayDialog("路径错误", "请选择项目 Assets 文件夹内的目录。", "确定");
+            }
+        }
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
 
         EditorGUI.BeginDisabledGroup(matIsAnalyzing);
@@ -1456,6 +1896,22 @@ public class VFXToolsWindow : EditorWindow
     void OnDestroy()
     {
         CleanupVFXAnalysis();
+    }
+}
+
+// 监听资产变化，自动失效引用缓存
+class VFXRefCacheInvalidator : AssetPostprocessor
+{
+    static void OnPostprocessAllAssets(
+        string[] importedAssets, string[] deletedAssets,
+        string[] movedAssets,    string[] movedFromAssetPaths)
+    {
+        // 只有 .prefab 或 .mat 发生变化时才需要失效缓存，避免脚本编译等无关操作触发重建
+        bool relevant = importedAssets.Concat(deletedAssets).Concat(movedAssets)
+            .Any(p => p.EndsWith(".prefab", System.StringComparison.OrdinalIgnoreCase) ||
+                      p.EndsWith(".mat",    System.StringComparison.OrdinalIgnoreCase));
+        if (relevant)
+            VFXToolsWindow.refCacheIsBuilt = false;
     }
 }
 #endif

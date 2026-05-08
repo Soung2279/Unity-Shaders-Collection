@@ -96,6 +96,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_B.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_IconAward_Idle.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Libao_BaseIdle.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_StageInfo_RewardIdle.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_1.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_2.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_3.prefab
