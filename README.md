@@ -88,11 +88,11 @@ A201-Shaders Collection  ///  Personal Usage
 
 
 - [ ] // 最低 //
-[![Unity](https://img.shields.io/badge/Unity%20-2018%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
-[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-7%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
+[![Unity](https://img.shields.io/badge/Unity%20-2022%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
+[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-14%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
 
 
-- 理论上支持 ``Unity 6.000`` 和 ``TuanJie 1.0+``, ``Universal Render Pipeline 17.0`` 及以上。
+- 理论上支持 ``Unity 6.000+`` 和 ``TuanJie 1.0+``, ``Universal Render Pipeline 13.0`` 及以上。
 
 
 本仓库收录的shader可实现下列需求：
