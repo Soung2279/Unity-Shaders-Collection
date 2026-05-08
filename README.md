@@ -88,11 +88,11 @@ A201-Shaders Collection  ///  Personal Usage
 
 
 - [ ] // 最低 //
-[![Unity](https://img.shields.io/badge/Unity%20-2018%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
-[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-7%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
+[![Unity](https://img.shields.io/badge/Unity%20-2022%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
+[![Static Badge](https://img.shields.io/badge/UniversalRenderPipeline%20-13%2B-black?style=flat-square)](https://docs.unity3d.com/cn/Packages/com.unity.render-pipelines.universal@12.1/manual/index.html)
 
 
-- 理论上支持 ``Unity 6.000`` 和 ``TuanJie 1.0+``, ``Universal Render Pipeline 17.0`` 及以上。
+- 理论上支持 ``Unity 6.000+`` 和 ``TuanJie 1.0+``, ``Universal Render Pipeline 13.0`` 及以上。
 
 
 本仓库收录的shader可实现下列需求：
@@ -109,7 +109,7 @@ A201-Shaders Collection  ///  Personal Usage
 
 #### 开始前：确认您的项目需求
 
-- 在使用本仓库提供的shader前，请先确认您的Unity项目是否支持可使用第三方shader (请询问项目组的技美大佬/客户端)，并确认您的Unity项目使用通用渲染管线 (Universal Render Pipeline, 简称URP)。请在确认后进行后续步骤。
+- 在使用本仓库提供的shader前，请先确认您的Unity项目是否支持可使用第三方shader (请询问项目组的技美大佬/客户端)，并确认您的Unity项目使用通用渲染管线 (Universal Render Pipeline, 简称URP)。请在确认后进行后续步骤。*注意：本仓库的URP最低需求已经提高至13.0+*
 
 
 <details>
