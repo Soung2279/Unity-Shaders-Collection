@@ -8,7 +8,7 @@ public class ParticleDelayModifier : EditorWindow
     private GameObject targetObject;
     private float additionalDelay = 0f;
 
-    [MenuItem("工具/VFXTools/粒子延迟修改器")]
+    [MenuItem("TATools/VFXTools/粒子延迟修改器")]
     public static void ShowWindow()
     {
         var window = GetWindow<ParticleDelayModifier>("粒子延迟修改器");

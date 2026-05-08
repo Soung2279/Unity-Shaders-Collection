@@ -58,7 +58,7 @@ namespace Game.Editor.ParticlePrefabCollector
         private bool _previewSelectPartial;
         private SceneAsset _lastSceneAsset;
 
-        [MenuItem("工具/VFXTools/特效批量预览器")]
+        [MenuItem("TATools/VFXTools/特效批量预览器")]
         public static void Open()
         {
             var w = GetWindow<ParticlePrefabCollectorWindow>("特效批量预览器");

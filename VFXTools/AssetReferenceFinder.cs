@@ -18,7 +18,7 @@ public class VFXToolsWindow : EditorWindow
     private int activeTab = 0;
     private readonly string[] tabNames = { "引用查找", "格式扫描", "VFX性能", "模型面数", "材质复用" };
 
-    [MenuItem("工具/VFXTools/VFX综合工具箱")]
+    [MenuItem("TATools/VFXTools/VFX综合工具箱")]
     public static void ShowWindow()
     {
         GetWindow<VFXToolsWindow>("VFX综合工具箱");

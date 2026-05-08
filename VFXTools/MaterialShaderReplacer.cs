@@ -10,7 +10,7 @@ using UnityEngine;
 #if UNITY_EDITOR
 public class MaterialShaderReplacer : EditorWindow
 {
-    [MenuItem("Tools/材质Shader批量替换")]
+    [MenuItem("TATools/材质Shader批量替换")]
     public static void OpenWindow()
     {
         var window = GetWindow<MaterialShaderReplacer>("材质Shader批量替换");

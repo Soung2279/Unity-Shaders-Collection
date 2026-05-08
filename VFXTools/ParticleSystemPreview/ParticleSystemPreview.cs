@@ -629,8 +629,10 @@ namespace WuHuan
         /// </summary>
         public void OnDestroy()
         {
-            ClearLockedParticle();
+            // 先 SimulateDisable（此时 lockedParticleSystem 仍指向预览PS），
+            // 确保 StopEffect 只停预览PS；再清锁，避免锁提前置 null 导致 StopEffect 影响所有场景粒子。
             SimulateDisable();
+            ClearLockedParticle();
             DestroyPreviewInstances();
             if (m_PreviewUtility != null)
             {
@@ -670,11 +672,20 @@ namespace WuHuan
         /// </summary>
         private void SimulateDisable()
         {
-            if (m_IsLockParticleSystem)
+            // 只有预览实际正在播放时才执行停止操作。
+            // 若 m_Playing == false，说明预览从未启动，不应调用 StopEffect——
+            // 否则切换场景对象时会停止场景中所有正在播放的粒子系统。
+            if (m_IsLockParticleSystem && m_Playing)
             {
                 ParticleSystemEditorUtilsReflect.editorIsScrubbing = false;
                 ParticleSystemEditorUtilsReflect.editorPlaybackTime = 0f;
-                ParticleSystemEditorUtilsReflect.StopEffect();
+                // 进入 Play Mode 或即将进入时，跳过 StopEffect。
+                // 原因：关闭 Domain Reload 时，OnDisable 可能在 Application.isPlaying = true 之后调用，
+                // 此时 StopEffect 会停止已通过 Play On Awake 启动的场景粒子。
+                if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    ParticleSystemEditorUtilsReflect.StopEffect();
+                }
                 s_IsStopParticlePlay = true;
             }
 
@@ -767,19 +778,27 @@ namespace WuHuan
 
         /// <summary>
         /// 解锁粒子
+        /// 不再依赖实例匹配，只要本预览持有锁则无条件清理，避免切换对象或进入 Play Mode 时锁残留
         /// </summary>
         private void ClearLockedParticle()
         {
+            if (!m_IsLockParticleSystem)
+            {
+                return;
+            }
+
             if (m_PreviewInstance)
             {
                 ParticleSystem particleSystem = m_PreviewInstance.GetComponentInChildren<ParticleSystem>(true);
-                if (particleSystem)
+                if (particleSystem && ParticleSystemEditorUtilsReflect.lockedParticleSystem == particleSystem)
                 {
-                    if (m_IsLockParticleSystem && ParticleSystemEditorUtilsReflect.lockedParticleSystem == particleSystem)
-                    {
-                        ParticleSystemEditorUtilsReflect.lockedParticleSystem = null;
-                    }
+                    ParticleSystemEditorUtilsReflect.lockedParticleSystem = null;
                 }
+            }
+            else
+            {
+                // 预览实例已被销毁但锁可能仍然残留，强制清空
+                ParticleSystemEditorUtilsReflect.lockedParticleSystem = null;
             }
         }
 

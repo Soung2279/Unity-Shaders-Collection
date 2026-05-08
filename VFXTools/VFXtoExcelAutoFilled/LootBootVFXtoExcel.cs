@@ -46,7 +46,7 @@ public class LootBootVFXtoExcel : EditorWindow
     private string scriptPath = "";
 
     // ── 菜单入口 ──────────────────────────────────────────────
-    [MenuItem("工具/VFXTools/VFXtoExcel自动填表工具")]
+    [MenuItem("TATools/VFXTools/VFXtoExcel自动填表工具")]
     public static void OpenWindow()
     {
         var window = GetWindow<LootBootVFXtoExcel>("VFX自动配表工具");
