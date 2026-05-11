@@ -27,6 +27,7 @@ Shader "Soung/Effect/ScreenFx"
         _NoiseTex("扭曲贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_NoiseTexP("扭曲贴图通道", Float) = 0
         _NoisePower("扭曲强度", Range( 0 , 1)) = 0
+        [Enum(Material,0,Custom1w,1)]_NoiseMode("扭曲控制模式", Float) = 0
         [Toggle]_NoiseEffLiuguang("扭曲是否影响流光", Float) = 0
         [Toggle]_NoiseEffDissolve("扭曲是否影响溶解", Float) = 0
         [KeywordEnum(Local,Polar,Screen)] _NoiseTexUVMode("扭曲贴图UV模式", Float) = 0
@@ -200,6 +201,7 @@ Shader "Soung/Effect/ScreenFx"
 
                 float _NoiseSwitch;
                 float _NoisePower;
+                float _NoiseMode;
                 float _NoiseTexP;
                 float _NoiseTexUspeed;
                 float _NoiseTexVspeed;
@@ -365,7 +367,8 @@ Shader "Soung/Effect/ScreenFx"
                     float2 noiseBaseUV = uv_NoiseTex;
                     #endif
                     float4 noiseSamp = tex2D(_NoiseTex, _Time.y * float2(_NoiseTexUspeed, _NoiseTexVspeed) + noiseBaseUV);
-                    noiseOffset = (lerp(noiseSamp.r, noiseSamp.a, _NoiseTexP) - 0.5) * _NoisePower;
+                    float noisePower = lerp(_NoisePower, c1.w, _NoiseMode);
+                    noiseOffset = (lerp(noiseSamp.r, noiseSamp.a, _NoiseTexP) - 0.5) * noisePower;
                 }
 
                 // ── 主贴图 ───────────────────────────────────────────────────

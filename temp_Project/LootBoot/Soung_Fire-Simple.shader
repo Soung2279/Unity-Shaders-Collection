@@ -22,22 +22,6 @@ Shader "Soung/Effect/ToonFireSimple"
 		[KeywordEnum( R,A )] _MaskSwitch1( "切换遮罩通道", Float ) = 1
 		_Float20( "遮罩强度", Range( 0, 1 ) ) = 1
 
-
-		//_TessPhongStrength( "Tess Phong Strength", Range( 0, 1 ) ) = 0.5
-		//_TessValue( "Tess Max Tessellation", Range( 1, 32 ) ) = 16
-		//_TessMin( "Tess Min Distance", Float ) = 10
-		//_TessMax( "Tess Max Distance", Float ) = 25
-		//_TessEdgeLength ( "Tess Edge length", Range( 2, 50 ) ) = 16
-		//_TessMaxDisp( "Tess Max Displacement", Float ) = 25
-
-		[HideInInspector] _QueueOffset("_QueueOffset", Float) = 0
-        [HideInInspector] _QueueControl("_QueueControl", Float) = -1
-
-        [HideInInspector][NoScaleOffset] unity_Lightmaps("unity_Lightmaps", 2DArray) = "" {}
-        [HideInInspector][NoScaleOffset] unity_LightmapsInd("unity_LightmapsInd", 2DArray) = "" {}
-        [HideInInspector][NoScaleOffset] unity_ShadowMasks("unity_ShadowMasks", 2DArray) = "" {}
-
-		[HideInInspector][ToggleOff] _ReceiveShadows("Receive Shadows", Float) = 0
 	}
 
 	SubShader
@@ -54,7 +38,7 @@ Shader "Soung/Effect/ToonFireSimple"
 		
 
 		HLSLINCLUDE
-		#pragma target 4.5
+		#pragma target 3.5
 		#pragma prefer_hlslcc gles
 		// ensure rendering platforms toggle list is visible
 
@@ -185,13 +169,12 @@ Shader "Soung/Effect/ToonFireSimple"
 
 			HLSLPROGRAM
             #pragma multi_compile_instancing
-            #pragma instancing_options renderinglayer
             #pragma multi_compile_local _RECEIVE_SHADOWS_OFF
             #define _SURFACE_TYPE_TRANSPARENT 1
             #define ASE_VERSION 19904
             #define ASE_SRP_VERSION 130109
 
-            #pragma multi_compile _ DOTS_INSTANCING_ON
+            #pragma multi_compile
 
 			#pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
 

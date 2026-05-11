@@ -25,14 +25,14 @@ Shader "Soung/Effect/FullFx"
         _MainTexVspeed("主帖图V速率", Float) = 0
 
 
-        [Header(NoiseTex)][Enum(OFF,0,ON,1)]_NoiseSwitch("扭曲开关", Float) = 0
+        [Header(NoiseTex)][Toggle(_NOISE_ON)]_NoiseSwitch("扭曲开关", Float) = 0
         _NoiseTex("扭曲贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_NoiseTexP("扭曲贴图通道", Float) = 0
         _NoisePower("扭曲强度", Range( 0 , 1)) = 0
         _NoiseTexUspeed("扭曲U速率", Float) = 0
         _NoiseTexVspeed("扭曲V速率", Float) = 0
 
-        [Header(GamTex)][Enum(OFF,0,ON,1)]_GamTexSwitch("颜色叠加开关", Float) = 0
+        [Header(GamTex)][Toggle(_GAMTEX_ON)]_GamTexSwitch("颜色叠加开关", Float) = 0
         _GamTex("颜色叠加贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_GamTexP("颜色叠加通道", Float) = 0
         [IntRange]_GamTexRotator("颜色叠加旋转", Range( 0 , 360)) = 0
@@ -46,7 +46,7 @@ Shader "Soung/Effect/FullFx"
         [Header(ProgramMask)][Enum(ON,0,OFF,1)]_ProMaskSwitch("程序遮罩开关", Float) = 0
         [KeywordEnum(UP,DOWN,LEFT,RIGHT)] _ProMaskDir("程序遮罩方向", Float) = 0
         _ProMaskRange("程序遮罩范围", Range( 1 , 8)) = 1
-        [Header(MaskTex)][Enum(OFF,0,ON,1)]_MaskSwitch("遮罩开关", Float) = 0
+        [Header(MaskTex)][Toggle(_MASKTEX_ON)]_MaskSwitch("遮罩开关", Float) = 0
 
         _MaskTex("遮罩贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_MaskTexP("遮罩贴图通道", Float) = 0
@@ -57,7 +57,7 @@ Shader "Soung/Effect/FullFx"
         _MaskTexUspeed("遮罩U速度", Float) = 0
         _MaskTexVspeed("遮罩V速度", Float) = 0
 
-        [Header(MaskTexPlus)][Enum(OFF,0,ON,1)]_MaskTexPlusSwitch("额外遮罩开关", Float) = 0
+        [Header(MaskTexPlus)][Toggle(_MASKTEXPLUS_ON)]_MaskTexPlusSwitch("额外遮罩开关", Float) = 0
         [Toggle]_MaskPlusUsePro("额外遮罩使用程序", Float) = 0
         _MaskTexPlus("额外遮罩", 2D) = "white" {}
         [Enum(R,0,A,1)]_MaskTexPlusP("额外遮罩通道", Float) = 0
@@ -66,7 +66,7 @@ Shader "Soung/Effect/FullFx"
         _MaskTexPlusUspeed("额外遮罩U速度", Float) = 0
         _MaskTexPlusVspeed("额外遮罩V速度", Float) = 0
 
-        [Header(Liuguang)][Enum(OFF,0,ON,1)]_LiuguangSwitch("流光开关", Float) = 0
+        [Header(Liuguang)][Toggle(_LIUGUANG_ON)]_LiuguangSwitch("流光开关", Float) = 0
         _LiuguangTex("流光贴图", 2D) = "black" {}
         [Enum(R,0,A,1)]_LiuguangTexP("流光纹理通道", Float) = 0
         [IntRange]_LiuguangTexRotator("流光纹理旋转", Range( 0 , 360)) = 0
@@ -78,7 +78,7 @@ Shader "Soung/Effect/FullFx"
         _LiuguangUSpeed("流光U速率", Float) = 0
         _LiuguangVSpeed("流光V速率", Float) = 0
 
-        [Header(DissolveTex)][Enum(OFF,0,ON,1)]_DissolveTexSwitch("溶解开关", Float) = 0
+        [Header(DissolveTex)][Toggle(_DISSOLVETEX_ON)]_DissolveTexSwitch("溶解开关", Float) = 0
         _DissolveTex("溶解贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_DissolveTexP("溶解贴图通道", Float) = 0
         [IntRange]_DissolveTexRotator("溶解贴图旋转", Range( 0 , 360)) = 0
@@ -92,7 +92,7 @@ Shader "Soung/Effect/FullFx"
         _DissolveTexUspeed("溶解U速度", Float) = 0
         _DissolveTexVspeed("溶解V速度", Float) = 0
 
-        [Header(DissloveTexPath)][Enum(OFF,0,ON,1)]_DissolveTexPlusSwitch("定向溶解开关", Float) = 0
+        [Header(DissloveTexPath)][Toggle(_DISSOLVETEXPLUS_ON)]_DissolveTexPlusSwitch("定向溶解开关", Float) = 0
         [Toggle]_DissolveTexPlusUsePro("定向溶解使用程序遮罩", Float) = 0
         _DissolveTexPlus("定向溶解贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_DissolveTexPlusP("定向溶解通道", Float) = 0
@@ -127,7 +127,7 @@ Shader "Soung/Effect/FullFx"
         AlphaToMask Off
 
         HLSLINCLUDE
-        #pragma target 4.5
+        #pragma target 3.5
 
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
@@ -148,7 +148,6 @@ Shader "Soung/Effect/FullFx"
             HLSLPROGRAM
 
             #pragma multi_compile_instancing
-            #pragma instancing_options renderinglayer
 
             #pragma vertex vert
             #pragma fragment frag
@@ -160,6 +159,13 @@ Shader "Soung/Effect/FullFx"
             #pragma shader_feature_local _MAINTEXUVMODE_LOCAL _MAINTEXUVMODE_POLAR _MAINTEXUVMODE_POLARDISTORTION
             #pragma shader_feature_local _USE_HSV_ON
             #pragma shader_feature_local _USE_OUTLINE
+            #pragma shader_feature_local _NOISE_ON
+            #pragma shader_feature_local _GAMTEX_ON
+            #pragma shader_feature_local _LIUGUANG_ON
+            #pragma shader_feature_local _DISSOLVETEX_ON
+            #pragma shader_feature_local _DISSOLVETEXPLUS_ON
+            #pragma shader_feature_local _MASKTEX_ON
+            #pragma shader_feature_local _MASKTEXPLUS_ON
 
             struct Attributes
             {
@@ -434,15 +440,14 @@ Shader "Soung/Effect/FullFx"
                 float ValueZero = 0.0;
                 // 优化噪声采样条件，_NoiseSwitch关闭时完全跳过采样
                 float lerpResult60 = ValueZero;
-                if (_NoiseSwitch > 0.01)
-                {
+                #if defined(_NOISE_ON)
                     float2 appendResult54 = (float2(_NoiseTexUspeed , _NoiseTexVspeed));
                     float2 uv_NoiseTex = input.ase_texcoord6.xy * _NoiseTex_ST.xy + _NoiseTex_ST.zw;
                     float2 panner50 = ( 1.0 * _Time.y * appendResult54 + uv_NoiseTex);
                     float4 tex2DNode17 = tex2D( _NoiseTex, panner50 );
                     float lerpResult63 = lerp( tex2DNode17.r , tex2DNode17.a , _NoiseTexP);
                     lerpResult60 = ( (-0.5 + (lerpResult63 - 0.0) * (0.5 - -0.5) / (1.0 - 0.0)) * _NoisePower );
-                }
+                #endif
                 float2 appendResult34 = (float2(_MainTexUspeed , _MainTexVspeed));
                 float2 uv_MainTex = input.ase_texcoord6.xy * _MainTex_ST.xy + _MainTex_ST.zw;
                 
@@ -499,12 +504,11 @@ Shader "Soung/Effect/FullFx"
 
                 //优化颜色叠加采样条件, 避免不必要的采样
                 float4 tex2DNode101 = float4(0,0,0,0);
-                if (_GamTexSwitch > 0.01) 
-                {
+                #if defined(_GAMTEX_ON)
                     float2 rotator102 = RotateUV( panner85 + lerpResult78, _GamTexRotator );
                     float2 lerpResult89 = lerp( rotator102 , saturate( rotator102 ) , _GamTexClamp);
                     tex2DNode101 = tex2D( _GamTex, ( lerpResult60 + lerpResult89 ) );
-                }
+                #endif
                 
                 float3 desaturateInitialColor91 = tex2DNode101.rgb;
                 float desaturateDot91 = dot( desaturateInitialColor91, float3( 0.299, 0.587, 0.114 ));
@@ -522,11 +526,10 @@ Shader "Soung/Effect/FullFx"
 
                 //优化溶解采样条件, 避免不必要的采样
                 float4 tex2DNode302 = float4(0,0,0,0);
-                if (_DissolveTexSwitch > 0.01) 
-                {
+                #if defined(_DISSOLVETEX_ON)
                     float2 rotator328 = RotateUV( panner317, _DissolveTexRotator );
                     tex2DNode302 = tex2D( _DissolveTex, rotator328 );
-                }
+                #endif
 
                 float lerpResult276 = lerp( tex2DNode302.r , tex2DNode302.a , _DissolveTexP);
                 float2 appendResult263 = (float2(_DissolveTexPlusUspeed , _DissolveTexPlusVspeed));
@@ -541,12 +544,11 @@ Shader "Soung/Effect/FullFx"
 
                 //优化定向溶解采样条件, 避免不必要的采样
                 float4 tex2DNode303 = float4(0,0,0,0);
-                if (_DissolveTexPlusSwitch > 0.01) 
-                {
+                #if defined(_DISSOLVETEXPLUS_ON)
                     float2 rotator316 = RotateUV( panner267, _DissolveTexPlusRotator );
                     float2 lerpResult272 = lerp( rotator316 , saturate( rotator316 ) , _DissolveTexPlusClamp);
                     tex2DNode303 = tex2D( _DissolveTexPlus, lerpResult272 );
-                }
+                #endif
 
                 float lerpResult275 = lerp( tex2DNode303.r , tex2DNode303.a , _DissolveTexPlusP);
                 float2 texCoord406 = input.ase_texcoord6.xy * float2( 1,1 ) + float2( 0,0 );
@@ -591,8 +593,7 @@ Shader "Soung/Effect/FullFx"
 
                 //优化流光纹理采样条件, 避免不必要的采样
                 float4 tex2DNode196 = float4(0,0,0,0);
-                if (_LiuguangSwitch > 0.01)
-                {
+                #if defined(_LIUGUANG_ON)
                     float2 appendResult210 = (float2(_LiuguangUSpeed , _LiuguangVSpeed));
                     float2 uv_LiuguangTex = input.ase_texcoord6.xy * _LiuguangTex_ST.xy + _LiuguangTex_ST.zw;
                     float2 rotator240 = RotateUV( uv_LiuguangTex, _LiuguangTexRotator );
@@ -616,7 +617,7 @@ Shader "Soung/Effect/FullFx"
                     #endif
                     float2 panner215 = ( 1.0 * _Time.y * appendResult210 + staticSwitch239);
                     tex2DNode196 = tex2D( _LiuguangTex, panner215 );
-                }
+                #endif
 
                 float3 appendResult200 = (float3(tex2DNode196.r , tex2DNode196.g , tex2DNode196.b));
                 float lerpResult197 = lerp( tex2DNode196.r , tex2DNode196.a , _LiuguangTexP);
@@ -638,12 +639,11 @@ Shader "Soung/Effect/FullFx"
 
                 //优化遮罩纹理采样条件, 避免不必要的采样
                 float4 tex2DNode158 = float4(0,0,0,0);
-                if (_MaskSwitch > 0.01)
-                {
+                #if defined(_MASKTEX_ON)
                     float2 rotator161 = RotateUV( lerpResult459, _MaskTexRotator );
                     float2 lerpResult172 = lerp( rotator161 , saturate( rotator161 ) , _MaskTexClamp);
                     tex2DNode158 = tex2D( _MaskTex, lerpResult172 );
-                }
+                #endif
 
                 float lerpResult171 = lerp( tex2DNode158.r , tex2DNode158.a , _MaskTexP);
                 float smoothstepResult383 = smoothstep( 1.0 , -1.0 , lerpResult171);
@@ -656,12 +656,11 @@ Shader "Soung/Effect/FullFx"
 
                 //优化额外遮罩纹理采样条件, 避免不必要的采样
                 float4 tex2DNode187 = float4(0,0,0,0);
-                if (_MaskTexPlusSwitch > 0.01)
-                {
+                #if defined(_MASKTEXPLUS_ON)
                     float2 rotator186 = RotateUV( panner181, _MaskTexPlusRotator );
                     float2 lerpResult190 = lerp( rotator186 , saturate( rotator186 ) , _MaskTexPlusClamp);
                     tex2DNode187 = tex2D( _MaskTexPlus, lerpResult190 );
-                }
+                #endif
 
                 float lerpResult188 = lerp( tex2DNode187.r , tex2DNode187.a , _MaskTexPlusP);
                 float lerpResult435 = lerp( lerpResult188 , ProMask431 , _MaskPlusUsePro);
@@ -708,7 +707,8 @@ Shader "Soung/Effect/FullFx"
 
                     // 近似溶解压制：当前像素已被溶解时不显示描边
                     float dissolveMask = step(0.01, DissolveAlpha305);
-                    float isOutline = step(0.01, maxNbrA) * (1.0 - step(0.01, mainA)) * dissolveMask;
+                    float maskCombined = MaskTexAlpha193 * MaskTexPlusAlpha194;
+                    float isOutline = step(0.01, maxNbrA) * (1.0 - step(0.01, mainA)) * dissolveMask * maskCombined;
 
                     // 笔触贴图调制描边形状和颜色
                     float2 outlineTexUV = lerpResult40 * _OutlineTex_ST.xy + _OutlineTex_ST.zw
