@@ -215,6 +215,14 @@ https://github.com/Soung2279/SoungFXShaders.git
 
 ## 更新日志
 
+### 2026.5.11 | 更新说明 | Standard V2.0.2
+
+#### 新增
+
+新增 Metaball、Smoothstep Flipbook 相关的 shader。
+
+新增 SingleTexOutlineNoise shader。基于SingTex制作，实现描边程序化扰动效果（适用于血条燃烧效果）
+
 ### 2025.11.19 | 更新说明 | Standard V2.0.2
 
 #### 新增
