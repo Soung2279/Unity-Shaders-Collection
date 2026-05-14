@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 
 #if UNITY_EDITOR
 //Made by Soung, 2025.6.13, Using Claude 3.7
@@ -14,8 +13,10 @@ public class BatchVFXAnalyzer : EditorWindow
     private bool analyzing = false;
     private int currentIndex = 0;
     private List<VFXAnalysisResult> results = new List<VFXAnalysisResult>();
-    private string searchFilter = "";
     private bool showResultsOnly = false;
+    private string searchPath = "Assets/";
+    private List<string> searchKeywords = new List<string>();
+    private string newKeywordInput = "";
 
     private enum SortField
     {
@@ -30,7 +31,7 @@ public class BatchVFXAnalyzer : EditorWindow
         GPUMemory,
         IssueCount
     }
-    private SortField sortField = SortField.Name;
+    private SortField sortField = SortField.DrawCall;
     private bool sortDescending = true; // 默认降序(从高到低)
 
     private class VFXAnalysisResult
@@ -63,26 +64,6 @@ public class BatchVFXAnalyzer : EditorWindow
         EditorGUILayout.HelpBox("对特效预制体进行性能分析, 部分数据使用Unity Stats值, 在编辑器模式下可能不准确。", MessageType.None, false);
         EditorGUILayout.Space();
 
-        // 搜索过滤器区域
-        EditorGUILayout.BeginHorizontal();
-        string newSearchFilter = EditorGUILayout.TextField("搜索关键字", searchFilter);
-        if (newSearchFilter != searchFilter)
-        {
-            searchFilter = newSearchFilter;
-            // 搜索关键词变化后，如果在"仅显示结果"模式，需要刷新视图
-            if (showResultsOnly)
-            {
-                Repaint();
-            }
-        }
-
-        // 添加按关键字搜索预制体的按钮
-        if (GUILayout.Button("查找", GUILayout.Width(100)))
-        {
-            FindVFXPrefabsByKeyword(searchFilter);
-        }
-        EditorGUILayout.EndHorizontal();
-
         // 添加一个切换，用于切换是否仅显示分析结果
         showResultsOnly = EditorGUILayout.Toggle("仅显示分析结果", showResultsOnly);
 
@@ -91,6 +72,75 @@ public class BatchVFXAnalyzer : EditorWindow
         // 只有当不是仅显示结果模式时，才显示预制体列表部分
         if (!showResultsOnly)
         {
+            // 搜索设置
+            EditorGUILayout.LabelField("搜索设置", EditorStyles.boldLabel);
+
+            // 搜索路径
+            EditorGUILayout.BeginHorizontal();
+            searchPath = EditorGUILayout.TextField("搜索路径", searchPath);
+            if (GUILayout.Button("浏览", GUILayout.Width(50)))
+            {
+                string selected = EditorUtility.OpenFolderPanel("选择搜索路径", Application.dataPath, "");
+                if (!string.IsNullOrEmpty(selected))
+                {
+                    string dataPath = Application.dataPath.Replace("\\", "/");
+                    selected = selected.Replace("\\", "/");
+                    if (selected.StartsWith(dataPath))
+                        searchPath = "Assets" + selected.Substring(dataPath.Length);
+                    else
+                        EditorUtility.DisplayDialog("路径错误", "请选择 Assets 文件夹内的路径", "确定");
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // 关键字输入（可添加多个，满足任意一个即匹配）
+            EditorGUILayout.BeginHorizontal();
+            newKeywordInput = EditorGUILayout.TextField("添加关键字", newKeywordInput);
+            if (GUILayout.Button("添加", GUILayout.Width(50)) && !string.IsNullOrWhiteSpace(newKeywordInput))
+            {
+                string kw = newKeywordInput.Trim();
+                if (!searchKeywords.Contains(kw))
+                    searchKeywords.Add(kw);
+                newKeywordInput = "";
+                GUI.FocusControl(null);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // 当前关键字列表
+            if (searchKeywords.Count > 0)
+            {
+                EditorGUILayout.LabelField("当前关键字（路径或名称含任意一个即匹配）:", EditorStyles.miniLabel);
+                for (int ki = 0; ki < searchKeywords.Count; ki++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Space(10);
+                    EditorGUILayout.LabelField("• " + searchKeywords[ki]);
+                    if (GUILayout.Button("移除", EditorStyles.miniButton, GUILayout.Width(45)))
+                    {
+                        searchKeywords.RemoveAt(ki);
+                        ki--;
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+            else
+            {
+                EditorGUILayout.LabelField("（无关键字限制，将搜索指定路径下所有VFX预制体）", EditorStyles.miniLabel);
+            }
+
+            // 查找按钮行
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("按路径+关键字查找"))
+            {
+                FindVFXPrefabsByPathAndKeywords();
+            }
+            if (GUILayout.Button("自动查找全部VFX"))
+            {
+                FindAllVFXPrefabs();
+                Debug.Log("<color=#66ccff><b><size=10>VFXAnalyzer INFO:\n>>>开始自动搜索当前工程中的所有VFX预制体, 可能需要一些时间, 请耐心等待<<<\n>>>搜索完成后, 可以在列表中查看结果, 并进行分析<<<</size></b></color>");
+            }
+            GUILayout.EndHorizontal();
+
             // 预制体列表
             EditorGUILayout.LabelField("特效预制体列表", EditorStyles.boldLabel);
 
@@ -99,19 +149,10 @@ public class BatchVFXAnalyzer : EditorWindow
             {
                 AddSelectedPrefabs();
             }
-
             if (GUILayout.Button("清空列表"))
             {
                 prefabsList.Clear();
                 results.Clear();
-            }
-
-            if (GUILayout.Button("自动查找VFX预制体"))
-            {
-                FindAllVFXPrefabs();
-                string warn_autofind = $"VFXAnalyzer INFO:\n>>>开始自动搜索当前工程中的所有VFX预制体, 可能需要一些时间, 请耐心等待<<<\n" +
-                                       $">>>搜索完成后, 可以在列表中查看结果, 并进行分析<<<";
-                Debug.Log($"<color=#66ccff><b><size=10>{warn_autofind}</size></b></color>");
             }
             GUILayout.EndHorizontal();
 
@@ -122,14 +163,6 @@ public class BatchVFXAnalyzer : EditorWindow
             {
                 if (prefabsList[i] != null)
                 {
-                    string prefabName = prefabsList[i].name;
-
-                    // 应用搜索过滤器 - 当前列表的过滤
-                    if (!string.IsNullOrEmpty(searchFilter) && !prefabName.ToLower().Contains(searchFilter.ToLower()))
-                    {
-                        continue;
-                    }
-
                     GUILayout.BeginHorizontal();
                     prefabsList[i] = (GameObject)EditorGUILayout.ObjectField(prefabsList[i], typeof(GameObject), false);
 
@@ -178,57 +211,64 @@ public class BatchVFXAnalyzer : EditorWindow
         }
     }
 
-    // 新增按关键字搜索VFX预制体的方法
-    private void FindVFXPrefabsByKeyword(string keyword)
+    // 按指定路径 + 多关键字查找VFX预制体（关键字满足任意一个即匹配）
+    private void FindVFXPrefabsByPathAndKeywords()
     {
-        if (string.IsNullOrWhiteSpace(keyword))
+        if (!AssetDatabase.IsValidFolder(searchPath))
         {
-            EditorUtility.DisplayDialog("搜索错误", "请输入有效的搜索关键字", "确定");
+            EditorUtility.DisplayDialog("路径错误", $"路径 '{searchPath}' 不存在，请检查搜索路径", "确定");
             return;
         }
-
-        // 清空之前的搜索结果，但保留已有的预制体
-        // prefabsList.Clear(); // 注释掉这一行，以便保留现有预制体
-        
-        // 查找所有与关键字匹配的预制体
-        string[] guids = AssetDatabase.FindAssets("t:Prefab " + keyword);
-        int foundCount = 0;
 
         HashSet<string> existingPaths = new HashSet<string>();
         foreach (var existingPrefab in prefabsList)
         {
             if (existingPrefab != null)
-            {
-                string existingPath = AssetDatabase.GetAssetPath(existingPrefab);
-                existingPaths.Add(existingPath);
-            }
+                existingPaths.Add(AssetDatabase.GetAssetPath(existingPrefab));
         }
+
+        string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { searchPath });
+        int foundCount = 0;
 
         foreach (string guid in guids)
         {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            
-            // 检查是否已经在列表中
-            if (existingPaths.Contains(path))
-                continue;
-                
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
 
-            // 检查是否包含特效相关组件
-            if (prefab != null)
+            if (existingPaths.Contains(assetPath))
+                continue;
+
+            // 关键字过滤：无关键字则全部匹配，有关键字则路径/名称含任意一个即匹配
+            if (searchKeywords.Count > 0)
             {
-                if (prefab.GetComponentInChildren<ParticleSystem>(true) != null ||
-                    prefab.GetComponentInChildren<TrailRenderer>(true) != null ||
-                    prefab.GetComponentInChildren<LineRenderer>(true) != null)
+                string lowerPath = assetPath.ToLower();
+                bool matched = false;
+                foreach (var kw in searchKeywords)
                 {
-                    prefabsList.Add(prefab);
-                    foundCount++;
+                    if (lowerPath.Contains(kw.ToLower()))
+                    {
+                        matched = true;
+                        break;
+                    }
                 }
+                if (!matched)
+                    continue;
+            }
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (prefab != null &&
+                prefab.GetComponentInChildren<ParticleSystem>(true) != null)
+            {
+                prefabsList.Add(prefab);
+                existingPaths.Add(assetPath);
+                foundCount++;
             }
         }
 
-        // 显示找到了多少个匹配的预制体
-        EditorUtility.DisplayDialog("搜索完成", $"找到 {foundCount} 个包含关键字 '{keyword}' 的VFX预制体并添加到列表中", "确定");
+        string keywordsDesc = searchKeywords.Count > 0
+            ? $"，关键字: [{string.Join(", ", searchKeywords)}]"
+            : "（无关键字限制）";
+        EditorUtility.DisplayDialog("搜索完成",
+            $"路径: {searchPath}{keywordsDesc}\n共找到 {foundCount} 个VFX预制体并添加到列表", "确定");
     }
 
     private void AddSelectedPrefabs()
@@ -260,38 +300,16 @@ public class BatchVFXAnalyzer : EditorWindow
             string path = AssetDatabase.GUIDToAssetPath(guid);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
 
-            // 检查是否包含特效相关组件
-            if (prefab != null)
+            // 必须包含至少一个粒子系统
+            if (prefab != null && prefab.GetComponentInChildren<ParticleSystem>(true) != null)
             {
-                if (prefab.GetComponentInChildren<ParticleSystem>(true) != null ||
-                    prefab.GetComponentInChildren<TrailRenderer>(true) != null ||
-                    prefab.GetComponentInChildren<LineRenderer>(true) != null)
-                {
-                    // 应用搜索过滤器 - 自动添加时进行过滤
-                    if (!string.IsNullOrEmpty(searchFilter) && 
-                        !prefab.name.ToLower().Contains(searchFilter.ToLower()) && 
-                        !path.ToLower().Contains(searchFilter.ToLower()))
-                    {
-                        continue;
-                    }
-
-                    prefabsList.Add(prefab);
-                    foundCount++;
-                }
+                prefabsList.Add(prefab);
+                foundCount++;
             }
         }
 
-        // 显示找到了多少个匹配的预制体
-        if (!string.IsNullOrEmpty(searchFilter))
-        {
-            EditorUtility.DisplayDialog("搜索完成", $"找到 {foundCount} 个符合条件 '{searchFilter}' 的VFX预制体", "确定");
-            Debug.Log($"找到 {foundCount} 个符合条件 '{searchFilter}' 的VFX预制体");
-        }
-        else
-        {
-            EditorUtility.DisplayDialog("搜索完成", $"找到 {foundCount} 个VFX预制体", "确定");
-            Debug.Log($"找到 {foundCount} 个VFX预制体");
-        }
+        EditorUtility.DisplayDialog("搜索完成", $"找到 {foundCount} 个VFX预制体", "确定");
+        Debug.Log($"找到 {foundCount} 个VFX预制体");
     }
 
     private void AnalyzeAllPrefabs()
@@ -340,28 +358,34 @@ public class BatchVFXAnalyzer : EditorWindow
 
             EditorApplication.delayCall += () =>
             {
-                // 收集基本组件信息
-                CollectComponentData(instance, result);
-
-                // 获取渲染数据
+                // 先读取Stats（instance仍然存在），再收集组件数据
                 int currentVertices = UnityEditor.UnityStats.vertices;
                 int currentTriangles = UnityEditor.UnityStats.triangles;
                 int currentDrawCalls = UnityEditor.UnityStats.drawCalls;
                 int currentBatches = UnityEditor.UnityStats.batches;
 
-                // 计算差值
-                result.vertexCount = Mathf.Max(0, currentVertices - originalVertices);
-                result.triangleCount = Mathf.Max(0, currentTriangles - originalTriangles);
-                result.drawCallsEstimate = Mathf.Max(0, currentDrawCalls - originalDrawCalls);
-                result.batchesEstimate = Mathf.Max(0, currentBatches - originalBatches);
+                // 收集基本组件信息（内部不再销毁instance）
+                CollectComponentData(instance, result);
 
-                // 如果从Stats获取的DrawCall和Batches为0，则使用估算值
-                if (result.drawCallsEstimate == 0 && result.batchesEstimate == 0)
+                // 计算Stats差值，若有效则覆盖组件估算值
+                int statsDeltaVertices = Mathf.Max(0, currentVertices - originalVertices);
+                int statsDeltaTriangles = Mathf.Max(0, currentTriangles - originalTriangles);
+                int statsDeltaDrawCalls = Mathf.Max(0, currentDrawCalls - originalDrawCalls);
+                int statsDeltaBatches = Mathf.Max(0, currentBatches - originalBatches);
+
+                if (statsDeltaVertices > 0)
+                    result.vertexCount = statsDeltaVertices;
+                if (statsDeltaTriangles > 0)
+                    result.triangleCount = statsDeltaTriangles;
+                if (statsDeltaDrawCalls > 0)
                 {
-                    // 简单估算值 - 材质数量与子发射器数量有关
-                    result.drawCallsEstimate = Mathf.Max(1, result.materialCount / 2 + result.emitterCount / 4);
-                    result.batchesEstimate = result.drawCallsEstimate;
-                    Debug.LogWarning($"[批量分析器] 无法从Stats获取数据，使用估算值 - DrawCalls: {result.drawCallsEstimate}, Batches: {result.batchesEstimate}");
+                    result.drawCallsEstimate = statsDeltaDrawCalls;
+                    result.batchesEstimate = statsDeltaBatches;
+                }
+                else
+                {
+                    // Stats无效，保留CollectComponentData中基于渲染队列的估算值
+                    Debug.LogWarning($"[批量分析器] 无法从Stats获取DrawCall数据，使用渲染队列估算值 - DrawCalls: {result.drawCallsEstimate}, Batches: {result.batchesEstimate}");
                 }
 
                 // 添加到结果列表
@@ -608,11 +632,6 @@ public class BatchVFXAnalyzer : EditorWindow
 
         // 检测性能问题
         DetectPerformanceIssues(result, particleSystems, uniqueTextures.Values.ToList());
-
-        // 销毁实例
-        DestroyImmediate(instance);
-
-        // return result; // Removed because method is void
     }
 
     // 新增：获取纹理格式的每像素位数
@@ -876,8 +895,8 @@ public class BatchVFXAnalyzer : EditorWindow
         }
 
         // 问题数表头
-        if (GUILayout.Button("问题", sortField == SortField.IssueCount ?
-            (sortDescending ? EditorStyles.boldLabel : headerStyle) : headerStyle, GUILayout.Width(40)))
+                if (GUILayout.Button("问题", sortField == SortField.IssueCount ?
+            (sortDescending ? EditorStyles.boldLabel : headerStyle) : headerStyle, GUILayout.Width(70)))
         {
             if (sortField == SortField.IssueCount)
                 sortDescending = !sortDescending;
@@ -893,19 +912,13 @@ public class BatchVFXAnalyzer : EditorWindow
 
         // 在这里开始结果列表的滚动视图
         resultsScrollPosition = EditorGUILayout.BeginScrollView(resultsScrollPosition, 
-            GUILayout.Height(Mathf.Min(position.height - 350, results.Count * 20 + 50)));
+            GUILayout.Height(Mathf.Min(Mathf.Max(50, position.height - 350), results.Count * 20 + 50)));
 
         // 显示每个预制体的分析结果
         foreach (var result in results)
         {
             if (result.prefab != null)
             {
-                // 应用搜索过滤器 - 结果列表的过滤
-                if (!string.IsNullOrEmpty(searchFilter) && !result.prefabName.ToLower().Contains(searchFilter.ToLower()))
-                {
-                    continue;
-                }
-
                 EditorGUILayout.BeginHorizontal();
 
                 // 添加颜色高亮（根据性能指标）
@@ -923,11 +936,8 @@ public class BatchVFXAnalyzer : EditorWindow
                     GUI.color = Color.white;
                 }
 
-                if (GUILayout.Button(result.prefabName, EditorStyles.label, GUILayout.Width(180)))
-                {
-                    // 选择该预制体
-                    Selection.activeObject = result.prefab;
-                }
+                // 带图标的ObjectField，点击即在项目视窗中定位
+                EditorGUILayout.ObjectField(result.prefab, typeof(GameObject), false, GUILayout.Width(180));
 
                 EditorGUILayout.LabelField(result.particleSystemCount.ToString(), GUILayout.Width(50));
                 EditorGUILayout.LabelField(result.emitterCount.ToString(), GUILayout.Width(50));
@@ -938,19 +948,19 @@ public class BatchVFXAnalyzer : EditorWindow
                 EditorGUILayout.LabelField(result.triangleCount.ToString(), GUILayout.Width(60));
                 EditorGUILayout.LabelField(result.gpuMemoryEstimate.ToString("F1") + "MB", GUILayout.Width(60));
 
-                // 问题数
+                // 问题按钮
                 if (result.performanceIssues.Count > 0)
                 {
                     GUI.color = new Color(1.0f, 0.5f, 0.5f);
-                    if (GUILayout.Button(result.performanceIssues.Count.ToString(), EditorStyles.label, GUILayout.Width(40)))
+                    if (GUILayout.Button($"! {result.performanceIssues.Count} 项问题", GUILayout.Width(70)))
                     {
-                        // 显示问题详情
+                        GUI.color = Color.white;
                         ShowPerformanceIssues(result);
                     }
                 }
                 else
                 {
-                    EditorGUILayout.LabelField("0", GUILayout.Width(40));
+                    EditorGUILayout.LabelField("无问题", GUILayout.Width(70));
                 }
 
                 GUI.color = Color.white;
@@ -961,57 +971,8 @@ public class BatchVFXAnalyzer : EditorWindow
 
         // 结束滚动视图
         EditorGUILayout.EndScrollView();
-
-        EditorGUILayout.Space();
-
-        // 导出按钮
-        if (GUILayout.Button("导出分析结果到CSV"))
-        {
-            ExportResults();
-        }
     }
 
-
-    // 修改CSV导出函数，增加新增的指标
-    private void ExportResults()
-    {
-        string path = EditorUtility.SaveFilePanel("导出分析结果", "", "VFX性能分析结果.csv", "csv");
-
-        if (string.IsNullOrEmpty(path))
-            return;
-
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
-        // CSV头
-        sb.AppendLine("预制体名称,粒子系统数量,发射器数量,材质数量,纹理数量,DrawCall数,Batches数,顶点数,三角形数,GPU内存(MB),shader复杂度,性能问题数");
-
-        // 数据行
-        foreach (var result in results)
-        {
-            if (result.prefab != null)
-            {
-                sb.AppendLine(
-                    string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11}",
-                    result.prefabName,
-                    result.particleSystemCount,
-                    result.emitterCount,
-                    result.materialCount,
-                    result.textureCount,
-                    result.drawCallsEstimate,
-                    result.batchesEstimate,
-                    result.vertexCount,
-                    result.triangleCount,
-                    result.gpuMemoryEstimate.ToString("F2"),
-                    result.shaderComplexity,
-                    result.performanceIssues.Count)
-                );
-            }
-        }
-
-        File.WriteAllText(path, sb.ToString());
-
-        Debug.Log("分析结果已导出至: " + path);
-    }
 
     // 添加排序方法
     private void SortResults()

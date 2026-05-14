@@ -13,9 +13,6 @@ MonoBehaviour:
   m_Name: ParticlePrefabScanResult
   m_EditorClassIdentifier: 
   prefabPaths:
-  - Assets/GameAsset/Effect/Backup/eft_staff_wxzj_a_hit_backup.prefab
-  - Assets/GameAsset/Effect/Backup/eft_staff_wxzj_a_hit_Enhanced_backup.prefab
-  - Assets/GameAsset/Effect/Backup/eft_staff_wxzj_a_hit_Ultra_Backup.prefab
   - Assets/GameAsset/Effect/Custom/eft_arrow_attack.prefab
   - Assets/GameAsset/Effect/Custom/eft_arrow_big_attack.prefab
   - Assets/GameAsset/Effect/Custom/eft_weapon_arrow_jianyuzhinu_a.prefab
@@ -26,11 +23,17 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Common/eft_common_buff_atk.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_guaiwushuliang_buff_01_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_hit_01_P.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_item_wing_speedstatus.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_item_wing_speedstatus_burst.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_atk_01_P.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_atk_02_P.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_skill.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_skill_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_monster_skill_04_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_npc_shandianLong_01.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_npc_shandianLong_02.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_player_run_smoke.prefab
-  - Assets/GameAsset/Effect/Particle/Common/eft_ScreenBlack_Sample.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_player_teleport.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Electric.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Fire.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Ice.prefab
@@ -63,6 +66,9 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Skill/HuoJingLing/eft_skill_zd_huojingling_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuoJingLing/eft_skill_zd_huojingling_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuoJingLing/eft_skill_zd_huojingling_a_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/JuKouShaYu/eft_skill_zd_jinjituci_01_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/JuKouShaYu/eft_skill_zd_jinjituci_02_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/JuKouShaYu/eft_skill_zd_jinjituci_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_01_a_fanwei_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_01_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_01_fanwei_P.prefab
@@ -96,6 +102,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_B.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_IconAward_Idle.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Libao_BaseIdle.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_StageInfo_RewardIdle.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_1.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_2.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_3.prefab
@@ -127,7 +134,6 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_a_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_b_hit_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_b_Particle.prefab
-  - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_Crack_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_hit_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_02_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_03_a_Particle.prefab
@@ -245,6 +251,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_Laser3rd_EndPoint.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_Laser_Absorb.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_Laser_ultra.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_weapon_trigger.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_zushi_atk.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_zushi_hit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_zushi_Laser.prefab
