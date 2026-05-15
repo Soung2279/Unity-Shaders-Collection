@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 #if UNITY_EDITOR
@@ -33,6 +34,26 @@ public class BatchVFXAnalyzer : EditorWindow
     }
     private SortField sortField = SortField.DrawCall;
     private bool sortDescending = true; // 默认降序(从高到低)
+
+    // 预设JSON路径（与 ParticleSystemSpawner 共用同一文件）
+    private string presetJsonPath = "Assets/Editor/VFXTools/VFXPresetSpawn/VFXPresets.json";
+
+    // 用于反序列化 VFXPresets.json 的内嵌数据结构
+    [System.Serializable]
+    private class VFXPresetDataEntry
+    {
+        public string function;
+        public string attribute;
+        public string weapon;
+        public string prefabName;
+        public string prefabPath;
+    }
+
+    [System.Serializable]
+    private class VFXPresetJsonRoot
+    {
+        public List<VFXPresetDataEntry> presets = new List<VFXPresetDataEntry>();
+    }
 
     private class VFXAnalysisResult
     {
@@ -141,6 +162,22 @@ public class BatchVFXAnalyzer : EditorWindow
             }
             GUILayout.EndHorizontal();
 
+            // 从预设JSON导入
+            EditorGUILayout.LabelField("从预设JSON导入", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            presetJsonPath = EditorGUILayout.TextField(presetJsonPath);
+            if (GUILayout.Button("浏览", GUILayout.Width(50)))
+            {
+                string absPath = EditorUtility.OpenFilePanel("选择VFXPresets.json", Application.dataPath, "json");
+                if (!string.IsNullOrEmpty(absPath))
+                    presetJsonPath = "Assets" + absPath.Substring(Application.dataPath.Length).Replace('\\', '/');
+            }
+            if (GUILayout.Button("导入", GUILayout.Width(50)))
+            {
+                ImportFromPresetJson();
+            }
+            EditorGUILayout.EndHorizontal();
+
             // 预制体列表
             EditorGUILayout.LabelField("特效预制体列表", EditorStyles.boldLabel);
 
@@ -196,10 +233,12 @@ public class BatchVFXAnalyzer : EditorWindow
 
         // 分析按钮
         GUI.enabled = prefabsList.Count > 0 && !analyzing;
-        if (GUILayout.Button(analyzing ? "分析中..." : "分析所有预制体"))
+        GUI.backgroundColor = analyzing ? Color.yellow : Color.green;
+        if (GUILayout.Button(analyzing ? "分析中..." : "分析所有预制体", GUILayout.Height(36)))
         {
             AnalyzeAllPrefabs();
         }
+        GUI.backgroundColor = Color.white;
         GUI.enabled = true;
 
         EditorGUILayout.Space();
@@ -310,6 +349,69 @@ public class BatchVFXAnalyzer : EditorWindow
 
         EditorUtility.DisplayDialog("搜索完成", $"找到 {foundCount} 个VFX预制体", "确定");
         Debug.Log($"找到 {foundCount} 个VFX预制体");
+    }
+
+    private void ImportFromPresetJson()
+    {
+        if (!File.Exists(presetJsonPath))
+        {
+            EditorUtility.DisplayDialog("文件不存在", $"找不到配置文件：\n{presetJsonPath}", "确定");
+            return;
+        }
+
+        VFXPresetJsonRoot root;
+        try
+        {
+            string json = File.ReadAllText(presetJsonPath);
+            root = JsonUtility.FromJson<VFXPresetJsonRoot>(json);
+        }
+        catch (System.Exception e)
+        {
+            EditorUtility.DisplayDialog("读取失败", $"解析JSON失败：\n{e.Message}", "确定");
+            return;
+        }
+
+        if (root == null || root.presets == null || root.presets.Count == 0)
+        {
+            EditorUtility.DisplayDialog("导入结果", "配置文件中没有任何预设条目", "确定");
+            return;
+        }
+
+        HashSet<string> existingPaths = new HashSet<string>();
+        foreach (var go in prefabsList)
+        {
+            if (go != null)
+                existingPaths.Add(AssetDatabase.GetAssetPath(go));
+        }
+
+        int addedCount = 0;
+        int skipCount = 0;
+        foreach (var entry in root.presets)
+        {
+            if (string.IsNullOrEmpty(entry.prefabPath))
+                continue;
+
+            if (existingPaths.Contains(entry.prefabPath))
+            {
+                skipCount++;
+                continue;
+            }
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(entry.prefabPath);
+            if (prefab != null)
+            {
+                prefabsList.Add(prefab);
+                existingPaths.Add(entry.prefabPath);
+                addedCount++;
+            }
+            else
+            {
+                Debug.LogWarning($"[BatchVFXAnalyzer] 无法加载预制体：{entry.prefabPath}（条目：{entry.function}/{entry.attribute}/{entry.weapon}）");
+            }
+        }
+
+        EditorUtility.DisplayDialog("导入完成",
+            $"从预设JSON导入完成\n新增：{addedCount} 个\n跳过（已在列表中）：{skipCount} 个", "确定");
     }
 
     private void AnalyzeAllPrefabs()
@@ -911,8 +1013,7 @@ public class BatchVFXAnalyzer : EditorWindow
         EditorGUILayout.EndHorizontal();
 
         // 在这里开始结果列表的滚动视图
-        resultsScrollPosition = EditorGUILayout.BeginScrollView(resultsScrollPosition, 
-            GUILayout.Height(Mathf.Min(Mathf.Max(50, position.height - 350), results.Count * 20 + 50)));
+        resultsScrollPosition = EditorGUILayout.BeginScrollView(resultsScrollPosition, GUILayout.ExpandHeight(true));
 
         // 显示每个预制体的分析结果
         foreach (var result in results)
