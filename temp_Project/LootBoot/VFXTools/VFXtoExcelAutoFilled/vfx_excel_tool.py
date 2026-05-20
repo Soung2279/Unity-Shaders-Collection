@@ -178,11 +178,11 @@ def cmd_overwrite(excel_path, json_path):
         data['remark'],
         data['name'],
         data['resource'],
-        data['vfxType'],
+        to_cell(data['vfxType']),
         to_cell(data['rangeSize']),
         to_cell(data['scaleFactor']),
-        data['attachPoint'],
-        data['rotationRule'],
+        to_cell(data['attachPoint']),
+        to_cell(data['rotationRule']),
         to_cell(data['soundId']),
     ]
 
@@ -520,11 +520,11 @@ def main():
         data['remark'],
         data['name'],
         data['resource'],
-        data['vfxType'],
+        to_cell(data['vfxType']),
         to_cell(data['rangeSize']),
         to_cell(data['scaleFactor']),
-        data['attachPoint'],
-        data['rotationRule'],
+        to_cell(data['attachPoint']),
+        to_cell(data['rotationRule']),
         to_cell(data['soundId']),
     ]
 

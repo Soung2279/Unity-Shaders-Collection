@@ -337,7 +337,10 @@ public class VFXTablePreviewWindow : EditorWindow
                .Contains(Event.current.mousePosition)
             && !nameColRect.Contains(Event.current.mousePosition))
         {
-            selectedRowIndex = (selectedRowIndex == index) ? -1 : index;
+            if (Event.current.clickCount == 2)
+                PingResource(row.resource);
+            else
+                selectedRowIndex = (selectedRowIndex == index) ? -1 : index;
             Event.current.Use();
             Repaint();
         }
@@ -587,7 +590,18 @@ public class VFXTablePreviewWindow : EditorWindow
         return psi;
     }
 
-    private void RefreshCacheAndReload()
+    /// <summary>
+    /// 若预览窗口已打开，立即刷新缓存并重新加载数据。
+    /// 可由外部（如差异检查窗口）在写入 Excel 后调用。
+    /// </summary>
+    internal static void RequestRefreshIfOpen()
+    {
+        var wins = Resources.FindObjectsOfTypeAll<VFXTablePreviewWindow>();
+        if (wins != null && wins.Length > 0)
+            wins[0].RefreshCacheAndReload();
+    }
+
+    internal void RefreshCacheAndReload()
     {
         if (!File.Exists(scriptPath))
         {

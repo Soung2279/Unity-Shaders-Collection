@@ -283,6 +283,12 @@ public class LootBootVFXtoExcel : EditorWindow
                 GUILayout.Height(26f)))
                 OpenPreviewTable();
 
+            GUI.backgroundColor = new Color(0.9f, 0.55f, 0.2f);
+            if (GUILayout.Button(new GUIContent("检查差异",
+                "检查 Excel 中所有配置项的资源路径是否存在于当前工程，列出缺失项并允许拖入新预制体补充修正。"),
+                GUILayout.Height(26f)))
+                CheckDiff();
+
             GUI.backgroundColor = savedBgPrev;
         }
 
@@ -694,7 +700,7 @@ public class LootBootVFXtoExcel : EditorWindow
 
     private static string EscapeJson(string s)
     {
-        return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
+        return (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
     }
 
     /// <summary>
@@ -844,6 +850,60 @@ public class LootBootVFXtoExcel : EditorWindow
         {
             prefabMatchWarning = $"读取缓存时出错：{ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// 读取缓存，检查每行资源路径是否存在于工程，收集缺失项后打开差异检查窗口。
+    /// 若缓存不存在，先自动生成。
+    /// </summary>
+    private void CheckDiff()
+    {
+        if (!File.Exists(cachePath))
+        {
+            string cacheErr = RefreshCache();
+            if (!File.Exists(cachePath))
+            {
+                EditorUtility.DisplayDialog("缓存生成失败",
+                    string.IsNullOrEmpty(cacheErr) ? "缓存文件未生成，原因未知。" : cacheErr, "确定");
+                return;
+            }
+        }
+
+        List<VFXRowData> missingRows;
+        try
+        {
+            string json = File.ReadAllText(cachePath, Encoding.UTF8);
+            VFXRowDataList list = JsonUtility.FromJson<VFXRowDataList>("{\"items\":" + json + "}");
+            if (list?.items == null)
+            {
+                EditorUtility.DisplayDialog("错误", "缓存数据解析失败，请重新生成缓存。", "确定");
+                return;
+            }
+
+            missingRows = new List<VFXRowData>();
+            foreach (var row in list.items)
+            {
+                if (string.IsNullOrWhiteSpace(row.resource)) continue;
+                string fullPath = Path.Combine(
+                    Application.dataPath, "GameAsset", "Effect",
+                    row.resource.TrimStart('/').Replace('/', Path.DirectorySeparatorChar) + ".prefab");
+                if (!File.Exists(fullPath))
+                    missingRows.Add(row);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            EditorUtility.DisplayDialog("错误", $"读取缓存时出错：{ex.Message}", "确定");
+            return;
+        }
+
+        if (missingRows.Count == 0)
+        {
+            EditorUtility.DisplayDialog("检查完成", "所有资源路径均可在当前工程中找到，无差异！", "确定");
+            return;
+        }
+
+        VFXDiffCheckWindow.Open(cachePath, excelPath, scriptPath, missingRows);
     }
 
 }
