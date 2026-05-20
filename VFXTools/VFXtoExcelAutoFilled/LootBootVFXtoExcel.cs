@@ -8,8 +8,20 @@ using System.Text;
 #if UNITY_EDITOR
 public class LootBootVFXtoExcel : EditorWindow
 {
+    // ── Python 未找到时的统一提示（退出码 9009）────────────────
+    private const string PYTHON_NOT_FOUND_MSG =
+        "找不到 python 命令（退出码 9009），请确认：\n" +
+        "1. Python 已安装并已加入系统 PATH\n" +
+        "2. 使用 python.org 版本，而非 Windows Store 版\n" +
+        "   （Store 版存根程序在 Unity 子进程中无法正常运行）\n" +
+        "3. 安装后重启 Unity";
+
     // ── 拖入的预制体 ──────────────────────────────────────────
     private GameObject droppedPrefab;
+
+    // ── 预制体缓存匹配结果 ────────────────────────────────────
+    private VFXRowData cachedMatchedRow = null;
+    private string prefabMatchWarning = "";
 
     // ── 10 项配置字段 ─────────────────────────────────────────
     private string fieldId = "";
@@ -28,7 +40,7 @@ public class LootBootVFXtoExcel : EditorWindow
         { "0 - Spine特效", "1 - 粒子特效", "2 - 复合特效" };
 
     private static readonly string[] ATTACH_POINT_OPTIONS =
-        { "0 - 物体原点", "1 - 物体中心点" };
+        { "0 - 物体原点", "1 - 物体中心点", "2 - 物体头部" };
 
     private static readonly string[] ROTATION_RULE_OPTIONS =
         { "0 - 不旋转", "1 - 旋转不翻转", "2 - 旋转并翻转" };
@@ -36,14 +48,15 @@ public class LootBootVFXtoExcel : EditorWindow
     // ── 滚动位置 ──────────────────────────────────────────────
     private Vector2 scrollPos;
 
-    // ── 备注搜索关键字 ────────────────────────────────────
-    private string searchKeyword = "";
-
     // ── Excel 路径 ────────────────────────────────────────────
     private string excelPath = "";
+    private const string PREF_EXCEL_PATH = "LootBootVFXtoExcel_ExcelPath";
 
     // ── Python 脚本路径（固定在项目内部，与 Excel 位置无关）────────
     private string scriptPath = "";
+
+    // ── 全量缓存 JSON 路径（与脚本同目录，固定路径）──────────────
+    private string cachePath = "";
 
     // ── 菜单入口 ──────────────────────────────────────────────
     [MenuItem("TATools/VFXTools/VFXtoExcel自动填表工具")]
@@ -56,11 +69,14 @@ public class LootBootVFXtoExcel : EditorWindow
 
     private void OnEnable()
     {
+        excelPath = EditorPrefs.GetString(PREF_EXCEL_PATH, "");
         if (string.IsNullOrEmpty(excelPath))
             excelPath = Path.Combine(Application.dataPath, "VFXTemp", "Effect.xls").Replace('\\', '/');
 
         // Python 脚本固定在项目内 VFXTools 目录，与 Excel 文件位置无关
         scriptPath = Path.Combine(Application.dataPath, "Editor/VFXTools/VFXtoExcelAutoFilled", "vfx_excel_tool.py").Replace('\\', '/');
+        // 缓存放在 Library/ 下，避免 Unity/Spine 将其当作资产导入
+        cachePath  = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Library", "VFXTool", "vfx_cache.json")).Replace('\\', '/');
 
         // 设置窗口标签图标
         var iconContent = EditorGUIUtility.IconContent("ParticleSystem Icon");
@@ -77,13 +93,19 @@ public class LootBootVFXtoExcel : EditorWindow
         using (new EditorGUILayout.HorizontalScope())
         {
             EditorGUILayout.LabelField("Excel 路径", GUILayout.Width(68f));
+            EditorGUI.BeginChangeCheck();
             excelPath = EditorGUILayout.TextField(excelPath);
+            if (EditorGUI.EndChangeCheck())
+                EditorPrefs.SetString(PREF_EXCEL_PATH, excelPath);
             if (GUILayout.Button("浏览", GUILayout.Width(44f)))
             {
                 string selected = EditorUtility.OpenFilePanel("选择 Excel 文件",
                     Path.GetDirectoryName(excelPath), "xls");
                 if (!string.IsNullOrEmpty(selected))
+                {
                     excelPath = selected;
+                    EditorPrefs.SetString(PREF_EXCEL_PATH, excelPath);
+                }
             }
         }
         // ── 清除配置按钮 ──────────────────────────────────────
@@ -103,14 +125,54 @@ public class LootBootVFXtoExcel : EditorWindow
             EditorGUILayout.LabelField("特效预制体", EditorStyles.boldLabel);
             newPrefab = (GameObject)EditorGUILayout.ObjectField(
                 droppedPrefab, typeof(GameObject), false);
+            if (droppedPrefab != null)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    Color savedBtnBg = GUI.backgroundColor;
+                    GUI.backgroundColor = new Color(0.35f, 0.85f, 0.35f);
+                    if (GUILayout.Button(new GUIContent("添加新配置",
+                        "重读预制体信息（名称、资源路径、特效类型、范围大小），并分配新 ID（末尾 ID + 10）。"),
+                        GUILayout.Height(22f)))
+                    {
+                        prefabMatchWarning = "";
+                        AutoFillFromPrefab(droppedPrefab, true);
+                    }
+                    GUI.backgroundColor = new Color(0.2f, 0.75f, 0.9f);
+                    if (GUILayout.Button(new GUIContent("变更新配置",
+                        "重读预制体信息（资源路径、特效类型、范围大小），保留当前 ID 与名称不变。"),
+                        GUILayout.Height(22f)))
+                    {
+                        prefabMatchWarning = "";
+                        AutoFillFromPrefab(droppedPrefab, false);
+                    }
+                    GUI.backgroundColor = new Color(1f, 0.6f, 0.15f);
+                    if (GUILayout.Button(new GUIContent("读取已有配置",
+                        "将界面配置项还原为缓存中该预制体对应行的数据（含 ID）。"),
+                        GUILayout.Height(22f)))
+                    {
+                        if (cachedMatchedRow != null)
+                            FillFromRowData(cachedMatchedRow);
+                        else
+                            EditorUtility.DisplayDialog("无法读取配置",
+                                string.IsNullOrEmpty(prefabMatchWarning)
+                                    ? "没有已匹配的缓存数据，无法读取配置。"
+                                    : prefabMatchWarning,
+                                "确定");
+                    }
+                    GUI.backgroundColor = savedBtnBg;
+                }
+            }
         }
         if (newPrefab != droppedPrefab)
         {
             droppedPrefab = newPrefab;
             if (newPrefab != null)
+                DoAutoMatchFromCache(newPrefab);
+            else
             {
-                fieldName = newPrefab.name;
-                AutoFillFromPrefab(newPrefab);
+                cachedMatchedRow   = null;
+                prefabMatchWarning = "";
             }
         }
 
@@ -131,21 +193,6 @@ public class LootBootVFXtoExcel : EditorWindow
                 new GUIContent("特效类型", "0 - Spine骨骼动画特效\n1 - 粒子系统特效\n2 - 复合特效（含 SpriteRenderer 子节点）\n拖入预制体时自动检测。"),
                 fieldVFXType, VFX_TYPE_OPTIONS);
 
-            // ── 搜索ID / 搜索名称 按钮 ──────────
-            Color savedBgQuery = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(0.25f, 0.55f, 1f);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button(new GUIContent("搜索 ID",
-                    "从 Excel 读取与当前 ID 匹配的行，并将全部字段填回界面。\n此操作只读取 Excel，不修改任何表中数据。"),
-                    GUILayout.Height(26f)))
-                    QueryById();
-                if (GUILayout.Button(new GUIContent("搜索名称",
-                    "从 Excel 读取与当前名称精确匹配的行，并将全部字段填回界面。\n此操作只读取 Excel，不修改任何表中数据。"),
-                    GUILayout.Height(26f)))
-                    QueryByName();
-            }
-            GUI.backgroundColor = savedBgQuery;
         }
 
         EditorGUILayout.Space(6f);
@@ -181,7 +228,7 @@ public class LootBootVFXtoExcel : EditorWindow
                 EditorGUIUtility.labelWidth = 148f;
             }
             fieldAttachPoint = EditorGUILayout.Popup(
-                new GUIContent("特效挂接点", "0 - 物体原点：特效跟随目标物体的 Transform 原点\n1 - 物体中心点：特效跟随目标物体的视觉中心（Renderer Bounds Center）"),
+                new GUIContent("特效挂接点", "0 - 物体原点：特效跟随目标物体的 Transform 原点\n1 - 物体中心点：特效跟随目标物体的视觉中心（Renderer Bounds Center）\n2 - 物体头部：特效挂载至目标物体头顶位置"),
                 fieldAttachPoint, ATTACH_POINT_OPTIONS);
             fieldRotationRule = EditorGUILayout.Popup(
                 new GUIContent("旋转规则", "0 - 不旋转：特效始终保持原始朝向\n1 - 旋转不翻转：特效跟随施放方向旋转，但不做镜像翻转\n2 - 旋转并翻转：特效旋转，同时根据朝向做水平镜像翻转"),
@@ -202,32 +249,13 @@ public class LootBootVFXtoExcel : EditorWindow
             fieldRemark = EditorGUILayout.TextArea(fieldRemark, GUILayout.MinHeight(40f));
         }
 
-        EditorGUILayout.Space(6f);
-
-        // ── 检索特效 ──────────────────────────────────────────────
-        EditorGUILayout.LabelField("检索特效", EditorStyles.boldLabel);
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-        {
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                EditorGUIUtility.labelWidth = 60f;
-                searchKeyword = EditorGUILayout.TextField(
-                    new GUIContent("搜索关键字", "输入关键字，将在 Excel 备注列中进行模糊搜索。"),
-                    searchKeyword);
-                EditorGUIUtility.labelWidth = 148f;
-                Color savedBgSearch = GUI.backgroundColor;
-                GUI.backgroundColor = new Color(1f, 0.9f, 0.2f);
-                if (GUILayout.Button(new GUIContent("搜索特效",
-                    "在 Excel 的备注列中模糊搜索输入的关键字，并在新窗口中列出所有匹配项。\n此操作只读取 Excel，不修改任何数据。"),
-                    GUILayout.Width(66f)))
-                    SearchByRemark();
-                GUI.backgroundColor = savedBgSearch;
-            }
-        }
-
         EditorGUILayout.EndScrollView();
 
         EditorGUIUtility.labelWidth = savedLabelWidth;
+
+        // ── 预制体匹配警告 ────────────────────────────────────
+        if (!string.IsNullOrEmpty(prefabMatchWarning))
+            EditorGUILayout.HelpBox(prefabMatchWarning, MessageType.Warning);
 
         // ── 操作按钮 ──────────────────────────────────────────
         GUILayout.FlexibleSpace();
@@ -244,6 +272,18 @@ public class LootBootVFXtoExcel : EditorWindow
                 OverwriteToExcel();
 
             GUI.backgroundColor = defaultBgColor;
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            Color savedBgPrev = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.25f, 0.55f, 1f);
+            if (GUILayout.Button(new GUIContent("预览表格",
+                "打开全表预览窗口，可浏览 Excel 中所有特效配置，支持实时搜索。"),
+                GUILayout.Height(26f)))
+                OpenPreviewTable();
+
+            GUI.backgroundColor = savedBgPrev;
         }
 
         if (GUILayout.Button("打开 Excel", GUILayout.Height(26f)))
@@ -269,12 +309,16 @@ public class LootBootVFXtoExcel : EditorWindow
         fieldRotationRule = 0;
         fieldSoundId      = "";
         scrollPos         = Vector2.zero;
+        cachedMatchedRow   = null;
+        prefabMatchWarning = "";
     }
 
     /// <summary>
-    /// 拖入预制体后自动填写：资源路径、原始特效范围大小、特效类型。
+    /// 根据预制体填写配置字段。
+    /// fillIdAndName = true（新增模式）：同时填写名称与自动 ID；
+    /// fillIdAndName = false（覆盖模式）：只更新资源路径、特效类型、范围大小，保持 ID 与名称不变。
     /// </summary>
-    private void AutoFillFromPrefab(GameObject prefab)
+    private void AutoFillFromPrefab(GameObject prefab, bool fillIdAndName)
     {
         // ── 1. 资源路径（省略 Assets/GameAsset/Effect/ 前缀）─────
         const string PATH_PREFIX = "Assets/GameAsset/Effect/";
@@ -299,12 +343,16 @@ public class LootBootVFXtoExcel : EditorWindow
         // ── 3. 特效类型（优先级：Spine > 粒子 > 复合）─────────────
         fieldVFXType = DetectVFXType(prefab);
 
-        // ── 4. id（读取 Excel 最后一行 id + 10）──────────────────
-        if (File.Exists(excelPath) && File.Exists(scriptPath))
+        // ── 4. 名称与 ID（仅新增模式）────────────────────────────
+        if (fillIdAndName)
         {
-            int nextId = ReadNextIdFromExcel(scriptPath, excelPath);
-            if (nextId >= 0)
-                fieldId = nextId.ToString();
+            fieldName = prefab.name;
+            if (File.Exists(excelPath) && File.Exists(scriptPath))
+            {
+                int nextId = ReadNextIdFromExcel(scriptPath, excelPath);
+                if (nextId >= 0)
+                    fieldId = nextId.ToString();
+            }
         }
     }
 
@@ -353,7 +401,7 @@ public class LootBootVFXtoExcel : EditorWindow
     {
         if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
         {
-            EditorUtility.DisplayDialog("错误", "Excel 文件路径无效，请检查路径设置。", "确定");
+            EditorUtility.DisplayDialog("错误", $"Excel 文件路径无效，请检查路径设置。\n当前路径：{excelPath}", "确定");
             return;
         }
 
@@ -412,18 +460,7 @@ public class LootBootVFXtoExcel : EditorWindow
         {
             File.WriteAllText(tempJson, sb.ToString(), new UTF8Encoding(false));
 
-            var psi = new ProcessStartInfo
-            {
-                FileName = "python",
-                Arguments = $"\"{scriptPath}\" --overwrite \"{excelPath}\" \"{tempJson}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8,
-            };
-            psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+            var psi = BuildPsi(scriptPath, $"--overwrite \"{excelPath}\" \"{tempJson}\"");
 
             using (var proc = Process.Start(psi))
             {
@@ -432,7 +469,15 @@ public class LootBootVFXtoExcel : EditorWindow
                 proc.WaitForExit();
 
                 if (proc.ExitCode == 0)
+                {
                     EditorUtility.DisplayDialog("成功", "配置已成功覆盖写入 Excel。", "确定");
+                    RefreshCache();
+                    OpenPreviewTable(overwriteId);
+                }
+                else if (proc.ExitCode == 9009)
+                {
+                    EditorUtility.DisplayDialog("覆盖失败", PYTHON_NOT_FOUND_MSG, "确定");
+                }
                 else
                 {
                     string msg = stdout.Trim();
@@ -455,18 +500,7 @@ public class LootBootVFXtoExcel : EditorWindow
     /// </summary>
     private static string CheckIdExists(string scriptPath, string excelPath, int id)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "python",
-            Arguments = $"\"{scriptPath}\" --check-id \"{excelPath}\" {id}",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-        psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+        var psi = BuildPsi(scriptPath, $"--check-id \"{excelPath}\" {id}");
 
         try
         {
@@ -487,7 +521,7 @@ public class LootBootVFXtoExcel : EditorWindow
     {
         if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
         {
-            EditorUtility.DisplayDialog("错误", "Excel 文件路径无效，请检查路径设置。", "确定");
+            EditorUtility.DisplayDialog("错误", $"Excel 文件路径无效，请检查路径设置。\n当前路径：{excelPath}", "确定");
             return;
         }
 
@@ -521,7 +555,12 @@ public class LootBootVFXtoExcel : EditorWindow
             if (error != null)
                 EditorUtility.DisplayDialog("写入失败", error, "确定");
             else
+            {
                 EditorUtility.DisplayDialog("成功", "配置已成功写入 Excel。", "确定");
+                RefreshCache();
+                if (int.TryParse(fieldId.Trim(), out int savedId))
+                    OpenPreviewTable(savedId);
+            }
         }
         finally
         {
@@ -537,7 +576,7 @@ public class LootBootVFXtoExcel : EditorWindow
     {
         if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
         {
-            EditorUtility.DisplayDialog("错误", "Excel 文件路径无效，请检查路径设置。", "确定");
+            EditorUtility.DisplayDialog("错误", $"Excel 文件路径无效，请检查路径设置。\n当前路径：{excelPath}", "确定");
             return;
         }
         Process.Start(new ProcessStartInfo(excelPath) { UseShellExecute = true });
@@ -548,83 +587,36 @@ public class LootBootVFXtoExcel : EditorWindow
     /// </summary>
     private static string RunPythonScript(string scriptPath, string excelPath, string jsonFilePath)
     {
-        var psi = new ProcessStartInfo
+        var psi = BuildPsi(scriptPath, $"\"{excelPath}\" \"{jsonFilePath}\"");
+
+        try
         {
-            FileName = "python",
-            Arguments = $"\"{scriptPath}\" \"{excelPath}\" \"{jsonFilePath}\"",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-        psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+            using (var proc = Process.Start(psi))
+            {
+                if (proc == null)
+                    return "启动 Python 进程失败（返回 null），请确认 Python 已正确安装。";
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit();
 
-        using (var proc = Process.Start(psi))
-        {
-            string stdout = proc.StandardOutput.ReadToEnd();
-            string stderr = proc.StandardError.ReadToEnd();
-            proc.WaitForExit();
+                if (proc.ExitCode == 0)
+                    return null;
 
-            if (proc.ExitCode == 0)
-                return null;
+                if (proc.ExitCode == 9009)
+                    return PYTHON_NOT_FOUND_MSG;
 
-            string msg = stdout.Trim();
-            if (string.IsNullOrEmpty(msg))
-                msg = stderr.Trim();
-            return string.IsNullOrEmpty(msg)
-                ? $"Python 脚本异常退出（退出码 {proc.ExitCode}）"
-                : msg;
+                string msg = stdout.Trim();
+                if (string.IsNullOrEmpty(msg))
+                    msg = stderr.Trim();
+                return string.IsNullOrEmpty(msg)
+                    ? $"Python 脚本异常退出（退出码 {proc.ExitCode}）"
+                    : msg;
+            }
         }
-    }
-
-    /// <summary>
-    /// 从 Excel 中按 ID 查询整行数据，并将结果填回界面所有字段。
-    /// </summary>
-    private void QueryById()
-    {
-        if (string.IsNullOrWhiteSpace(fieldId) || !int.TryParse(fieldId.Trim(), out int queryId))
+        catch (System.Exception ex)
         {
-            EditorUtility.DisplayDialog("错误", "请先在 ID 字段填入有效的整数后再执行查询。", "确定");
-            return;
+            return $"启动 Python 进程失败，请确认 python 已安装并已加入系统 PATH（注意：Windows Store 版 Python 无法被 Unity 子进程调用，需从 python.org 重新安装）。\n详情：{ex.Message}";
         }
-
-        if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
-        {
-            EditorUtility.DisplayDialog("错误", "Excel 文件路径无效，请检查路径设置。", "确定");
-            return;
-        }
-
-        if (!File.Exists(scriptPath))
-        {
-            EditorUtility.DisplayDialog("错误", $"找不到 Python 脚本：\n{scriptPath}", "确定");
-            return;
-        }
-
-        string json = ReadRowById(scriptPath, excelPath, queryId);
-
-        if (json == null)
-        {
-            EditorUtility.DisplayDialog("查询失败", "调用 Python 脚本时发生错误，请查看控制台输出。", "确定");
-            return;
-        }
-
-        if (json == "NOT_FOUND")
-        {
-            EditorUtility.DisplayDialog("未找到", $"Excel 中不存在 ID 为 {queryId} 的记录。", "确定");
-            return;
-        }
-
-        // 解析返回的 JSON（所有字段均为字符串）
-        VFXRowData row = JsonUtility.FromJson<VFXRowData>(json);
-        if (row == null)
-        {
-            EditorUtility.DisplayDialog("解析失败", "无法解析 Python 返回的数据，请查看控制台输出。", "确定");
-            return;
-        }
-
-        FillFromRowData(row);
     }
 
     /// <summary>
@@ -650,214 +642,7 @@ public class LootBootVFXtoExcel : EditorWindow
         Repaint();
     }
 
-    /// <summary>
-    /// 从 Excel 中按名称查询整行数据，并将结果填回界面所有字段。
-    /// </summary>
-    private void QueryByName()
-    {
-        if (string.IsNullOrWhiteSpace(fieldName))
-        {
-            EditorUtility.DisplayDialog("错误", "请先在名称字段填入内容后再执行查询。", "确定");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
-        {
-            EditorUtility.DisplayDialog("错误", "Excel 文件路径无效，请检查路径设置。", "确定");
-            return;
-        }
-
-        if (!File.Exists(scriptPath))
-        {
-            EditorUtility.DisplayDialog("错误", $"找不到 Python 脚本：\n{scriptPath}", "确定");
-            return;
-        }
-
-        string json = ReadRowByName(scriptPath, excelPath, fieldName.Trim());
-
-        if (json == null)
-        {
-            EditorUtility.DisplayDialog("查询失败", "调用 Python 脚本时发生错误，请查看控制台输出。", "确定");
-            return;
-        }
-
-        if (json == "NOT_FOUND")
-        {
-            EditorUtility.DisplayDialog("未找到", $"Excel 中不存在名称为 \"{fieldName.Trim()}\" 的记录。", "确定");
-            return;
-        }
-
-        VFXRowData row = JsonUtility.FromJson<VFXRowData>(json);
-        if (row == null)
-        {
-            EditorUtility.DisplayDialog("解析失败", "无法解析 Python 返回的数据，请查看控制台输出。", "确定");
-            return;
-        }
-
-        FillFromRowData(row);
-    }
-
-    /// <summary>
-    /// 调用 Python 脚本按名称读取整行数据，返回 JSON 字符串。
-    /// 返回 "NOT_FOUND" 表示不存在，null 表示调用失败。
-    /// </summary>
-    private static string ReadRowByName(string scriptPath, string excelPath, string name)
-    {
-        // 通过临时 JSON 文件传递名称，避免含空格或特殊字符时的命令行转义问题
-        string tempJson = Path.GetTempFileName();
-        try
-        {
-            File.WriteAllText(tempJson,
-                "{\"name\":\"" + EscapeJson(name) + "\"}",
-                new UTF8Encoding(false));
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "python",
-                Arguments = $"\"{scriptPath}\" --get-by-name \"{excelPath}\" \"{tempJson}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8,
-            };
-            psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
-
-            using (var proc = Process.Start(psi))
-            {
-                string output = proc.StandardOutput.ReadToEnd().Trim();
-                proc.WaitForExit();
-                if (proc.ExitCode == 0) return output;
-                if (proc.ExitCode == 1) return "NOT_FOUND";
-                return null;
-            }
-        }
-        catch { return null; }
-        finally
-        {
-            if (File.Exists(tempJson))
-                File.Delete(tempJson);
-        }
-    }
-
-    /// <summary>
-    /// 在 Excel 备注列中模糊搜索关键字，结果在新窗口展示。
-    /// </summary>
-    private void SearchByRemark()
-    {
-        if (string.IsNullOrWhiteSpace(searchKeyword))
-        {
-            EditorUtility.DisplayDialog("提示", "请先在搜索关键字字段输入内容后再执行搜索。", "确定");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
-        {
-            EditorUtility.DisplayDialog("错误", "Excel 文件路径无效，请检查路径设置。", "确定");
-            return;
-        }
-
-        if (!File.Exists(scriptPath))
-        {
-            EditorUtility.DisplayDialog("错误", $"找不到 Python 脚本：\n{scriptPath}", "确定");
-            return;
-        }
-
-        string json = RunPythonSearchByRemark(scriptPath, excelPath, searchKeyword);
-        if (json == null)
-        {
-            EditorUtility.DisplayDialog("搜索失败", "调用 Python 脚本时发生错误，请查看控制台输出。", "确定");
-            return;
-        }
-
-        // JsonUtility 不支持顶层数组，需包装后反序列化
-        VFXRowDataList list = JsonUtility.FromJson<VFXRowDataList>("{\"items\":" + json + "}");
-        if (list == null || list.items == null || list.items.Length == 0)
-        {
-            EditorUtility.DisplayDialog("未找到", $"备注中没有包含 \"{searchKeyword}\" 的特效记录。", "确定");
-            return;
-        }
-
-        VFXSearchResultWindow.Open(new List<VFXRowData>(list.items), FillFromRowData, searchKeyword, excelPath, scriptPath);
-    }
-
-    /// <summary>
-    /// 调用 Python 脚本按备注模糊搜索，返回 JSON 数组字符串。失败返回 null。
-    /// </summary>
-    private static string RunPythonSearchByRemark(string scriptPath, string excelPath, string keyword)
-    {
-        // 通过临时 JSON 文件传递关键字，避免命令行特殊字符转义问题
-        string tempJson = Path.GetTempFileName();
-        try
-        {
-            File.WriteAllText(tempJson,
-                "{\"keyword\":\"" + EscapeJson(keyword) + "\"}",
-                new UTF8Encoding(false));
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "python",
-                Arguments = $"\"{scriptPath}\" --search-by-remark \"{excelPath}\" \"{tempJson}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8,
-            };
-            psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
-
-            using (var proc = Process.Start(psi))
-            {
-                string output = proc.StandardOutput.ReadToEnd().Trim();
-                proc.WaitForExit();
-                return proc.ExitCode == 0 ? output : null;
-            }
-        }
-        catch { return null; }
-        finally
-        {
-            if (File.Exists(tempJson))
-                File.Delete(tempJson);
-        }
-    }
-
-    /// <summary>
-    /// 调用 Python 脚本按 ID 读取整行数据，返回 JSON 字符串。
-    /// 返回 "NOT_FOUND" 表示不存在，null 表示调用失败。
-    /// </summary>
-    private static string ReadRowById(string scriptPath, string excelPath, int id)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "python",
-            Arguments = $"\"{scriptPath}\" --get-by-id \"{excelPath}\" {id}",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-        psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
-
-        try
-        {
-            using (var proc = Process.Start(psi))
-            {
-                string output = proc.StandardOutput.ReadToEnd().Trim();
-                proc.WaitForExit();
-                // 退出码 0 = 找到，1 = 未找到，其他 = 错误
-                if (proc.ExitCode == 0) return output;
-                if (proc.ExitCode == 1) return "NOT_FOUND";
-                return null;
-            }
-        }
-        catch { return null; }
-    }
-
-    /// <summary>用于接收 Python --get-by-id / --search-by-remark 返回的 JSON（所有字段均为字符串）。</summary>
+    /// <summary>特效配置行的数据模型，供预览窗口回填及序列化使用。</summary>
     [System.Serializable]
     internal class VFXRowData
     {
@@ -873,11 +658,35 @@ public class LootBootVFXtoExcel : EditorWindow
         public string soundId;
     }
 
-    /// <summary>用于 JsonUtility 反序列化 Python --search-by-remark 返回的 JSON 数组。</summary>
+    /// <summary>JSON 缓存数组的包装器，供 QuickPreview 反序列化使用。</summary>
     [System.Serializable]
     private class VFXRowDataList
     {
         public VFXRowData[] items;
+    }
+
+    /// <summary>
+    /// 构建子进程启动配置。若同目录存在 vfx_excel_tool.exe（PyInstaller 打包产物）则直接调用，
+    /// 否则回退到 python 命令 + 脚本路径，实现无缝降级。
+    /// </summary>
+    private static ProcessStartInfo BuildPsi(string scriptPath, string pythonArgs)
+    {
+        string dir     = Path.GetDirectoryName(scriptPath) ?? "";
+        string exePath = Path.Combine(dir, "vfx_excel_tool.exe");
+        bool   useExe  = File.Exists(exePath);
+        var psi = new ProcessStartInfo
+        {
+            FileName               = useExe ? exePath : "python",
+            Arguments              = useExe ? pythonArgs : $"\"{scriptPath}\" {pythonArgs}",
+            UseShellExecute        = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError  = true,
+            CreateNoWindow         = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding  = Encoding.UTF8,
+        };
+        psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+        return psi;
     }
 
     private static string IntFieldToJson(string s) =>
@@ -893,16 +702,7 @@ public class LootBootVFXtoExcel : EditorWindow
     /// </summary>
     private static int ReadNextIdFromExcel(string scriptPath, string excelPath)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "python",
-            Arguments = $"\"{scriptPath}\" --get-last-id \"{excelPath}\"",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-        };
-        psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+        var psi = BuildPsi(scriptPath, $"--get-last-id \"{excelPath}\"");
 
         try
         {
@@ -918,5 +718,134 @@ public class LootBootVFXtoExcel : EditorWindow
 
         return -1;
     }
+
+    /// <summary>
+    /// 将 Excel 全量数据导出为 JSON 缓存文件。
+    /// 返回 null 表示成功；返回非 null 字符串表示具体失败原因。
+    /// </summary>
+    private string RefreshCache()
+    {
+        if (!File.Exists(excelPath))
+            return $"Excel 文件不存在：{excelPath}";
+        if (!File.Exists(scriptPath))
+            return $"Python 脚本不存在：{scriptPath}";
+
+        var psi = BuildPsi(scriptPath, $"--export-all \"{excelPath}\" \"{cachePath}\"");
+
+        try
+        {
+            using (var proc = Process.Start(psi))
+            {
+                if (proc == null)
+                    return "启动 Python 进程失败（返回 null），请确认 Python 已正确安装。";
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit();
+                if (proc.ExitCode == 9009)
+                    return PYTHON_NOT_FOUND_MSG;
+
+                if (proc.ExitCode != 0)
+                {
+                    string msg = (string.IsNullOrWhiteSpace(stderr) ? stdout : stderr).Trim();
+                    return string.IsNullOrEmpty(msg) ? $"Python 脚本异常退出（退出码 {proc.ExitCode}）" : msg;
+                }
+                return null;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            return $"启动 Python 进程失败，请确认 python 已安装并已加入系统 PATH（注意：Windows Store 版 Python 无法被 Unity 子进程调用）。\n详情：{ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// 打开全表预览窗口。若缓存不存在则弹窗询问是否立即生成。
+    /// </summary>
+    /// <param name="highlightId">需高亮定位的行 ID；-1 表示不高亮。</param>
+    private void OpenPreviewTable(int highlightId = -1)
+    {
+        if (!File.Exists(cachePath))
+        {
+            bool doRefresh = EditorUtility.DisplayDialog(
+                "缓存不存在",
+                "尚未生成数据缓存，是否立即从 Excel 导出？",
+                "立即生成", "取消");
+            if (!doRefresh) return;
+            string cacheErr = RefreshCache();
+            if (!File.Exists(cachePath))
+            {
+                string detail = string.IsNullOrEmpty(cacheErr)
+                    ? "缓存文件未生成，原因未知。"
+                    : cacheErr;
+                EditorUtility.DisplayDialog("缓存生成失败", detail, "确定");
+                return;
+            }
+        }
+        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData, highlightId);
+    }
+
+    /// <summary>
+    /// 拖入预制体时，在缓存中按资源路径精确匹配：
+    /// 恰好 1 条 → 自动回填所有字段并记录匹配行；0 条或多条 → 仅设置黄色警告，不改动字段。
+    /// </summary>
+    private void DoAutoMatchFromCache(GameObject prefab)
+    {
+        prefabMatchWarning = "";
+        cachedMatchedRow   = null;
+
+        if (!File.Exists(cachePath))
+        {
+            prefabMatchWarning = "缓存文件不存在，请先点击「预览表格」生成缓存，再拖入预制体进行匹配。";
+            return;
+        }
+
+        const string PATH_PREFIX = "Assets/GameAsset/Effect/";
+        string fullPath = AssetDatabase.GetAssetPath(prefab);
+        if (string.IsNullOrEmpty(fullPath))
+        {
+            prefabMatchWarning = "无法获取预制体的资源路径，请确认预制体已保存到工程中。";
+            return;
+        }
+
+        string resourcePath = fullPath.StartsWith(PATH_PREFIX)
+            ? fullPath.Substring(PATH_PREFIX.Length)
+            : fullPath;
+        if (resourcePath.EndsWith(".prefab"))
+            resourcePath = resourcePath.Substring(0, resourcePath.Length - ".prefab".Length);
+
+        try
+        {
+            string json = File.ReadAllText(cachePath, Encoding.UTF8);
+            VFXRowDataList list = JsonUtility.FromJson<VFXRowDataList>("{\"items\":" + json + "}");
+            if (list?.items == null)
+            {
+                prefabMatchWarning = "缓存数据解析失败，请重新生成缓存。";
+                return;
+            }
+
+            var matches = new List<VFXRowData>();
+            foreach (var row in list.items)
+            {
+                if (row.resource == resourcePath)
+                    matches.Add(row);
+            }
+
+            if (matches.Count == 0)
+                prefabMatchWarning = $"未在缓存中找到匹配项（resource = \"{resourcePath}\"），可点击「添加新配置」新增。";
+            else if (matches.Count > 1)
+                prefabMatchWarning = $"找到 {matches.Count} 条匹配项（resource = \"{resourcePath}\"），无法自动回填，请从「预览表格」手动选择。";
+            else
+            {
+                cachedMatchedRow = matches[0];
+                FillFromRowData(cachedMatchedRow);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            prefabMatchWarning = $"读取缓存时出错：{ex.Message}";
+        }
+    }
+
 }
+
 #endif

@@ -66,6 +66,39 @@ namespace Game.Editor.ParticlePrefabCollector
             w.Focus();
         }
 
+        /// <summary>
+        /// 从外部工具导入Prefab路径到预览器列表，并自动选中这些条目，便于直接预览。
+        /// </summary>
+        public static void ImportFromExternalAnalyzer(IEnumerable<string> prefabPaths)
+        {
+            if (prefabPaths == null)
+            {
+                EditorUtility.DisplayDialog("导入失败", "没有可导入的预制体路径", "确定");
+                return;
+            }
+
+            var normalizedPaths = prefabPaths
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path.Replace('\\', '/'))
+                .Distinct()
+                .ToList();
+
+            if (normalizedPaths.Count == 0)
+            {
+                EditorUtility.DisplayDialog("导入失败", "没有可导入的预制体路径", "确定");
+                return;
+            }
+
+            Open();
+            if (_instance == null)
+            {
+                EditorUtility.DisplayDialog("导入失败", "预览器窗口尚未初始化，请重试", "确定");
+                return;
+            }
+
+            _instance.ImportExternalPrefabPathsInternal(normalizedPaths);
+        }
+
         private const string ScanResultAssetPath =
             "Assets/Editor/VFXTools/ParticlePrefabCollector/ParticlePrefabScanResult.asset";
 
@@ -570,6 +603,68 @@ namespace Game.Editor.ParticlePrefabCollector
                 _previewTargets = null;
                 ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
             }
+        }
+
+        private void ImportExternalPrefabPathsInternal(List<string> prefabPaths)
+        {
+            if (prefabPaths == null || prefabPaths.Count == 0)
+            {
+                EditorUtility.DisplayDialog("导入失败", "没有可导入的预制体路径", "确定");
+                return;
+            }
+
+            if (_isPreviewing)
+            {
+                _isPreviewing = false;
+                _previewTargets = null;
+                ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
+            }
+
+            int addedCount = 0;
+            int selectedCount = 0;
+            int invalidCount = 0;
+
+            var existingPathSet = new HashSet<string>(_entries.Select(e => e.PrefabPath));
+            _previewSelected.Clear();
+
+            foreach (var path in prefabPaths)
+            {
+                var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (!go || go.GetComponentInChildren<ParticleSystem>(true) == null)
+                {
+                    invalidCount++;
+                    continue;
+                }
+
+                if (!existingPathSet.Contains(path))
+                {
+                    _entries.Add(new Entry
+                    {
+                        PrefabPath = path,
+                        PrefabName = Path.GetFileNameWithoutExtension(path),
+                        PrefabAsset = go
+                    });
+                    existingPathSet.Add(path);
+                    addedCount++;
+                }
+
+                if (_previewSelected.Add(path))
+                {
+                    selectedCount++;
+                }
+            }
+
+            _previewPage = 0;
+            _currentPage = 0;
+            _search = string.Empty;
+            _filterCacheDirty = true;
+            SaveScanResultFromEntries();
+            Repaint();
+
+            EditorUtility.DisplayDialog(
+                "导入完成",
+                $"已同步到特效批量预览器\n新增到列表：{addedCount} 个\n已选中可预览：{selectedCount} 个\n无效或非粒子Prefab：{invalidCount} 个",
+                "确定");
         }
 
         public static void EndPreviewFromControl()

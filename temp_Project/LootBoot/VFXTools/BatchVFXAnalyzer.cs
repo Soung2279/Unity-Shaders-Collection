@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Game.Editor.ParticlePrefabCollector;
 
 #if UNITY_EDITOR
 //Made by Soung, 2025.6.13, Using Claude 3.7
@@ -191,6 +192,15 @@ public class BatchVFXAnalyzer : EditorWindow
                 prefabsList.Clear();
                 results.Clear();
             }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUI.enabled = prefabsList.Any(prefab => prefab != null);
+            if (GUILayout.Button("导入到特效批量预览器"))
+            {
+                ExportToParticlePrefabCollector();
+            }
+            GUI.enabled = true;
             GUILayout.EndHorizontal();
 
             // 显示预制体列表
@@ -412,6 +422,24 @@ public class BatchVFXAnalyzer : EditorWindow
 
         EditorUtility.DisplayDialog("导入完成",
             $"从预设JSON导入完成\n新增：{addedCount} 个\n跳过（已在列表中）：{skipCount} 个", "确定");
+    }
+
+    private void ExportToParticlePrefabCollector()
+    {
+        List<string> prefabPaths = prefabsList
+            .Where(prefab => prefab != null)
+            .Select(AssetDatabase.GetAssetPath)
+            .Where(path => !string.IsNullOrEmpty(path))
+            .Distinct()
+            .ToList();
+
+        if (prefabPaths.Count == 0)
+        {
+            EditorUtility.DisplayDialog("导出失败", "当前分析列表中没有可导出的有效预制体", "确定");
+            return;
+        }
+
+        ParticlePrefabCollectorWindow.ImportFromExternalAnalyzer(prefabPaths);
     }
 
     private void AnalyzeAllPrefabs()

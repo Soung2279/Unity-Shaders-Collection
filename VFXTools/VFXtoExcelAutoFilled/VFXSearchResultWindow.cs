@@ -203,18 +203,7 @@ public class VFXSearchResultWindow : EditorWindow
                 "{\"keyword\":\"" + EscapeJson(keyword) + "\"}",
                 new UTF8Encoding(false));
 
-            var psi = new ProcessStartInfo
-            {
-                FileName = "python",
-                Arguments = $"\"{scriptPath}\" --search-by-remark \"{excelPath}\" \"{tempJson}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8,
-            };
-            psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+            var psi = BuildPsi(scriptPath, $"--search-by-remark \"{excelPath}\" \"{tempJson}\"");
 
             using (var proc = Process.Start(psi))
             {
@@ -229,6 +218,27 @@ public class VFXSearchResultWindow : EditorWindow
             if (File.Exists(tempJson))
                 File.Delete(tempJson);
         }
+    }
+
+    /// <summary>构建子进程启动配置。同目录存在 vfx_excel_tool.exe 则直接调用，否则回退到 python + 脚本路径。</summary>
+    private static ProcessStartInfo BuildPsi(string scriptPath, string pythonArgs)
+    {
+        string dir     = System.IO.Path.GetDirectoryName(scriptPath) ?? "";
+        string exePath = System.IO.Path.Combine(dir, "vfx_excel_tool.exe");
+        bool   useExe  = System.IO.File.Exists(exePath);
+        var psi = new ProcessStartInfo
+        {
+            FileName               = useExe ? exePath : "python",
+            Arguments              = useExe ? pythonArgs : $"\"{scriptPath}\" {pythonArgs}",
+            UseShellExecute        = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError  = true,
+            CreateNoWindow         = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding  = Encoding.UTF8,
+        };
+        psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+        return psi;
     }
 
     private static string EscapeJson(string s)

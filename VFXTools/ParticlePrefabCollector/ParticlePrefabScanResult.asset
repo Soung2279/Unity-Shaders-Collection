@@ -38,6 +38,11 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Fire.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Ice.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Posion.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_desert_smoke.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_forest_leaves.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_snow_snows.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_tomb_dots.prefab
+  - Assets/GameAsset/Effect/Particle/Player/AnYing/eft_player_AnYing_hit.prefab
   - Assets/GameAsset/Effect/Particle/Player/AoBing/eft_player_aobing_Skill_1.prefab
   - Assets/GameAsset/Effect/Particle/Player/AoBing/eft_player_aobing_Skill_2.prefab
   - Assets/GameAsset/Effect/Particle/Player/LiangLiang/eft_player_xueren_skill_1_Income.prefab
@@ -79,6 +84,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_03_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_03_P.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_Anjin.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_fivestar.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_gold.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_sliver.prefab
@@ -98,6 +104,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Hero_UnlockCompeted.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Hero_WakeUp.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_HeroHud_HPBar.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_AnjingEquip.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_A.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_B.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_IconAward_Idle.prefab
@@ -251,6 +258,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_Laser3rd_EndPoint.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_Laser_Absorb.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_Laser_ultra.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_solobuff.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_weapon_trigger.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_zushi_atk.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_b_zushi_hit.prefab

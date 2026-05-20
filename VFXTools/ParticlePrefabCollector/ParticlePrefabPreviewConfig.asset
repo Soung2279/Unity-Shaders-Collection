@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ParticlePrefabPreviewConfig
   m_EditorClassIdentifier: 
   showBoundaries: 1
-  showLabels: 0
+  showLabels: 1
   previewSpacing: 10
   loopAllParticles: 1
   verticalLayout: 1

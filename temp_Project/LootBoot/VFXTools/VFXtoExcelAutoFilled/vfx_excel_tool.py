@@ -371,6 +371,55 @@ def cmd_search_by_remark(excel_path, keyword_json_path):
     sys.exit(0)
 
 
+def cmd_export_all(excel_path, cache_json_path):
+    """将 Excel 所有数据行全量导出为 JSON 数组，写入缓存文件供 Unity 侧直接读取。"""
+    if not os.path.exists(excel_path):
+        print(f"错误：Excel 文件不存在: {excel_path}")
+        sys.exit(3)
+
+    rb = xlrd.open_workbook(excel_path)
+    ws = rb.sheet_by_index(0)
+
+    def cell_int(v):
+        try:
+            return int(float(v)) if v != '' else None
+        except (ValueError, TypeError):
+            return None
+
+    def int_to_str(v):
+        return "" if v is None else str(v)
+
+    rows = []
+    for r in range(DATA_START_ROW, ws.nrows):
+        raw_id = ws.cell_value(r, 0)
+        if raw_id == '' or raw_id is None:
+            continue
+        row_data = {
+            "id":           int_to_str(cell_int(ws.cell_value(r, 0))),
+            "remark":       str(ws.cell_value(r, 1)),
+            "name":         str(ws.cell_value(r, 2)),
+            "resource":     str(ws.cell_value(r, 3)),
+            "vfxType":      int_to_str(cell_int(ws.cell_value(r, 4))),
+            "rangeSize":    int_to_str(cell_int(ws.cell_value(r, 5))),
+            "scaleFactor":  int_to_str(cell_int(ws.cell_value(r, 6))),
+            "attachPoint":  int_to_str(cell_int(ws.cell_value(r, 7))),
+            "rotationRule": int_to_str(cell_int(ws.cell_value(r, 8))),
+            "soundId":      int_to_str(cell_int(ws.cell_value(r, 9))),
+        }
+        rows.append(row_data)
+
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(cache_json_path)), exist_ok=True)
+        with open(cache_json_path, 'w', encoding='utf-8') as f:
+            json.dump(rows, f, ensure_ascii=False)
+    except Exception as e:
+        print(f"错误：写入缓存文件失败: {e}")
+        sys.exit(3)
+
+    print(f"OK:{len(rows)}")
+    sys.exit(0)
+
+
 def main():
     # 模式一：仅读取最后 id + 10
     # 用法: vfx_excel_tool.py --get-last-id <excel_path>
@@ -406,6 +455,12 @@ def main():
     # 用法: vfx_excel_tool.py --search-by-remark <excel_path> <keyword_json_file>
     if len(sys.argv) >= 4 and sys.argv[1] == '--search-by-remark':
         cmd_search_by_remark(sys.argv[2], sys.argv[3])
+        return
+
+    # 模式七：全量导出为 JSON 缓存
+    # 用法: vfx_excel_tool.py --export-all <excel_path> <cache_json_path>
+    if len(sys.argv) >= 4 and sys.argv[1] == '--export-all':
+        cmd_export_all(sys.argv[2], sys.argv[3])
         return
 
     if len(sys.argv) < 3:
