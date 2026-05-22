@@ -49,8 +49,8 @@ public class VFXTablePreviewWindow : EditorWindow
     private const float ROW_HEIGHT    = 20f;
     private const float MIN_COL_WIDTH = 30f;
 
-    // 各列当前宽度（可拖动调整）；操作列 96px 容纳「选择」+「定位」两个按钮
-    private float[] colWidths = { 50f, 150f, 58f, 190f, 45f, 50f, 58f, 60f, 50f, 155f, 96f };
+    // 各列当前宽度（可拖动调整）；操作列 76px 容纳「选择」+「定位」两个按钮
+    private float[] colWidths = { 50f, 150f, 58f, 240f, 45f, 50f, 58f, 60f, 50f, 200f, 76f };
 
     // 列宽拖动状态
     private int   resizingCol    = -1;
@@ -282,8 +282,23 @@ public class VFXTablePreviewWindow : EditorWindow
         }
         else
         {
-            for (int i = 0; i < filteredRows.Count; i++)
+            int rowCount = filteredRows.Count;
+            // ── 虚拟滚动：只渲染视口内可见的行 ──────────────────
+            // 工具栏 ~22px + 表头 ROW_HEIGHT，其余为滚动视口
+            float viewportH = Mathf.Max(100f, position.height - 22f - ROW_HEIGHT);
+            int firstVisible = Mathf.Max(0, Mathf.FloorToInt(scrollPos.y / ROW_HEIGHT));
+            int lastVisible  = Mathf.Min(rowCount - 1,
+                firstVisible + Mathf.CeilToInt(viewportH / ROW_HEIGHT) + 2);
+
+            if (firstVisible > 0)
+                GUILayout.Space(firstVisible * ROW_HEIGHT);
+
+            for (int i = firstVisible; i <= lastVisible; i++)
                 DrawRow(filteredRows[i], i);
+
+            int bottomRows = rowCount - lastVisible - 1;
+            if (bottomRows > 0)
+                GUILayout.Space(bottomRows * ROW_HEIGHT);
         }
 
         GUILayout.EndScrollView();
@@ -643,7 +658,11 @@ public class VFXTablePreviewWindow : EditorWindow
                 string raw = stdout.Trim();
                 if (raw.StartsWith("OK:") && int.TryParse(raw.Substring(3), out int n))
                     count = n;
-                refreshStatus = count >= 0 ? $"✔ 已刷新 {count} 条" : "✔ 已刷新";
+                string excelTime = File.Exists(excelPath)
+                    ? File.GetLastWriteTime(excelPath).ToString("MM-dd HH:mm:ss")
+                    : "";
+                string timeLabel = string.IsNullOrEmpty(excelTime) ? "" : $"  Excel {excelTime}";
+                refreshStatus = count >= 0 ? $"✔ 已刷新 {count} 条{timeLabel}" : $"✔ 已刷新{timeLabel}";
             }
         }
         catch (Exception ex)

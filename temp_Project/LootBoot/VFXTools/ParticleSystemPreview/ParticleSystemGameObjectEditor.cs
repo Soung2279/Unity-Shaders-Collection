@@ -61,10 +61,7 @@ namespace WuHuan
                     BindingFlags.NonPublic | BindingFlags.Instance);
             }
 
-            Editor editor = null;
-            var baseType = s_GameObjectType;
-            CreateCachedEditor(targets, baseType, ref editor);
-            return editor;
+            return Editor.CreateEditor(targets, s_GameObjectType);
         }
 
         void OnEnable()

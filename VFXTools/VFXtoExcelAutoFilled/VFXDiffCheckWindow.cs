@@ -21,10 +21,14 @@ public class VFXDiffCheckWindow : EditorWindow
     private string excelPath  = "";
     private string scriptPath = "";
 
+    // ── 刷新状态提示 ──────────────────────────────────────────
+    private string refreshStatus = "";
+
     // ── 差异行数据 ────────────────────────────────────────────
     private List<LootBootVFXtoExcel.VFXRowData> diffRows     = new List<LootBootVFXtoExcel.VFXRowData>();
     private GameObject[] prefabFields;       // 每行 ObjectField 的当前预制体
     private string[]     overrideResources;  // 从预制体提取的新资源路径（null = 未设置）
+    private string[]     overrideVfxTypes;   // 检测到与原记录不一致的新特效类型（null = 无变更）
 
     // ── 滚动 ──────────────────────────────────────────────────
     private Vector2 scrollPos;
@@ -71,6 +75,7 @@ public class VFXDiffCheckWindow : EditorWindow
         win.diffRows         = rows;
         win.prefabFields     = new GameObject[rows.Count];
         win.overrideResources = new string[rows.Count];
+        win.overrideVfxTypes  = new string[rows.Count];
         win.scrollPos        = Vector2.zero;
         win.minSize          = new Vector2(900f, 480f);
         win.Show();
@@ -127,6 +132,13 @@ public class VFXDiffCheckWindow : EditorWindow
                 ? $"共 {diffRows.Count} 条路径缺失  |  已补充 {modifiedCount} 条"
                 : "所有资源路径均存在，无差异";
             GUILayout.Label(labelText, EditorStyles.toolbarButton);
+            if (!string.IsNullOrEmpty(refreshStatus))
+            {
+                var statusStyle = new GUIStyle(EditorStyles.miniLabel);
+                statusStyle.normal.textColor = refreshStatus.StartsWith("✔")
+                    ? new Color(0.2f, 0.85f, 0.2f) : new Color(1f, 0.4f, 0.4f);
+                GUILayout.Label(refreshStatus, statusStyle);
+            }
             GUILayout.FlexibleSpace();
 
             Color savedBg = GUI.backgroundColor;
@@ -213,8 +225,8 @@ public class VFXDiffCheckWindow : EditorWindow
         // 1 名称（SelectableLabel：双击可全选文字进行复制）
         EditorGUI.SelectableLabel(new Rect(x, rowRect.y, colWidths[1], ROW_HEIGHT), row.name, cellStyle);
         x += colWidths[1];
-        // 2 类型
-        DrawTypeCell(new Rect(x, rowRect.y, colWidths[2], ROW_HEIGHT), row.vfxType);
+        // 2 类型（overrideVfxTypes[index] 非空代表检测到类型已变更）
+        DrawTypeCell(new Rect(x, rowRect.y, colWidths[2], ROW_HEIGHT), row.vfxType, overrideVfxTypes?[index]);
         x += colWidths[2];
         // 3 资源路径（红 = 缺失；橙 = 已补充待保存）
         string showResource = hasOverride ? overrideResources[index] : row.resource;
@@ -242,10 +254,16 @@ public class VFXDiffCheckWindow : EditorWindow
                 if (rel.EndsWith(".prefab"))
                     rel = rel.Substring(0, rel.Length - ".prefab".Length);
                 overrideResources[index] = rel;
+                // 检测新预制体类型，与原行记录对比，不一致则同步标记
+                int detectedType = LootBootVFXtoExcel.DetectVFXType(newPrefab);
+                int.TryParse(diffRows[index].vfxType, out int origType);
+                overrideVfxTypes[index] = (detectedType != origType)
+                    ? detectedType.ToString() : null;
             }
             else
             {
                 overrideResources[index] = null;
+                overrideVfxTypes[index]  = null;
             }
             Repaint();
         }
@@ -260,17 +278,32 @@ public class VFXDiffCheckWindow : EditorWindow
         GUI.contentColor = saved;
     }
 
-    private void DrawTypeCell(Rect rect, string vfxTypeStr)
+    private void DrawTypeCell(Rect rect, string vfxTypeStr, string overrideTypeStr = null)
     {
-        if (!int.TryParse(vfxTypeStr, out int t) || t < 0 || t >= VFX_TYPE_LABELS.Length)
-        { EditorGUI.LabelField(rect, vfxTypeStr, cellStyle); return; }
+        bool   hasOverride   = !string.IsNullOrEmpty(overrideTypeStr);
+        string effectiveType = hasOverride ? overrideTypeStr : vfxTypeStr;
+
+        if (!int.TryParse(effectiveType, out int t) || t < 0 || t >= VFX_TYPE_LABELS.Length)
+        { EditorGUI.LabelField(rect, effectiveType, cellStyle); return; }
 
         Color saved = GUI.contentColor;
-        GUI.contentColor = VFX_TYPE_COLORS[t];
+        // 类型被覆写时用橙色提示，否则用默认类型颜色
+        GUI.contentColor = hasOverride ? new Color(1.00f, 0.78f, 0.20f) : VFX_TYPE_COLORS[t];
+        string label   = hasOverride ? $"\u2192{VFX_TYPE_LABELS[t]}" : VFX_TYPE_LABELS[t];
+        string tooltip = hasOverride
+            ? $"类型已变更：{GetTypeLabel(vfxTypeStr)} \u2192 {VFX_TYPE_LABELS[t]}"
+            : VFX_TYPE_LABELS[t];
         EditorGUI.LabelField(
             new Rect(rect.x + 2f, rect.y, rect.width - 2f, rect.height),
-            VFX_TYPE_LABELS[t], cellStyle);
+            new GUIContent(label, tooltip), cellStyle);
         GUI.contentColor = saved;
+    }
+
+    private static string GetTypeLabel(string vfxTypeStr)
+    {
+        if (int.TryParse(vfxTypeStr, out int t) && t >= 0 && t < VFX_TYPE_LABELS.Length)
+            return VFX_TYPE_LABELS[t];
+        return string.IsNullOrEmpty(vfxTypeStr) ? "?" : vfxTypeStr;
     }
 
     // ── 列宽拖动 ──────────────────────────────────────────────
@@ -324,9 +357,16 @@ public class VFXDiffCheckWindow : EditorWindow
             return;
         }
 
+        int typeChangedCount = 0;
+        if (overrideVfxTypes != null)
+            for (int j = 0; j < overrideVfxTypes.Length; j++)
+                if (!string.IsNullOrEmpty(overrideVfxTypes[j])) typeChangedCount++;
+        string typeChangeNote = typeChangedCount > 0
+            ? $"\n其中 {typeChangedCount} 条将同时更新特效类型。"
+            : "";
         bool confirmed = EditorUtility.DisplayDialog(
             "确认保存差异修改",
-            $"即将修改 {modifiedCount} 条记录的资源路径，确认执行？",
+            $"即将修改 {modifiedCount} 条记录的资源路径，确认执行？{typeChangeNote}",
             "确认", "取消");
         if (!confirmed) return;
 
@@ -359,7 +399,7 @@ public class VFXDiffCheckWindow : EditorWindow
             sb.Append($"\"id\":{IntFieldToJson(row.id)},");
             sb.Append($"\"name\":\"{EscapeJson(row.name)}\",");
             sb.Append($"\"resource\":\"{EscapeJson(overrideResources[i])}\",");
-            sb.Append($"\"vfxType\":{IntFieldToJson(row.vfxType)},");
+            sb.Append($"\"vfxType\":{IntFieldToJson(!string.IsNullOrEmpty(overrideVfxTypes?[i]) ? overrideVfxTypes[i] : row.vfxType)},");
             sb.Append($"\"rangeSize\":{IntFieldToJson(row.rangeSize)},");
             sb.Append($"\"scaleFactor\":{IntFieldToJson(row.scaleFactor)},");
             sb.Append($"\"attachPoint\":{IntFieldToJson(row.attachPoint)},");
@@ -399,19 +439,22 @@ public class VFXDiffCheckWindow : EditorWindow
         }
 
         // 从列表移除已成功保存的行
-        var newDiff      = new List<LootBootVFXtoExcel.VFXRowData>();
-        var newPrefabs   = new List<GameObject>();
-        var newOverrides = new List<string>();
+        var newDiff         = new List<LootBootVFXtoExcel.VFXRowData>();
+        var newPrefabs      = new List<GameObject>();
+        var newOverrides    = new List<string>();
+        var newTypeOverrides = new List<string>();
         for (int i = 0; i < diffRows.Count; i++)
         {
             if (savedIndices.Contains(i)) continue;
             newDiff.Add(diffRows[i]);
             newPrefabs.Add(prefabFields[i]);
             newOverrides.Add(overrideResources[i]);
+            newTypeOverrides.Add(overrideVfxTypes != null && i < overrideVfxTypes.Length ? overrideVfxTypes[i] : null);
         }
         diffRows          = newDiff;
         prefabFields      = newPrefabs.ToArray();
         overrideResources = newOverrides.ToArray();
+        overrideVfxTypes  = newTypeOverrides.ToArray();
 
         string resultMsg = failMessages.Count == 0
             ? $"成功修改 {savedIndices.Count} 条记录。\n\n数据已写入 Excel，请点击工具栏「刷新缓存」使全表预览同步。"
@@ -431,7 +474,7 @@ public class VFXDiffCheckWindow : EditorWindow
     /// </summary>
     private void AutoFillMissingPaths()
     {
-        int filled = 0, notFound = 0, ambiguous = 0;
+        int filled = 0, notFound = 0, ambiguous = 0, typeMismatch = 0;
 
         for (int i = 0; i < diffRows.Count; i++)
         {
@@ -467,6 +510,18 @@ public class VFXDiffCheckWindow : EditorWindow
                     rel = rel.Substring(0, rel.Length - ".prefab".Length);
                 overrideResources[i] = rel;
                 filled++;
+                // 同步检测新预制体类型是否与原记录一致
+                var foundPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ap);
+                if (foundPrefab != null)
+                {
+                    int detectedType = LootBootVFXtoExcel.DetectVFXType(foundPrefab);
+                    int.TryParse(diffRows[i].vfxType, out int origType);
+                    if (detectedType != origType)
+                    {
+                        overrideVfxTypes[i] = detectedType.ToString();
+                        typeMismatch++;
+                    }
+                }
             }
             else if (exactMatches.Count == 0)
                 notFound++;
@@ -476,7 +531,10 @@ public class VFXDiffCheckWindow : EditorWindow
 
         if (filled > 0) Repaint();
 
-        string msg = $"自动补充完成：\n• 成功匹配  {filled} 条（已标橙，可继续确认后保存）\n• 未找到预制体  {notFound} 条\n• 同名预制体有多个（已跳过）  {ambiguous} 条";
+        string typeMismatchNote = typeMismatch > 0
+            ? $"\n• 类型与原记录不一致（已标橙更新）  {typeMismatch} 条"
+            : "";
+        string msg = $"自动补充完成：\n• 成功匹配  {filled} 条（已标橙，可继续确认后保存）\n• 未找到预制体  {notFound} 条\n• 同名预制体有多个（已跳过）  {ambiguous} 条{typeMismatchNote}";
         EditorUtility.DisplayDialog("自动补充路径", msg, "确定");
     }
 
@@ -525,6 +583,13 @@ public class VFXDiffCheckWindow : EditorWindow
 
         // 缓存已更新，同步到已打开的全表预览窗口
         VFXTablePreviewWindow.RequestRefreshIfOpen();
+        string excelTime = File.Exists(excelPath)
+            ? File.GetLastWriteTime(excelPath).ToString("MM-dd HH:mm:ss")
+            : "";
+        refreshStatus = string.IsNullOrEmpty(excelTime)
+            ? "✔ 缓存已刷新"
+            : $"✔ Excel {excelTime}";
+        Repaint();
         EditorUtility.DisplayDialog("刷新完成", "缓存已重新生成，全表预览已同步。", "确定");
     }
 

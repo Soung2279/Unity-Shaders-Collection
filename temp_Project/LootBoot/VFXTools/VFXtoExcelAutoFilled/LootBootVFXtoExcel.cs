@@ -369,7 +369,7 @@ public class LootBootVFXtoExcel : EditorWindow
     /// 根物体有 SpriteRenderer → 2（复合）；
     /// 其余（全为粒子系统） → 1。
     /// </summary>
-    private static int DetectVFXType(GameObject prefab)
+    internal static int DetectVFXType(GameObject prefab)
     {
         // 检测 Spine：通过组件类型名判断，避免硬引用 Spine 程序集
         Component[] allComponents = prefab.GetComponentsInChildren<Component>(true);
