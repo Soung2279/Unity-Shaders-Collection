@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.IO;
 using System.Collections;
@@ -325,4 +324,3 @@ public class ParticleExporter : MonoBehaviour
         }
     }
 }
-#endif

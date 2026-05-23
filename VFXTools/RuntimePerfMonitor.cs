@@ -35,10 +35,24 @@ public class RuntimePerfMonitor : EditorWindow
     // 是否在监控期间同步启用 Profiler（会引入 5~15% 额外开销，可能导致 FPS 指标偏低）
     private bool enableProfilerDuringMonitor = false;
 
+    // 是否阻断：true = 触发后暂停并弹出 Frame Debugger（原有行为）；false = 持续记录，不中断游戏
+    private bool enableInterrupt = true;
+    private float lastViolationLogTime = -999f;
+    private const float VIOLATION_LOG_INTERVAL = 1f; // 非阻断模式：每秒最多向日志写入一次
+    private bool showViolationSummary = false;
+
+    // 各项违规帧次统计（仅非阻断模式使用）
+    private int fpsViolationCount = 0;
+    private int batchesViolationCount = 0;
+    private int setPassViolationCount = 0;
+    private int texMemViolationCount = 0;
+
     // ─── UI 状态 ─────────────────────────────────────────────
     private bool showConfig = true;
     private Vector2 logScrollPos;
     private readonly List<string> triggerLog = new List<string>();
+    private readonly List<string> violationReasons = new List<string>(); // 缓存复用，避免每帧 new 触发 GC
+    private float lastRepaintTime = 0f;
 
     // ─── EditorPrefs 键名 ────────────────────────────────────
     private const string PREF_ENABLE_FPS     = "RPM_EnableFpsCheck";
@@ -49,7 +63,8 @@ public class RuntimePerfMonitor : EditorWindow
     private const string PREF_SETPASS_UPPER  = "RPM_SetPassUpperLimit";
     private const string PREF_ENABLE_TEXMEM  = "RPM_EnableTexMemCheck";
     private const string PREF_TEXMEM_UPPER   = "RPM_TexMemUpperLimitMB";
-    private const string PREF_ENABLE_PROFILER = "RPM_EnableProfilerDuringMonitor";
+    private const string PREF_ENABLE_PROFILER   = "RPM_EnableProfilerDuringMonitor";
+    private const string PREF_ENABLE_INTERRUPT  = "RPM_EnableInterrupt";
 
     // ─── GUIStyle 缓存 ───────────────────────────────────────
     private GUIStyle greenLabelStyle;
@@ -101,6 +116,7 @@ public class RuntimePerfMonitor : EditorWindow
         enableTexMemCheck  = EditorPrefs.GetBool(PREF_ENABLE_TEXMEM, true);
         texMemUpperLimitMB = EditorPrefs.GetFloat(PREF_TEXMEM_UPPER, 512f);
         enableProfilerDuringMonitor = EditorPrefs.GetBool(PREF_ENABLE_PROFILER, false);
+        enableInterrupt             = EditorPrefs.GetBool(PREF_ENABLE_INTERRUPT, true);
     }
 
     void SavePrefs()
@@ -114,6 +130,7 @@ public class RuntimePerfMonitor : EditorWindow
         EditorPrefs.SetBool(PREF_ENABLE_TEXMEM, enableTexMemCheck);
         EditorPrefs.SetFloat(PREF_TEXMEM_UPPER, texMemUpperLimitMB);
         EditorPrefs.SetBool(PREF_ENABLE_PROFILER, enableProfilerDuringMonitor);
+        EditorPrefs.SetBool(PREF_ENABLE_INTERRUPT, enableInterrupt);
     }
 
     // ─── GUIStyle 初始化（必须在 OnGUI 内调用）─────────────────
@@ -169,6 +186,7 @@ public class RuntimePerfMonitor : EditorWindow
         EditorGUILayout.Space(4);
 
         DrawTriggerLog();
+        DrawViolationSummary();
     }
 
     void DrawThresholdConfig()
@@ -226,6 +244,14 @@ public class RuntimePerfMonitor : EditorWindow
         if (enableProfilerDuringMonitor)
             EditorGUILayout.HelpBox("注意：Profiler 会引入额外开销（典型 5~15% FPS 下降），可能导致 FPS 阈值误报。建议确认阈值时将 FPS 下限适当降低。", MessageType.Warning);
 
+        EditorGUILayout.Space(4);
+        EditorGUILayout.BeginHorizontal();
+        enableInterrupt = EditorGUILayout.Toggle(enableInterrupt, GUILayout.Width(16));
+        EditorGUILayout.LabelField("触发阈值时暂停游戏", GUILayout.Width(LABEL_WIDTH + FIELD_WIDTH));
+        EditorGUILayout.EndHorizontal();
+        if (!enableInterrupt)
+            EditorGUILayout.HelpBox("非阻断模式：监控期间持续记录违规帧数据，停止监控后显示统计汇总，游戏不会被中断。", MessageType.Info);
+
         if (EditorGUI.EndChangeCheck())
             SavePrefs();
 
@@ -242,6 +268,12 @@ public class RuntimePerfMonitor : EditorWindow
             if (GUILayout.Button("开始监控", GUILayout.Height(26)))
             {
                 texMemFrameCounter = 0;
+                fpsViolationCount = 0;
+                batchesViolationCount = 0;
+                setPassViolationCount = 0;
+                texMemViolationCount = 0;
+                showViolationSummary = false;
+                lastViolationLogTime = -999f;
                 isMonitoring = true;
                 if (enableProfilerDuringMonitor)
                 {
@@ -326,6 +358,30 @@ public class RuntimePerfMonitor : EditorWindow
         EditorGUILayout.EndScrollView();
     }
 
+    void DrawViolationSummary()
+    {
+        if (!showViolationSummary) return;
+
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("违规统计汇总（本次监控）", EditorStyles.boldLabel);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+        int total = fpsViolationCount + batchesViolationCount + setPassViolationCount + texMemViolationCount;
+        EditorGUILayout.LabelField($"总违规帧次：{total}", EditorStyles.boldLabel);
+        EditorGUILayout.Space(2);
+
+        if (enableFpsCheck)
+            EditorGUILayout.LabelField($"  FPS 低于下限 {fpsLowerLimit}：{fpsViolationCount} 帧");
+        if (enableBatchesCheck)
+            EditorGUILayout.LabelField($"  Batches 超上限 {batchesUpperLimit}：{batchesViolationCount} 帧");
+        if (enableSetPassCheck)
+            EditorGUILayout.LabelField($"  SetPass 超上限 {setPassUpperLimit}：{setPassViolationCount} 帧");
+        if (enableTexMemCheck)
+            EditorGUILayout.LabelField($"  Texture2D 内存超上限 {texMemUpperLimitMB} MB：{texMemViolationCount} 帧");
+
+        EditorGUILayout.EndVertical();
+    }
+
     // ─── 采集与检测 ───────────────────────────────────────────
 
     void StopMonitoring()
@@ -336,6 +392,9 @@ public class RuntimePerfMonitor : EditorWindow
         // 若是本工具启用了 Profiler，停止监控时同步关闭，避免持续影响运行时性能
         if (enableProfilerDuringMonitor)
             Profiler.enabled = false;
+        // 非阻断模式下，停止后展示统计汇总
+        if (!enableInterrupt)
+            showViolationSummary = true;
     }
 
     void UpdateMonitoring()
@@ -357,7 +416,12 @@ public class RuntimePerfMonitor : EditorWindow
         }
 
         CheckThresholds();
-        Repaint();
+        // 阻断模式监控期短，每帧刷新无妨；非阻断模式节流到 ≤10 fps，避免高频 Repaint 拖慢主线程
+        if (enableInterrupt || Time.realtimeSinceStartup - lastRepaintTime >= 0.1f)
+        {
+            lastRepaintTime = Time.realtimeSinceStartup;
+            Repaint();
+        }
     }
 
     float SampleTexture2DMemoryMB()
@@ -374,40 +438,48 @@ public class RuntimePerfMonitor : EditorWindow
 
     void CheckThresholds()
     {
-        var reasons = new List<string>();
+        violationReasons.Clear(); // 复用列表，不产生 GC 分配
 
         if (enableFpsCheck     && currentFps      < fpsLowerLimit)
-            reasons.Add($"FPS {currentFps:F1} 低于下限 {fpsLowerLimit}");
+            violationReasons.Add($"FPS {currentFps:F1} 低于下限 {fpsLowerLimit}");
         if (enableBatchesCheck && currentBatches   > batchesUpperLimit)
-            reasons.Add($"Batches {currentBatches} 超过上限 {batchesUpperLimit}");
+            violationReasons.Add($"Batches {currentBatches} 超过上限 {batchesUpperLimit}");
         if (enableSetPassCheck && currentSetPass   > setPassUpperLimit)
-            reasons.Add($"SetPass Calls {currentSetPass} 超过上限 {setPassUpperLimit}");
+            violationReasons.Add($"SetPass Calls {currentSetPass} 超过上限 {setPassUpperLimit}");
         if (enableTexMemCheck  && currentTexMemMB  > texMemUpperLimitMB)
-            reasons.Add($"Texture2D 内存 {currentTexMemMB:F2}MB 超过上限 {texMemUpperLimitMB}MB");
+            violationReasons.Add($"Texture2D 内存 {currentTexMemMB:F2}MB 超过上限 {texMemUpperLimitMB}MB");
 
-        if (reasons.Count == 0) return;
+        if (violationReasons.Count == 0) return;
 
-        // 1. 记录当前帧快照（含帧号、时间戳、各项当前值、触发原因）
         string timestamp  = DateTime.Now.ToString("HH:mm:ss");
-        string reasonText = string.Join(" | ", reasons);
+        string reasonText = string.Join(" | ", violationReasons);
         string logEntry   = $"[帧 {Time.frameCount}]  {timestamp}\n"
                           + $"FPS: {currentFps:F1}  |  Batches: {currentBatches}  |  SetPass: {currentSetPass}  |  TexMem: {currentTexMemMB:F2}MB\n"
                           + $"触发原因: {reasonText}";
-        triggerLog.Add(logEntry);
 
-        // 2. 停止监控
-        StopMonitoring();
-
-        // 3. 暂停 PlayMode
-        EditorApplication.isPaused = true;
-
-        // 4. 打开并启用 Frame Debugger
-        EnableFrameDebugger();
-
-        // 5. 聚焦 Profiler（监控开始时已打开并录制，此时直接聚焦以查看已采集的帧数据）
-        EditorApplication.ExecuteMenuItem("Window/Analysis/Profiler");
-
-        Repaint();
+        if (enableInterrupt)
+        {
+            // 阻断模式：记录快照 → 停止监控 → 暂停 PlayMode → 打开 Frame Debugger / Profiler
+            triggerLog.Add(logEntry);
+            StopMonitoring();
+            EditorApplication.isPaused = true;
+            EnableFrameDebugger();
+            EditorApplication.ExecuteMenuItem("Window/Analysis/Profiler");
+        }
+        else
+        {
+            // 非阻断模式：节流写入日志（每 VIOLATION_LOG_INTERVAL 秒最多一条），不中断游戏
+            if (Time.realtimeSinceStartup - lastViolationLogTime >= VIOLATION_LOG_INTERVAL)
+            {
+                lastViolationLogTime = Time.realtimeSinceStartup;
+                triggerLog.Add(logEntry);
+            }
+            // 无论是否写入日志，每帧均累加违规次数
+            if (enableFpsCheck     && currentFps      < fpsLowerLimit)      fpsViolationCount++;
+            if (enableBatchesCheck && currentBatches   > batchesUpperLimit)  batchesViolationCount++;
+            if (enableSetPassCheck && currentSetPass   > setPassUpperLimit)  setPassViolationCount++;
+            if (enableTexMemCheck  && currentTexMemMB  > texMemUpperLimitMB) texMemViolationCount++;
+        }
     }
 
     void EnableFrameDebugger()
