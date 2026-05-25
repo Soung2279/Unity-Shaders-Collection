@@ -1,12 +1,8 @@
 {
-    "name": "VFXTool",
+    "name": "VFXToolRuntime",
     "rootNamespace": "",
-    "references": [
-        "GUID:f3af4a344f8222f4ea61ec09aff8f226"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
