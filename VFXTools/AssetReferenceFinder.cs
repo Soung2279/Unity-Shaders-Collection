@@ -6,9 +6,6 @@ using System.Text;
 using System.IO;
 using UnityEngine.Rendering;
 
-// Made by Copilot, 2026.3.27, Using Claude Sonnet 4.6
-// Unified VFX toolbox merging: AssetReferenceFinder, VFXPerformanceAnalyzer,
-//   ModelPolygonChecker, MaterialSimilarityAnalyzer
 #if UNITY_EDITOR
 public class VFXToolsWindow : EditorWindow
 {
@@ -18,10 +15,10 @@ public class VFXToolsWindow : EditorWindow
     private int activeTab = 0;
     private readonly string[] tabNames = { "引用查找", "格式扫描", "VFX性能", "模型面数", "材质复用" };
 
-    [MenuItem("TATools/VFXTools/VFX综合工具箱")]
+    [MenuItem("TATools/ToolHub/整合 - 资源检查")]
     public static void ShowWindow()
     {
-        GetWindow<VFXToolsWindow>("VFX综合工具箱");
+        GetWindow<VFXToolsWindow>("资源检查工具");
     }
 
     void OnGUI()

@@ -74,7 +74,7 @@ public class SpineAuditTool : EditorWindow
     // ============================================================
     // 入口
     // ============================================================
-    [MenuItem("TATools/Spine 资源检测工具")]
+    [MenuItem("TATools/Tools/工具 - Spine 资源检测")]
     public static void ShowWindow()
     {
         var win = GetWindow<SpineAuditTool>("Spine 资源检测");

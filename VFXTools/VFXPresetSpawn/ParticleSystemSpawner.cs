@@ -60,11 +60,11 @@ public class ParticleSystemSpawner : EditorWindow
 
     // ===================== 菜单入口 =====================
 
-    [MenuItem("TATools/VFXTools/空特效生成")]
+    [MenuItem("TATools/Tools/工具 - 预设特效生成")]
     public static void ShowWindow()
     {
-        var window = GetWindow<ParticleSystemSpawner>("一键生成空特效");
-        window.titleContent = new GUIContent("一键生成空特效", EditorGUIUtility.IconContent("ParticleSystem Icon").image);
+        var window = GetWindow<ParticleSystemSpawner>("生成预设特效");
+        window.titleContent = new GUIContent("生成预设特效", EditorGUIUtility.IconContent("ParticleSystem Icon").image);
     }
 
     private void OnEnable()

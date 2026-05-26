@@ -136,7 +136,7 @@ public class ParticleRecorderWindow : EditorWindow
     private Vector2    scroll;
     private GameObject previewInstance;    // 预览实例（在当前场景中）
 
-    [MenuItem("TATools/粒子序列帧录制器")]
+    [MenuItem("TATools/Tools/工具 - 粒子序列帧录制")]
     public static void ShowWindow()
     {
         var win = GetWindow<ParticleRecorderWindow>("粒子录制器");
