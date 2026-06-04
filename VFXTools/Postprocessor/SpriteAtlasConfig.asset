@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8dac3c1a202a84cb78673ac9e2c831, type: 3}
+  m_Name: SpriteAtlasConfig
+  m_EditorClassIdentifier: 
+  atlasScanDirs:
+  - Assets/GameAsset/Sprite/Icon/Activity
+  - Assets/GameAsset/Sprite/Icon/Battle
+  - Assets/GameAsset/Sprite/Icon/Battle_Buff
+  - Assets/GameAsset/Sprite/Icon/Battle_obj
+  - Assets/GameAsset/Sprite/Icon/Battle_weapon
+  - Assets/GameAsset/Sprite/Icon/BgFrame
+  - Assets/GameAsset/Sprite/Icon/Item
+  - Assets/GameAsset/Sprite/Icon/Monster
+  - Assets/GameAsset/Sprite/Icon/PlayerHead
+  - Assets/GameAsset/Sprite/UI/Abilities
+  - Assets/GameAsset/Sprite/UI/Alliance
+  - Assets/GameAsset/Sprite/UI/Battle
+  - Assets/GameAsset/Sprite/UI/BattleMain
+  - Assets/GameAsset/Sprite/UI/BattlePass
+  - Assets/GameAsset/Sprite/UI/Common
+  - Assets/GameAsset/Sprite/UI/Equip
+  - Assets/GameAsset/Sprite/UI/FuBen
+  - Assets/GameAsset/Sprite/UI/Main
+  - Assets/GameAsset/Sprite/UI/QualityUI
+  - Assets/GameAsset/Sprite/UI/Rank
+  - Assets/GameAsset/Sprite/UI/Shop
+  - Assets/GameAsset/Sprite/UI/TeQuan
+  autoImportWatchDirs:
+  - Assets/GameAsset/Sprite
+  pathMarker: Sprite
+  packMode: 1
+  directoryRules:
+  - directoryPath: Assets/GameAsset/Sprite/Icon/Battle
+    prefixes:
+    - hero_
+    - prop_
+    - skill_
+    excludeFiles: []
+  - directoryPath: Assets/GameAsset/Sprite/Icon/Battle_weapon
+    prefixes:
+    - prop_bow_
+    - skill_book_
+    - skill_bow_
+    - skill_club_
+    - skill_spear_
+    - skill_staff_
+    - skill_sword_
+    - prop_sword_
+    excludeFiles: []
+  - directoryPath: Assets/GameAsset/Sprite/Icon/Item
+    prefixes:
+    - icon_avatar_
+    - icon_buff_
+    - icon_hero_
+    - icon_skill_
+    - icon_wing_
+    excludeFiles: []
+  - directoryPath: Assets/GameAsset/Sprite/Icon/Monster
+    prefixes:
+    - monster
+    - monster_boss
+    - monster_elite
+    excludeFiles: []
+  minSpriteCount: 6
+  enableAutoImport: 0
+  autoFixTextureType: 1
+  autoClearPackingTag: 1
+  autoDisablePhysicsShape: 0
+  autoSetAlphaIsTransparency: 1
+  enableRotation: 0
+  enableTightPacking: 0
+  enableAlphaDilation: 0
+  padding: 4
+  readable: 0
+  generateMipMaps: 0
+  sRGB: 1
+  filterMode: 1

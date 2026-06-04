@@ -247,7 +247,10 @@ public class VFXTablePreviewWindow : EditorWindow
             Color savedBg = GUI.backgroundColor;
             GUI.backgroundColor = new Color(0.35f, 0.75f, 1f);
             if (GUILayout.Button("刷新缓存", EditorStyles.toolbarButton, GUILayout.Width(64f)))
-                RefreshCacheAndReload();
+            {
+                EditorApplication.delayCall += RefreshCacheAndReload;
+                GUIUtility.ExitGUI();
+            }
             GUI.backgroundColor = savedBg;
         }
 

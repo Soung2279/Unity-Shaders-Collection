@@ -23,6 +23,10 @@ public class ParticleRecorderRuntime : MonoBehaviour
     public const string KeyRecordingResult    = "PR_RecordingResult";
     public const string KeyTemplatePrefabPath = "PR_TemplatePrefabPath";
     public const string KeyMatOutPath         = "PR_MatOutPath";
+    public const string KeyLastPrefabResult  = "PR_LastPrefabResult";
+    public const string KeyLastAtlasResult   = "PR_LastAtlasResult";
+    public const string KeyLastOutputDir     = "PR_LastOutputDir";
+    public const string KeyTempSourcePrefab  = "PR_TempSourcePrefab";
 
     // ── 运行时状态 ──────────────────────────────────────────────────────────
     private int        frameRate;

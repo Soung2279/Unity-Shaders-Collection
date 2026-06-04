@@ -74,7 +74,7 @@ public class BatchVFXAnalyzer : EditorWindow
         public List<string> performanceIssues = new List<string>();
     }
 
-    [MenuItem("TATools/VFXTools/VFX批量性能分析器")]
+    [MenuItem("TATools/Tools/工具 - 特效批量性能分析")]
     public static void ShowWindow()
     {
         GetWindow<BatchVFXAnalyzer>("特效批量性能分析");

@@ -25,10 +25,6 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Common/eft_hit_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_item_wing_speedstatus.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_item_wing_speedstatus_burst.prefab
-  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_atk_01_P.prefab
-  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_atk_02_P.prefab
-  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_skill.prefab
-  - Assets/GameAsset/Effect/Particle/Common/eft_monster_21boss_skill_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_monster_skill_04_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_npc_shandianLong_01.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_npc_shandianLong_02.prefab
@@ -42,6 +38,13 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Map/eft_map_forest_leaves.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_snow_snows.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_tomb_dots.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_windline.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_atk_01_P.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_atk_02_P.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_skill.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_skill_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_38_aboss_skill_01.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_38_bboss_skill_01.prefab
   - Assets/GameAsset/Effect/Particle/Player/AnYing/eft_player_AnYing_hit.prefab
   - Assets/GameAsset/Effect/Particle/Player/AoBing/eft_player_aobing_Skill_1.prefab
   - Assets/GameAsset/Effect/Particle/Player/AoBing/eft_player_aobing_Skill_2.prefab
@@ -64,6 +67,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_c_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan_02_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan_02_P_sheet.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan_big.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuiMieXuanFeng/eft_skill_zd_huimiexuanfeng_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuiMieXuanFeng/eft_skill_zd_huimiexuanfeng_02_P.prefab
@@ -105,6 +109,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Hero_WakeUp.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_HeroHud_HPBar.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_AnjingEquip.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_AnjingEquip_Wind.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_A.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_B.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_IconAward_Idle.prefab
@@ -187,7 +192,9 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_P.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_P_sheet.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_c_01_P.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_c_01_P_Anim.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_c_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_spear_longjuan_03_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_spear_longjuan_04_1_P.prefab
@@ -201,6 +208,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/MoJiaQianJiGun/eft_spear_qianji_hit_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/MoJiaQianJiGun/eft_spear_qianji_hit_P_01.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_a_P.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_a_P_Anim.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_b_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_c_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ShengGuangFaZhang/eft_hit_Staff_02_P.prefab
@@ -301,6 +309,24 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/XueZheZhiGun/eft_staff_xzzg_ultra.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/XueZheZhiGun/eft_staff_xzzg_ultra_A.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/XueZheZhiGun/eft_staff_xzzg_ultrahit_A.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_bullet_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_bullet_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_fallbullet_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_fallbullet_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_fallbullet_base.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_rangecircle.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skill_cloud.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skill_cloud_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skillhit_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skillhit_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_bullet_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_bullet_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_shoot_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_shoot_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_skill_cloud.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_skill_cloud_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_skillhit_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_skillhit_01_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ZhanDouHuanRen/eft_staff_zdhr_atk.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ZhanDouHuanRen/eft_staff_zdhr_atk_A.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ZhanDouHuanRen/eft_staff_zdhr_atk_B.prefab
