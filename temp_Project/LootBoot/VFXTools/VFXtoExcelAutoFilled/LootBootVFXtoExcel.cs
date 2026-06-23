@@ -683,7 +683,7 @@ public class LootBootVFXtoExcel : EditorWindow
         var psi = new ProcessStartInfo
         {
             FileName               = useExe ? exePath : "python",
-            Arguments              = useExe ? pythonArgs : $"\"{scriptPath}\" {pythonArgs}",
+            Arguments              = useExe ? pythonArgs : $"-X utf8 \"{scriptPath}\" {pythonArgs}",
             UseShellExecute        = false,
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
@@ -691,6 +691,7 @@ public class LootBootVFXtoExcel : EditorWindow
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding  = Encoding.UTF8,
         };
+        psi.EnvironmentVariables["PYTHONUTF8"] = "1";
         psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
         return psi;
     }

@@ -286,22 +286,24 @@ public class VFXTablePreviewWindow : EditorWindow
         else
         {
             int rowCount = filteredRows.Count;
-            // ── 虚拟滚动：只渲染视口内可见的行 ──────────────────
+            float totalTableWidth = GetTotalTableWidth();
+            float totalRowsHeight = rowCount * ROW_HEIGHT;
+            Rect contentRect = GUILayoutUtility.GetRect(
+                totalTableWidth, totalTableWidth, totalRowsHeight, totalRowsHeight);
+
+            // ── 虚拟滚动：只绘制视口内可见的行，布局只占用一个固定 Rect，避免 GUILayout 控件数在滚动时变化。
             // 工具栏 ~22px + 表头 ROW_HEIGHT，其余为滚动视口
             float viewportH = Mathf.Max(100f, position.height - 22f - ROW_HEIGHT);
             int firstVisible = Mathf.Max(0, Mathf.FloorToInt(scrollPos.y / ROW_HEIGHT));
             int lastVisible  = Mathf.Min(rowCount - 1,
                 firstVisible + Mathf.CeilToInt(viewportH / ROW_HEIGHT) + 2);
 
-            if (firstVisible > 0)
-                GUILayout.Space(firstVisible * ROW_HEIGHT);
-
             for (int i = firstVisible; i <= lastVisible; i++)
-                DrawRow(filteredRows[i], i);
-
-            int bottomRows = rowCount - lastVisible - 1;
-            if (bottomRows > 0)
-                GUILayout.Space(bottomRows * ROW_HEIGHT);
+            {
+                var rowRect = new Rect(contentRect.x, contentRect.y + i * ROW_HEIGHT,
+                    totalTableWidth, ROW_HEIGHT);
+                DrawRow(filteredRows[i], i, rowRect);
+            }
         }
 
         GUILayout.EndScrollView();
@@ -333,7 +335,15 @@ public class VFXTablePreviewWindow : EditorWindow
         }
     }
 
-    private void DrawRow(LootBootVFXtoExcel.VFXRowData row, int index)
+    private float GetTotalTableWidth()
+    {
+        float total = 0f;
+        for (int i = 0; i < colWidths.Length; i++)
+            total += colWidths[i];
+        return total;
+    }
+
+    private void DrawRow(LootBootVFXtoExcel.VFXRowData row, int index, Rect rowRect)
     {
         bool isHighlight = highlightId >= 0 && row.id == highlightId.ToString();
         bool isSelected  = selectedRowIndex == index;
@@ -342,7 +352,6 @@ public class VFXTablePreviewWindow : EditorWindow
             : isSelected    ? selectedRowStyle
             : (index % 2 == 0 ? normalRowStyle : altRowStyle);
 
-        Rect rowRect = EditorGUILayout.GetControlRect(GUILayout.Height(ROW_HEIGHT));
         GUI.Box(rowRect, GUIContent.none, rowStyle);
 
         // ── 行点击选中（排除操作列和名称列，名称列留给 SelectableLabel）──
@@ -596,7 +605,7 @@ public class VFXTablePreviewWindow : EditorWindow
         var psi = new ProcessStartInfo
         {
             FileName               = useExe ? exePath : "python",
-            Arguments              = useExe ? pythonArgs : $"\"{scriptPath}\" {pythonArgs}",
+            Arguments              = useExe ? pythonArgs : $"-X utf8 \"{scriptPath}\" {pythonArgs}",
             UseShellExecute        = false,
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
@@ -604,6 +613,7 @@ public class VFXTablePreviewWindow : EditorWindow
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding  = Encoding.UTF8,
         };
+        psi.EnvironmentVariables["PYTHONUTF8"] = "1";
         psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
         return psi;
     }

@@ -15,6 +15,12 @@ import sys
 import json
 import os
 
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
+
 # ── 依赖检查 ──────────────────────────────────────────────────
 try:
     import xlrd
