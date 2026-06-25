@@ -6,18 +6,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 
-//Edited by Soung, 2026.4.15
+//Edited by Soung, 2026.6.25
 
 //创建一个GUI类, 在ASE中填写Custome Editor或直接在shader源码中加入下行
 //CustomEditor "ShaderGUI_AllEffect"
-
+#if UNITY_EDITOR
 //简陋的版本信息
 static class ConstantInfo
 {
-    public const string Sd_Version = "URP_V2.5.9_Project";
-    public const string Sd_Model = "4.5";
+    public const string Sd_Version = "URP_V2.6.2_Project";
+    public const string Sd_Model = "3.5";
     public const string Sd_Type = "UniversalRenderPipeline/Unlit";
-    public const string UpdateTime = "2025.10.22";
+    public const string UpdateTime = "2026.6.25";
     public const string UpdateWebSite = "https://github.com/Soung2279/Unity-Shaders-Collection";
 }
 
@@ -194,7 +194,6 @@ public class ShaderGUI_AllEffect : ShaderGUI
     static bool _Liuguang_Foldout = false;
     static bool _Dissolve_Foldout = false;
     static bool _DissolvePlus_Foldout = false;
-    static bool _Outline_Foldout = false;
 
     MaterialEditor m_MaterialEditor;
 
@@ -299,6 +298,18 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty NoiseTexP = null;
     //扭曲强度
     MaterialProperty NoisePower = null;
+    //扭曲UV模式
+    MaterialProperty NoiseTexUVMode = null;
+    //扭曲Polar参数
+    MaterialProperty NoisePolarScale = null;
+    //扭曲Screen参数
+    MaterialProperty NoiseScreenTilingOffset = null;
+    //扭曲强度使用Custom1.w
+    MaterialProperty NoiseUseCustom1w = null;
+    //扭曲影响流光
+    MaterialProperty NoiseAffectLiuguang = null;
+    //扭曲影响溶解
+    MaterialProperty NoiseAffectDissolve = null;
     //扭曲U速度
     MaterialProperty NoiseTexUspeed = null;
     //扭曲V速度
@@ -333,6 +344,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty ProMaskRange = null;
     //程序遮罩方向 | UP DOWN LEFT RIGHT
     MaterialProperty ProMaskDir = null;
+    //程序遮罩形状 | Linear Circle
+    MaterialProperty ProMaskShape = null;
     #endregion
 
 
@@ -411,6 +424,12 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty DissolveColorMode = null;
     //边缘宽度
     MaterialProperty DissolveEdgeWide = null;
+    //溶解UV模式
+    MaterialProperty DissolveTexUVMode = null;
+    //溶解Polar参数
+    MaterialProperty DissolvePolarScale = null;
+    //溶解Screen参数
+    MaterialProperty DissolveScreenTilingOffset = null;
     //溶解U速度
     MaterialProperty DissolveTexUspeed = null;
     //溶解V速度
@@ -434,33 +453,6 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty DissolveTexPlusUspeed = null;
     //定向溶解V速度
     MaterialProperty DissolveTexPlusVspeed = null;
-    #endregion
-
-
-    #region [Outline按钮命名]
-    //- 描边部分 -
-    //描边开关
-    MaterialProperty EnableOutline = null;
-    //描边宽度
-    MaterialProperty OutlineWidth = null;
-    //描边颜色
-    MaterialProperty OutlineColor = null;
-    //笔触贴图
-    MaterialProperty OutlineTex = null;
-    //笔触通道
-    MaterialProperty OutlineTexP = null;
-    //笔触U速度
-    MaterialProperty OutlineTexUspeed = null;
-    //笔触V速度
-    MaterialProperty OutlineTexVspeed = null;
-    //噪波缩放
-    MaterialProperty OutlineNoiseScale = null;
-    //噪波强度
-    MaterialProperty OutlineNoiseStrength = null;
-    //噪波U速率
-    MaterialProperty OutlineNoiseSpeedU = null;
-    //噪波V速率
-    MaterialProperty OutlineNoiseSpeedV = null;
     #endregion
 
     //引用参数部分(从引擎的按钮里面提取数值，以便下面随时取用)
@@ -488,6 +480,12 @@ public class ShaderGUI_AllEffect : ShaderGUI
         NoiseTex = FindProperty("_NoiseTex", props);
         NoiseTexP = FindProperty("_NoiseTexP", props);
         NoisePower = FindProperty("_NoisePower", props);
+        NoiseTexUVMode = FindProperty("_NoiseTexUVMode", props);
+        NoisePolarScale = FindProperty("_NoisePolarScale", props);
+        NoiseScreenTilingOffset = FindProperty("_NoiseScreenTilingOffset", props);
+        NoiseUseCustom1w = FindProperty("_NoiseUseCustom1w", props);
+        NoiseAffectLiuguang = FindProperty("_NoiseAffectLiuguang", props);
+        NoiseAffectDissolve = FindProperty("_NoiseAffectDissolve", props);
         NoiseTexUspeed = FindProperty("_NoiseTexUspeed", props);
         NoiseTexVspeed = FindProperty("_NoiseTexVspeed", props);
         #endregion
@@ -508,6 +506,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
         //程序遮罩属性
         ProMaskSwitch = FindProperty("_ProMaskSwitch", props);
         ProMaskDir = FindProperty("_ProMaskDir", props);
+        ProMaskShape = FindProperty("_ProMaskShape", props);
         ProMaskRange = FindProperty("_ProMaskRange", props);
         #endregion
 
@@ -558,6 +557,9 @@ public class ShaderGUI_AllEffect : ShaderGUI
         DissolveEdgeColor = FindProperty("_DissolveEdgeColor", props);
         DissolveColorMode = FindProperty("_DissolveColorMode", props);
         DissolveEdgeWide = FindProperty("_DissolveEdgeWide", props);
+        DissolveTexUVMode = FindProperty("_DissolveTexUVMode", props);
+        DissolvePolarScale = FindProperty("_DissolvePolarScale", props);
+        DissolveScreenTilingOffset = FindProperty("_DissolveScreenTilingOffset", props);
         DissolveTexUspeed = FindProperty("_DissolveTexUspeed", props);
         DissolveTexVspeed = FindProperty("_DissolveTexVspeed", props);
         #endregion
@@ -572,22 +574,6 @@ public class ShaderGUI_AllEffect : ShaderGUI
         DissolveTexPlusPower = FindProperty("_DissolveTexPlusPower", props);
         DissolveTexPlusUspeed = FindProperty("_DissolveTexPlusUspeed", props);
         DissolveTexPlusVspeed = FindProperty("_DissolveTexPlusVspeed", props);
-        #endregion
-
-
-        #region [Outline按钮参数引用]
-        //描边属性
-        EnableOutline = FindProperty("_EnableOutline", props);
-        OutlineWidth = FindProperty("_OutlineWidth", props);
-        OutlineColor = FindProperty("_OutlineColor", props);
-        OutlineTex = FindProperty("_OutlineTex", props);
-        OutlineTexP = FindProperty("_OutlineTexP", props);
-        OutlineTexUspeed = FindProperty("_OutlineTexUspeed", props);
-        OutlineTexVspeed = FindProperty("_OutlineTexVspeed", props);
-        OutlineNoiseScale = FindProperty("_OutlineNoiseScale", props);
-        OutlineNoiseStrength = FindProperty("_OutlineNoiseStrength", props);
-        OutlineNoiseSpeedU = FindProperty("_OutlineNoiseSpeedU", props);
-        OutlineNoiseSpeedV = FindProperty("_OutlineNoiseSpeedV", props);
         #endregion
     }
 
@@ -1001,39 +987,6 @@ public class ShaderGUI_AllEffect : ShaderGUI
         #endregion
 
 
-        //描边下拉菜单
-        #region [描边部分]
-        if (material.GetFloat("_EnableOutline") == 1)
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-            _Outline_Foldout = Foldout(_Outline_Foldout, "描边 | Outline");
-            if (_Outline_Foldout)
-            {
-                EditorGUI.indentLevel++;
-                GUI_Outline(material);
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.EndVertical();
-        }
-        else
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-            _Outline_Foldout = Foldout2(_Outline_Foldout, "描边 | Outline");
-            if (_Outline_Foldout)
-            {
-                EditorGUI.indentLevel++;
-                GUI_Outline(material);
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.EndVertical();
-        }
-        #endregion
-
-
         //------------------------------------函数引用----------------------------------------------
 
         //- 基础设置部分的GUI -
@@ -1380,7 +1333,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
         //- 扭曲部分的GUI -
     #region [扭曲部分GUI]
-    void GUI_Noise(Material material)
+        void GUI_Noise(Material material)
         {
             //功能说明
             EditorGUILayout.LabelField("功能说明：使用一张扭曲贴图来改变主帖图的UV，使材质具有纹理扭动的效果");
@@ -1393,6 +1346,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_NoiseSwitch", 1);
+                    material.EnableKeyword("_NOISE_ON");
                     string warn_noise = $"Soung Shader INFO: NoiseTex Disable\n>>>扭曲禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_noise}</size></b></color>");
                 }
@@ -1402,6 +1356,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_NoiseSwitch", 0);
+                    material.DisableKeyword("_NOISE_ON");
                     string warn_noise = $"Soung Shader INFO: NoiseTex Enable\n>>>扭曲启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_noise}</size></b></color>");
                 }
@@ -1421,9 +1376,34 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     m_MaterialEditor.ShaderProperty(NoisePower, "扭曲强度");
                     EditorGUILayout.HelpBox("若调整此值无扭曲，请尝试切换通道", MessageType.None, false);
 
+                    m_MaterialEditor.ShaderProperty(NoiseTexUVMode, "扭曲UV模式");
+                    EditorGUILayout.HelpBox("可选择本地UV、极坐标或屏幕坐标进行流动", MessageType.None, false);
+
+                    if (material.GetFloat("_NoiseTexUVMode") == 1)
+                    {
+                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                        m_MaterialEditor.ShaderProperty(NoisePolarScale, "扭曲Polar中心与缩放");
+                        EditorGUILayout.HelpBox("xy控制中心点, zw控制缩放与重复", MessageType.None, false);
+                        EditorGUILayout.EndVertical();
+                    }
+                    else if (material.GetFloat("_NoiseTexUVMode") == 2)
+                    {
+                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                        m_MaterialEditor.ShaderProperty(NoiseScreenTilingOffset, "扭曲Screen重铺与偏移");
+                        EditorGUILayout.HelpBox("xy控制平铺值, zw控制偏移值", MessageType.None, false);
+                        EditorGUILayout.EndVertical();
+                    }
+
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                     m_MaterialEditor.ShaderProperty(NoiseTexUspeed, "扭曲U速度");
                     m_MaterialEditor.ShaderProperty(NoiseTexVspeed, "扭曲V速度");
+                    EditorGUILayout.EndVertical();
+
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    m_MaterialEditor.ShaderProperty(NoiseUseCustom1w, "扭曲强度使用Custom1.w");
+                    EditorGUILayout.HelpBox("开启后，可用 Custom1.w 额外控制扭曲强度", MessageType.None, false);
+                    m_MaterialEditor.ShaderProperty(NoiseAffectLiuguang, "扭曲影响流光");
+                    m_MaterialEditor.ShaderProperty(NoiseAffectDissolve, "扭曲影响溶解");
                     EditorGUILayout.EndVertical();
                 }
             }
@@ -1446,6 +1426,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_GamTexSwitch", 1);
+                    material.EnableKeyword("_GAMTEX_ON");
                     string warn_gam = $"Soung Shader INFO: GamTex Disable\n>>>颜色叠加禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_gam}</size></b></color>");
                 }
@@ -1455,6 +1436,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_GamTexSwitch", 0);
+                    material.DisableKeyword("_GAMTEX_ON");
                     string warn_gam = $"Soung Shader INFO: GamTex Enable\n>>>颜色叠加启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_gam}</size></b></color>");
                 }
@@ -1570,10 +1552,19 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
             if (material.GetFloat("_ProMaskSwitch") == 0)
             {
-                m_MaterialEditor.ShaderProperty(ProMaskDir, "程序遮罩方向");
-                EditorGUILayout.HelpBox("控制渐变图的方向", MessageType.None, false);
-                m_MaterialEditor.ShaderProperty(ProMaskRange, "程序遮罩范围");
-                EditorGUILayout.HelpBox("控制渐变图黑白的范围，值越大黑色范围越大", MessageType.None, false);
+                m_MaterialEditor.ShaderProperty(ProMaskShape, "程序遮罩形状");
+                if (material.GetFloat("_ProMaskShape") == 0)
+                {
+                    m_MaterialEditor.ShaderProperty(ProMaskDir, "程序遮罩方向");
+                    EditorGUILayout.HelpBox("控制线性渐变图的方向", MessageType.None, false);
+                    m_MaterialEditor.ShaderProperty(ProMaskRange, "程序遮罩范围");
+                    EditorGUILayout.HelpBox("控制渐变图黑白的范围，值越大黑色范围越大", MessageType.None, false);
+                }
+                else
+                {
+                    m_MaterialEditor.ShaderProperty(ProMaskRange, "程序遮罩范围");
+                    EditorGUILayout.HelpBox("圆形遮罩从外向内由黑到白，值越大白色区域越集中", MessageType.None, false);
+                }
             }
         }
         #endregion
@@ -1593,6 +1584,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_MaskSwitch", 1);
+                    material.EnableKeyword("_MASKTEX_ON");
                     string warn_masktex = $"Soung Shader INFO: MaskTex Enable\n>>>遮罩贴图启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_masktex}</size></b></color>");
                 }
@@ -1602,6 +1594,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_MaskSwitch", 0);
+                    material.DisableKeyword("_MASKTEX_ON");
                     string warn_masktex = $"Soung Shader INFO: MaskTex Disable\n>>>遮罩贴图禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_masktex}</size></b></color>");
                 }
@@ -1703,6 +1696,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_MaskTexPlusSwitch", 1);
+                    material.EnableKeyword("_MASKTEXPLUS_ON");
                     string warn_masktexplus = $"Soung Shader INFO: MaskTexPlus Enable\n>>>额外遮罩贴图启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_masktexplus}</size></b></color>");
                 }
@@ -1712,6 +1706,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_MaskTexPlusSwitch", 0);
+                    material.DisableKeyword("_MASKTEXPLUS_ON");
                     string warn_masktex = $"Soung Shader INFO: MaskTexPlus Disable\n>>>额外遮罩贴图禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_masktex}</size></b></color>");
                 }
@@ -1793,6 +1788,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_LiuguangSwitch", 1);
+                    material.EnableKeyword("_LIUGUANG_ON");
                     string warn_lgtex = $"Soung Shader INFO: LiuguangTex Enable\n>>>流光启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_lgtex}</size></b></color>");
                 }
@@ -1802,6 +1798,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_LiuguangSwitch", 0);
+                    material.DisableKeyword("_LIUGUANG_ON");
                     string warn_lgtex = $"Soung Shader INFO: LiuguangTex Disable\n>>>流光禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_lgtex}</size></b></color>");
                 }
@@ -1906,6 +1903,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_DissolveTexSwitch", 1);
+                    material.EnableKeyword("_DISSOLVETEX_ON");
                     string warn_distex = $"Soung Shader INFO: DissolveTex Enable\n>>>溶解启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_distex}</size></b></color>");
                 }
@@ -1915,6 +1913,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_DissolveTexSwitch", 0);
+                    material.DisableKeyword("_DISSOLVETEX_ON");
                     string warn_distex = $"Soung Shader INFO: DissolveTex Disable\n>>>溶解禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_distex}</size></b></color>");
                 }
@@ -1997,6 +1996,22 @@ public class ShaderGUI_AllEffect : ShaderGUI
                         m_MaterialEditor.ShaderProperty(DissolveColorMode, "溶解颜色混合模式");
                     }
 
+                    m_MaterialEditor.ShaderProperty(DissolveTexUVMode, "溶解UV模式");
+                    EditorGUILayout.HelpBox("可选择本地UV、极坐标或屏幕坐标进行流动", MessageType.None, false);
+                    if (material.GetFloat("_DissolveTexUVMode") == 1)
+                    {
+                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                        m_MaterialEditor.ShaderProperty(DissolvePolarScale, "溶解Polar中心与缩放");
+                        EditorGUILayout.HelpBox("xy控制中心点, zw控制缩放与重复", MessageType.None, false);
+                        EditorGUILayout.EndVertical();
+                    }
+                    else if (material.GetFloat("_DissolveTexUVMode") == 2)
+                    {
+                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                        m_MaterialEditor.ShaderProperty(DissolveScreenTilingOffset, "溶解Screen重铺与偏移");
+                        EditorGUILayout.HelpBox("xy控制平铺值, zw控制偏移值", MessageType.None, false);
+                        EditorGUILayout.EndVertical();
+                    }
 
                     //任何时候都应该展示溶解流动选项
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
@@ -2025,6 +2040,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已关闭"))
                 {
                     SetMat("_DissolveTexPlusSwitch", 1);
+                    material.EnableKeyword("_DISSOLVETEXPLUS_ON");
                     string warn_distexplus = $"Soung Shader INFO: DissolveTexPlus Enable\n>>>定向溶解启用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_distexplus}</size></b></color>");
                 }
@@ -2034,6 +2050,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("已开启"))
                 {
                     SetMat("_DissolveTexPlusSwitch", 0);
+                    material.DisableKeyword("_DISSOLVETEXPLUS_ON");
                     string warn_distexplus = $"Soung Shader INFO: DissolveTexPlus Disable\n>>>定向溶解禁用中";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_distexplus}</size></b></color>");
                 }
@@ -2132,77 +2149,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
         }
         #endregion
 
-
-        //- 描边部分的GUI -
-        #region [描边部分GUI]
-        void GUI_Outline(Material material)
-        {
-            //功能说明
-            EditorGUILayout.LabelField("功能说明：基于主贴图Alpha的外轮廓描边，支持手绘抖动和笔触贴图");
-
-            //绘制开关框
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            if (material.GetFloat("_EnableOutline") == 0)
-            {
-                if (GUILayout.Button("已关闭"))
-                {
-                    SetMat("_EnableOutline", 1);
-                    material.EnableKeyword("_USE_OUTLINE");
-                    Debug.Log($"<color=#66ccff><b><size=10>Soung Shader INFO: Outline Enable\n>>>描边启用中</size></b></color>");
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("已开启"))
-                {
-                    SetMat("_EnableOutline", 0);
-                    material.DisableKeyword("_USE_OUTLINE");
-                    Debug.Log($"<color=#66ccff><b><size=10>Soung Shader INFO: Outline Disable\n>>>描边禁用中</size></b></color>");
-                }
-            }
-            EditorGUILayout.EndVertical();
-            //结束绘制开关框
-
-            //开关启用时，展示后续内容
-            if (material.GetFloat("_EnableOutline") == 1)
-            {
-                m_MaterialEditor.ShaderProperty(OutlineWidth, "描边宽度");
-                EditorGUILayout.HelpBox("描边基于主贴图Alpha的外轮廓，宽度以UV空间为单位", MessageType.None, false);
-                m_MaterialEditor.ShaderProperty(OutlineColor, "描边颜色 (支持HDR发光)");
-
-                EditorGUILayout.Space(4);
-
-                //笔触贴图区域
-                m_MaterialEditor.TexturePropertySingleLine(new GUIContent("笔触贴图"), OutlineTex);
-                EditorGUILayout.HelpBox("使用白色贴图或不赋图时为纯色描边。使用带笔触纹理的贴图可增强手绘感", MessageType.None, false);
-                if (OutlineTex.textureValue != null)
-                {
-                    m_MaterialEditor.TextureScaleOffsetProperty(OutlineTex);
-                    m_MaterialEditor.ShaderProperty(OutlineTexP, "切换通道");
-                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                    m_MaterialEditor.ShaderProperty(OutlineTexUspeed, "笔触横向流动速度");
-                    m_MaterialEditor.ShaderProperty(OutlineTexVspeed, "笔触纵向流动速度");
-                    EditorGUILayout.EndVertical();
-                }
-
-                EditorGUILayout.Space(4);
-
-                //噪波抖动区域
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.LabelField("手绘抖动 | 噪波扰动", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("通过ValueNoise扰动描边宽度，使边缘产生手绘颤抖感。将强度设为0可关闭抖动", MessageType.None, false);
-                m_MaterialEditor.ShaderProperty(OutlineNoiseStrength, "抖动强度");
-                if (OutlineNoiseStrength.floatValue > 0f)
-                {
-                    m_MaterialEditor.ShaderProperty(OutlineNoiseScale, "噪波缩放");
-                    EditorGUILayout.HelpBox("值越大，抖动频率越高（颗粒感越强）", MessageType.None, false);
-                    m_MaterialEditor.ShaderProperty(OutlineNoiseSpeedU, "噪波横向速率");
-                    m_MaterialEditor.ShaderProperty(OutlineNoiseSpeedV, "噪波纵向速率");
-                }
-                EditorGUILayout.EndVertical();
-            }
-        }
-        #endregion
-
     }
 }
+
+#endif // UNITY_EDITOR

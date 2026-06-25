@@ -46,7 +46,8 @@ Shader "Soung/Effect/SingleTexOutlineNoise"
 
         Pass
         {
-            Tags { "LightMode" = "SRPDefaultUnlit" }
+            Name "Universal2D"
+            Tags { "LightMode" = "Universal2D" }
 
             HLSLPROGRAM
             #pragma target 3.5
