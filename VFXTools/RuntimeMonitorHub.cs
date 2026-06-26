@@ -16,6 +16,7 @@ public class RuntimeMonitorHub : EditorWindow
     // 顶层 Tab
     // ============================================================
     private int activeTab = 0;
+    private Vector2 mainScrollPos;
     private readonly string[] TAB_NAMES = { "性能阈值", "Shader 变体", "VFX 监控" };
 
     [MenuItem("TATools/ToolHub/整合 - 运行时性能监控")]
@@ -88,12 +89,14 @@ public class RuntimeMonitorHub : EditorWindow
         InitStyles();
         activeTab = GUILayout.Toolbar(activeTab, TAB_NAMES);
         EditorGUILayout.Space(4);
+        mainScrollPos = EditorGUILayout.BeginScrollView(mainScrollPos);
         switch (activeTab)
         {
             case 0: DrawPerfMonitorTab();  break;
             case 1: DrawShaderVariantTab(); break;
             case 2: DrawVfxProfilerTab();  break;
         }
+        EditorGUILayout.EndScrollView();
     }
 
     // ============================================================

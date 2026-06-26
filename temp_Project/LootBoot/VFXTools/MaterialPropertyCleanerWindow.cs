@@ -37,31 +37,43 @@ public class MaterialPropertyCleanerWindow : EditorWindow
 
     private void OnGUI()
     {
+        EditorGUILayout.Space(4);
         EditorGUILayout.LabelField("材质残留属性清理", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox("按当前 shader 的 properties 检查材质残留属性，并清理不匹配项。", MessageType.Info);
         scanFolder = (DefaultAsset)EditorGUILayout.ObjectField("扫描目录", scanFolder, typeof(DefaultAsset), false);
 
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("扫描"))
-            Scan();
-
-        using (new EditorGUI.DisabledScope(reports.Count == 0))
+        using (new EditorGUILayout.HorizontalScope())
         {
-            if (GUILayout.Button("清理"))
-                CleanReports();
+            if (GUILayout.Button("扫描", GUILayout.Height(26)))
+                Scan();
+
+            using (new EditorGUI.DisabledScope(reports.Count == 0))
+            {
+                if (GUILayout.Button("清理", GUILayout.Height(26)))
+                    CleanReports();
+            }
         }
-        EditorGUILayout.EndHorizontal();
 
-        EditorGUILayout.LabelField($"结果：{reports.Count} 个材质，{reports.Sum(r => r.RemovableCount)} 个可清理残留项。");
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField($"结果：{reports.Count} 个材质，{reports.Sum(r => r.RemovableCount)} 个可清理残留项。", EditorStyles.boldLabel);
 
+        var pathStyle = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true };
         scroll = EditorGUILayout.BeginScrollView(scroll);
         foreach (MaterialReport report in reports)
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-            if (GUILayout.Button(report.Name, EditorStyles.linkLabel, GUILayout.Width(180)))
-                SelectMaterial(report.Path);
-            EditorGUILayout.SelectableLabel(report.Path, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-            EditorGUILayout.EndHorizontal();
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button(report.Name, EditorStyles.linkLabel, GUILayout.ExpandWidth(true)))
+                        SelectMaterial(report.Path);
+                    GUILayout.Label($"{report.RemovableCount} 项", EditorStyles.miniLabel, GUILayout.Width(44));
+                }
+
+                EditorGUILayout.SelectableLabel(report.Path, pathStyle, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
+                if (report.RemovableCount > 0)
+                    EditorGUILayout.LabelField("残留属性：" + string.Join(", ", report.Removable.Select(p => p.PropertyName)), pathStyle);
+            }
         }
         EditorGUILayout.EndScrollView();
     }

@@ -577,22 +577,27 @@ public class ParticleRecorderWindow : EditorWindow
         if (string.IsNullOrEmpty(prefabResult) && string.IsNullOrEmpty(atlasResult) && string.IsNullOrEmpty(outputDir))
             return;
 
-        EditorGUILayout.BeginHorizontal();
-        EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(prefabResult));
-        if (GUILayout.Button("定位预制体"))
-            PingAsset(prefabResult);
-        EditorGUI.EndDisabledGroup();
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            EditorGUILayout.LabelField("结果操作", EditorStyles.boldLabel);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(prefabResult));
+                if (GUILayout.Button("定位预制体"))
+                    PingAsset(prefabResult);
+                EditorGUI.EndDisabledGroup();
 
-        EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(atlasResult));
-        if (GUILayout.Button("定位图集"))
-            PingAsset(atlasResult);
-        EditorGUI.EndDisabledGroup();
+                EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(atlasResult));
+                if (GUILayout.Button("定位图集"))
+                    PingAsset(atlasResult);
+                EditorGUI.EndDisabledGroup();
+            }
 
-        EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(outputDir));
-        if (GUILayout.Button("打开输出目录"))
-            EditorUtility.RevealInFinder(outputDir);
-        EditorGUI.EndDisabledGroup();
-        EditorGUILayout.EndHorizontal();
+            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(outputDir));
+            if (GUILayout.Button("打开输出目录"))
+                EditorUtility.RevealInFinder(outputDir);
+            EditorGUI.EndDisabledGroup();
+        }
     }
 
     private static void PingAsset(string path)
@@ -711,21 +716,30 @@ public class ParticleRecorderWindow : EditorWindow
     // ── 辅助：带「浏览」按钮的路径字段 ──────────────────────────────────
     private static void DrawPathField(string label, ref string path, string defaultPath)
     {
-        EditorGUILayout.BeginHorizontal();
-        string editedPath = EditorGUILayout.TextField(new GUIContent(label), ToProjectRelativeDisplay(path));
-        path = NormalizePathInput(editedPath);
-        if (GUILayout.Button("浏览", GUILayout.Width(48)))
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            string sel = EditorUtility.OpenFolderPanel("选择" + label, path, "");
-            if (!string.IsNullOrEmpty(sel)) path = sel;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
+            string editedPath = EditorGUILayout.TextField(new GUIContent(label), ToProjectRelativeDisplay(path));
+            if (EditorGUI.EndChangeCheck())
+                path = NormalizePathInput(editedPath);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("浏览", GUILayout.Width(64)))
+            {
+                string sel = EditorUtility.OpenFolderPanel("选择" + label, path, "");
+                if (!string.IsNullOrEmpty(sel)) path = sel;
+            }
+            EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(path));
+            if (GUILayout.Button("打开", GUILayout.Width(64)))
+                EditorUtility.RevealInFinder(path);
+            EditorGUI.EndDisabledGroup();
+            if (GUILayout.Button("重置", GUILayout.Width(64)))
+                path = defaultPath;
+            EditorGUILayout.EndHorizontal();
         }
-        EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(path));
-        if (GUILayout.Button("打开", GUILayout.Width(48)))
-            EditorUtility.RevealInFinder(path);
-        EditorGUI.EndDisabledGroup();
-        if (GUILayout.Button("重置", GUILayout.Width(48)))
-            path = defaultPath;
-        EditorGUILayout.EndHorizontal();
     }
 
     // ── 录制流程 ──────────────────────────────────────────────────────────

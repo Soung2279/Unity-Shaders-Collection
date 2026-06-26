@@ -32,6 +32,7 @@ public class VFXDiffCheckWindow : EditorWindow
 
     // ── 滚动 ──────────────────────────────────────────────────
     private Vector2 scrollPos;
+    private int selectedRowIndex = -1;
 
     // ── 样式（OnGUI 内延迟初始化）────────────────────────────
     private GUIStyle cellStyle;
@@ -77,6 +78,7 @@ public class VFXDiffCheckWindow : EditorWindow
         win.overrideResources = new string[rows.Count];
         win.overrideVfxTypes  = new string[rows.Count];
         win.scrollPos        = Vector2.zero;
+        win.selectedRowIndex = -1;
         win.minSize          = new Vector2(900f, 480f);
         win.Show();
         win.Focus();
@@ -165,6 +167,12 @@ public class VFXDiffCheckWindow : EditorWindow
                 SaveAllOverrides();
             GUI.enabled = true;
 
+            using (new EditorGUI.DisabledScope(selectedRowIndex < 0 || selectedRowIndex >= diffRows.Count))
+            {
+                if (GUILayout.Button("查看详情", EditorStyles.toolbarButton, GUILayout.Width(64f)))
+                    OpenSelectedRowDetail();
+            }
+
             GUI.backgroundColor = new Color(0.35f, 0.75f, 1f);
             if (GUILayout.Button("刷新缓存", EditorStyles.toolbarButton, GUILayout.Width(64f)))
                 RefreshCacheManual();
@@ -177,18 +185,18 @@ public class VFXDiffCheckWindow : EditorWindow
             return;
         }
 
-        DrawHeader();
-
-        scrollPos = GUILayout.BeginScrollView(scrollPos);
+        float tableWidth = GetTotalTableWidth();
+        scrollPos = GUILayout.BeginScrollView(scrollPos, true, true, GUILayout.ExpandHeight(true));
+        DrawHeader(tableWidth);
         for (int i = 0; i < diffRows.Count; i++)
-            DrawRow(i);
+            DrawRow(i, tableWidth);
         GUILayout.EndScrollView();
     }
 
     // ── 表头 ──────────────────────────────────────────────────
-    private void DrawHeader()
+    private void DrawHeader(float tableWidth)
     {
-        Rect rect = EditorGUILayout.GetControlRect(GUILayout.Height(ROW_HEIGHT));
+        Rect rect = GUILayoutUtility.GetRect(tableWidth, ROW_HEIGHT, GUILayout.Width(tableWidth), GUILayout.Height(ROW_HEIGHT));
         EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin
             ? new Color(0.16f, 0.16f, 0.16f)
             : new Color(0.68f, 0.68f, 0.68f));
@@ -209,13 +217,20 @@ public class VFXDiffCheckWindow : EditorWindow
     }
 
     // ── 行绘制 ────────────────────────────────────────────────
-    private void DrawRow(int index)
+    private void DrawRow(int index, float tableWidth)
     {
         var  row         = diffRows[index];
         bool hasOverride = !string.IsNullOrEmpty(overrideResources?[index]);
 
-        Rect rowRect = EditorGUILayout.GetControlRect(GUILayout.Height(ROW_HEIGHT));
+        Rect rowRect = GUILayoutUtility.GetRect(tableWidth, ROW_HEIGHT, GUILayout.Width(tableWidth), GUILayout.Height(ROW_HEIGHT));
         GUI.Box(rowRect, GUIContent.none, index % 2 == 0 ? normalRowStyle : altRowStyle);
+        if (selectedRowIndex == index)
+            EditorGUI.DrawRect(rowRect, new Color(0.25f, 0.55f, 1f, 0.18f));
+        if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rowRect.Contains(Event.current.mousePosition))
+        {
+            selectedRowIndex = index;
+            Repaint();
+        }
 
         float x = rowRect.x;
 
@@ -266,6 +281,67 @@ public class VFXDiffCheckWindow : EditorWindow
                 overrideVfxTypes[index]  = null;
             }
             Repaint();
+        }
+    }
+
+    private float GetTotalTableWidth()
+    {
+        float total = 0f;
+        for (int i = 0; i < colWidths.Length; i++)
+            total += colWidths[i];
+        return total;
+    }
+
+    private void OpenSelectedRowDetail()
+    {
+        if (selectedRowIndex < 0 || selectedRowIndex >= diffRows.Count)
+            return;
+
+        var row = diffRows[selectedRowIndex];
+        var sb = new StringBuilder();
+        sb.AppendLine($"ID: {row.id}");
+        sb.AppendLine($"名称: {row.name}");
+        sb.AppendLine($"类型: {GetTypeLabel(row.vfxType)} ({row.vfxType})");
+        sb.AppendLine($"资源路径: {row.resource}");
+        if (!string.IsNullOrEmpty(row.remark))
+            sb.AppendLine($"备注: {row.remark}");
+        if (!string.IsNullOrEmpty(overrideResources?[selectedRowIndex]))
+            sb.AppendLine($"补充路径: {overrideResources[selectedRowIndex]}");
+        if (!string.IsNullOrEmpty(overrideVfxTypes?[selectedRowIndex]))
+            sb.AppendLine($"新类型: {GetTypeLabel(overrideVfxTypes[selectedRowIndex])} ({overrideVfxTypes[selectedRowIndex]})");
+
+        VFXDiffDetailWindow.Open($"VFX 差异详情 - {row.id}", sb.ToString());
+    }
+
+    private class VFXDiffDetailWindow : EditorWindow
+    {
+        private string detailText;
+        private Vector2 detailScroll;
+
+        public static void Open(string title, string text)
+        {
+            var win = CreateInstance<VFXDiffDetailWindow>();
+            win.titleContent = new GUIContent(title);
+            win.detailText = text;
+            win.minSize = new Vector2(560f, 360f);
+            win.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            {
+                GUILayout.Label("完整信息", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("复制", EditorStyles.toolbarButton, GUILayout.Width(48f)))
+                    GUIUtility.systemCopyBuffer = detailText;
+                if (GUILayout.Button("关闭", EditorStyles.toolbarButton, GUILayout.Width(48f)))
+                    Close();
+            }
+
+            detailScroll = EditorGUILayout.BeginScrollView(detailScroll);
+            detailText = EditorGUILayout.TextArea(detailText, GUILayout.ExpandHeight(true));
+            EditorGUILayout.EndScrollView();
         }
     }
 

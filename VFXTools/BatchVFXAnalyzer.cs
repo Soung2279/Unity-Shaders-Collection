@@ -12,6 +12,7 @@ public class BatchVFXAnalyzer : EditorWindow
     private List<GameObject> prefabsList = new List<GameObject>();
     private Vector2 scrollPosition; // 用于预制体列表
     private Vector2 resultsScrollPosition; // 新增：用于结果列表的滚动位置
+    private Vector2 resultsHorizontalScrollPosition;
     private bool analyzing = false;
     private int currentIndex = 0;
     private List<VFXAnalysisResult> results = new List<VFXAnalysisResult>();
@@ -892,6 +893,8 @@ public class BatchVFXAnalyzer : EditorWindow
         EditorGUILayout.Space();
 
         // 创建表头 - 添加可点击的表头进行排序
+        resultsHorizontalScrollPosition = EditorGUILayout.BeginScrollView(resultsHorizontalScrollPosition, true, false);
+        EditorGUILayout.BeginVertical(GUILayout.Width(740));
         EditorGUILayout.BeginHorizontal();
 
         // 每个表头按钮的样式
@@ -1099,6 +1102,8 @@ public class BatchVFXAnalyzer : EditorWindow
         }
 
         // 结束滚动视图
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
         EditorGUILayout.EndScrollView();
     }
 

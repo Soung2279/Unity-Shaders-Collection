@@ -39,6 +39,10 @@ public class SpineAuditTool : EditorWindow
     private GUIStyle styleOk;
     private GUIStyle styleWarn;
     private GUIStyle styleBoldHeader;
+    private GUIStyle styleEntryTitleError;
+    private GUIStyle styleEntryTitleOk;
+    private GUIStyle styleWrappedLabel;
+    private GUIStyle stylePath;
     private bool stylesInited = false;
 
     // ============================================================
@@ -113,6 +117,29 @@ public class SpineAuditTool : EditorWindow
             richText = true
         };
         styleBoldHeader = new GUIStyle(EditorStyles.boldLabel) { fontSize = 14 };
+        styleEntryTitleError = new GUIStyle(EditorStyles.boldLabel)
+        {
+            fontSize = 13,
+            richText = true,
+            wordWrap = true,
+            normal = { textColor = styleError.normal.textColor }
+        };
+        styleEntryTitleOk = new GUIStyle(EditorStyles.boldLabel)
+        {
+            fontSize = 13,
+            richText = true,
+            wordWrap = true,
+            normal = { textColor = styleOk.normal.textColor }
+        };
+        styleWrappedLabel = new GUIStyle(EditorStyles.label)
+        {
+            richText = true,
+            wordWrap = true
+        };
+        stylePath = new GUIStyle(EditorStyles.miniLabel)
+        {
+            wordWrap = true
+        };
     }
 
     // ============================================================
@@ -215,6 +242,13 @@ public class SpineAuditTool : EditorWindow
             return;
         }
 
+        using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+        {
+            GUILayout.Label($"结果列表：显示 {display.Count} / {allEntries.Count}", EditorStyles.miniLabel);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("每个问题独立分块显示，长路径会自动换行", EditorStyles.miniLabel);
+        }
+
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
         foreach (var entry in display)
@@ -226,79 +260,70 @@ public class SpineAuditTool : EditorWindow
     private void DrawEntry(SpineEntry entry)
     {
         bool hasIssue = entry.HasIssue;
-        Color bgTint = hasIssue
-            ? new Color(0.7f, 0.2f, 0.2f, 0.12f)
-            : new Color(0.2f, 0.7f, 0.2f, 0.08f);
-
-        Rect boxRect = EditorGUILayout.BeginVertical(GUI.skin.box);
-        EditorGUI.DrawRect(
-            new Rect(boxRect.x + 1, boxRect.y + 1, boxRect.width - 2, boxRect.height - 2),
-            bgTint);
-
-        // --- 标题行 ---
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            GUIStyle nameStyle = hasIssue ? styleError : styleOk;
-            string icon = hasIssue ? "⚠" : "✓";
-            EditorGUILayout.LabelField($"{icon}  {entry.spineName}", nameStyle, GUILayout.ExpandWidth(true));
-            GUILayout.FlexibleSpace();
-
-            if (GUILayout.Button("定位", GUILayout.Width(42)))
-                PingAsset(entry.folderPath);
-
-            if (hasIssue && GUILayout.Button("修复此项", GUILayout.Width(66)))
-            {
-                FixEntry(entry);
-                AssetDatabase.SaveAssets();
-                RunScan();
-                GUIUtility.ExitGUI();
-            }
-        }
-
-        EditorGUILayout.Space(2);
-
-        // --- 材质 Shader 问题 ---
-        if (entry.wrongShader)
+        using (new EditorGUILayout.VerticalScope(GUI.skin.box))
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                EditorGUILayout.LabelField(
-                    $"   材质 Shader 不支持 SRP 合批\n   当前：{entry.currentShaderName}",
-                    styleError);
-                GUILayout.FlexibleSpace();
+                string icon = hasIssue ? "⚠" : "✓";
+                GUIStyle nameStyle = hasIssue ? styleEntryTitleError : styleEntryTitleOk;
+                EditorGUILayout.LabelField($"{icon} {entry.spineName}", nameStyle, GUILayout.ExpandWidth(true));
 
-                using (new EditorGUILayout.VerticalScope(GUILayout.Width(90)))
+                if (GUILayout.Button("定位文件夹", GUILayout.Width(76)))
+                    PingAsset(entry.folderPath);
+
+                using (new EditorGUI.DisabledScope(!hasIssue))
                 {
-                    if (GUILayout.Button("修复 Shader"))
+                    if (GUILayout.Button("修复此项", GUILayout.Width(76)))
                     {
-                        FixShader(entry);
+                        FixEntry(entry);
                         AssetDatabase.SaveAssets();
-                    }
-                    if (entry.material != null)
-                    {
-                        if (GUILayout.Button("选中材质"))
-                            Selection.activeObject = entry.material;
+                        RunScan();
+                        GUIUtility.ExitGUI();
                     }
                 }
             }
-            EditorGUILayout.Space(2);
+
+            EditorGUILayout.LabelField(entry.folderPath, stylePath);
+            EditorGUILayout.Space(3);
+
+            if (entry.wrongShader)
+                DrawShaderIssue(entry);
+
+            foreach (var tex in entry.texIssues.ToList())
+            {
+                DrawTexIssue(tex, entry);
+                EditorGUILayout.Space(3);
+            }
+
+            if (!hasIssue)
+                EditorGUILayout.HelpBox("所有检测项通过", MessageType.None);
         }
 
-        // --- 图集尺寸问题 ---
-        foreach (var tex in entry.texIssues)
+        EditorGUILayout.Space(4);
+    }
+
+    private void DrawShaderIssue(SpineEntry entry)
+    {
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            DrawTexIssue(tex, entry);
-            EditorGUILayout.Space(2);
-        }
+            EditorGUILayout.LabelField("材质 Shader 不支持 SRP 合批", styleError);
+            EditorGUILayout.LabelField($"当前 Shader：{entry.currentShaderName}", styleWrappedLabel);
+            EditorGUILayout.LabelField($"材质路径：{entry.matPath}", stylePath);
 
-        // --- 通过状态 ---
-        if (!hasIssue)
-        {
-            EditorGUILayout.LabelField("   所有检测项通过", styleOk);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                if (entry.material != null && GUILayout.Button("选中材质", GUILayout.Width(90)))
+                    Selection.activeObject = entry.material;
+                if (GUILayout.Button("修复 Shader", GUILayout.Width(90)))
+                {
+                    FixShader(entry);
+                    AssetDatabase.SaveAssets();
+                    RunScan();
+                    GUIUtility.ExitGUI();
+                }
+            }
         }
-
-        EditorGUILayout.EndVertical();
-        EditorGUILayout.Space(3);
     }
 
     private void DrawTexIssue(TexPageIssue tex, SpineEntry entry)
@@ -306,37 +331,47 @@ public class SpineAuditTool : EditorWindow
         string texName = Path.GetFileName(tex.texPath);
         var issues = new List<string>();
         if (tex.isTooLarge)
-            issues.Add($"尺寸超限 {tex.declaredWidth}×{tex.declaredHeight} > {maxAllowedSize}");
+            issues.Add($"尺寸超限：{tex.declaredWidth}×{tex.declaredHeight} > {maxAllowedSize}");
         if (tex.isNonPOT)
-            issues.Add($"非二次幂 ({tex.declaredWidth}×{tex.declaredHeight})");
+            issues.Add($"非二次幂：{tex.declaredWidth}×{tex.declaredHeight}");
 
-        string issueText = string.Join(" | ", issues);
-
-        using (new EditorGUILayout.HorizontalScope())
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            EditorGUILayout.LabelField(
-                $"   图集 {texName}\n   [{issueText}]",
-                styleWarn);
-            GUILayout.FlexibleSpace();
+            EditorGUILayout.LabelField($"图集：{texName}", styleWarn);
+            EditorGUILayout.LabelField("问题：" + string.Join("；", issues), styleWrappedLabel);
+            EditorGUILayout.LabelField("路径：" + tex.texPath, stylePath);
 
-            using (new EditorGUILayout.VerticalScope(GUILayout.Width(90)))
+            using (new EditorGUILayout.HorizontalScope())
             {
-                if (tex.isTooLarge && GUILayout.Button("修复尺寸"))
-                {
-                    if (FixTextureTooLarge(tex))
-                        entry.texIssues.Remove(tex);
-                    GUIUtility.ExitGUI();
-                }
-                if (tex.isNonPOT && GUILayout.Button("修复非POT"))
-                {
-                    if (FixTextureNonPOT(tex))
-                        entry.texIssues.Remove(tex);
-                    GUIUtility.ExitGUI();
-                }
-                if (GUILayout.Button("选中贴图"))
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("选中贴图", GUILayout.Width(90)))
                 {
                     var texAsset = AssetDatabase.LoadAssetAtPath<Texture2D>(tex.texPath);
                     if (texAsset != null) Selection.activeObject = texAsset;
+                }
+                using (new EditorGUI.DisabledScope(!tex.isTooLarge))
+                {
+                    if (GUILayout.Button("修复尺寸", GUILayout.Width(90)))
+                    {
+                        if (FixTextureTooLarge(tex))
+                        {
+                            entry.texIssues.Remove(tex);
+                            RunScan();
+                        }
+                        GUIUtility.ExitGUI();
+                    }
+                }
+                using (new EditorGUI.DisabledScope(!tex.isNonPOT))
+                {
+                    if (GUILayout.Button("修复非POT", GUILayout.Width(90)))
+                    {
+                        if (FixTextureNonPOT(tex))
+                        {
+                            entry.texIssues.Remove(tex);
+                            RunScan();
+                        }
+                        GUIUtility.ExitGUI();
+                    }
                 }
             }
         }

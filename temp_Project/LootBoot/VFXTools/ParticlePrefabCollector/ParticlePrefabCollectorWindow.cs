@@ -276,7 +276,7 @@ namespace Game.Editor.ParticlePrefabCollector
             var iconRect = GUILayoutUtility.GetRect(18, 18, GUILayout.Width(18));
             var icon = EditorGUIUtility.IconContent("Search Icon");
             GUI.Label(iconRect, icon);
-            var newSearch = GUILayout.TextField(_search, GUILayout.Width(200));
+            var newSearch = GUILayout.TextField(_search, GUILayout.MinWidth(160), GUILayout.ExpandWidth(true));
             if (!string.Equals(newSearch, _search))
             {
                 _search = newSearch;
@@ -332,7 +332,7 @@ namespace Game.Editor.ParticlePrefabCollector
             }
 
             GUILayout.FlexibleSpace();
-            GUILayout.Label($"共 {_entries.Count} 个Prefab", GUILayout.Width(140));
+            GUILayout.Label($"共 {_entries.Count} 个Prefab", GUILayout.Width(120));
             GUILayout.EndHorizontal();
         }
 
@@ -391,7 +391,8 @@ namespace Game.Editor.ParticlePrefabCollector
             for (int i = start; i < end; i++)
             {
                 var e = filtered[i];
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginVertical(GUI.skin.box);
+                GUILayout.BeginHorizontal();
                 bool sel = _previewSelected.Contains(e.PrefabPath);
                 EditorGUI.BeginDisabledGroup(_isPreviewing);
                 bool newSel = GUILayout.Toggle(sel, GUIContent.none, GUILayout.Width(selectToggleWidth));
@@ -407,8 +408,9 @@ namespace Game.Editor.ParticlePrefabCollector
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.ObjectField(e.PrefabAsset, typeof(GameObject), false, GUILayout.Width(prefabWidth));
                 EditorGUI.EndDisabledGroup();
-                GUILayout.Label(e.PrefabPath, GUILayout.Width(pathWidth));
+                EditorGUILayout.SelectableLabel(e.PrefabPath, EditorStyles.wordWrappedMiniLabel, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
                 GUILayout.EndHorizontal();
+                GUILayout.EndVertical();
             }
 
             GUILayout.EndScrollView();

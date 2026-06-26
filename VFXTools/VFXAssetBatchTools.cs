@@ -16,6 +16,7 @@ using UnityEngine.Tilemaps;
 public class VFXAssetBatchTools : EditorWindow
 {
     private int activeTab = 0;
+    private Vector2 mainScrollPos;
     private readonly string[] TAB_NAMES = { "材质 Shader 替换", "Crunch 检测", "Tilemap 修复", "粒子延迟" };
 
     [MenuItem("TATools/ToolHub/整合 - 资源批量处理")]
@@ -31,6 +32,7 @@ public class VFXAssetBatchTools : EditorWindow
     {
         activeTab = GUILayout.Toolbar(activeTab, TAB_NAMES);
         EditorGUILayout.Space(6);
+        mainScrollPos = EditorGUILayout.BeginScrollView(mainScrollPos);
         switch (activeTab)
         {
             case 0: DrawShaderReplacerTab(); break;
@@ -38,6 +40,7 @@ public class VFXAssetBatchTools : EditorWindow
             case 2: DrawTilemapFixerTab();   break;
             case 3: DrawParticleDelayTab();  break;
         }
+        EditorGUILayout.EndScrollView();
     }
 
     // ────────────────────────────────────────────────────────────
@@ -80,9 +83,9 @@ public class VFXAssetBatchTools : EditorWindow
 
         EditorGUILayout.Space(4);
         EditorGUILayout.LabelField($"找到 {msrFoundPaths.Count} 个材质", EditorStyles.miniLabel);
-        msrScrollPos = EditorGUILayout.BeginScrollView(msrScrollPos, GUILayout.MaxHeight(200));
+        msrScrollPos = EditorGUILayout.BeginScrollView(msrScrollPos, GUILayout.MaxHeight(240));
         foreach (var path in msrFoundPaths)
-            EditorGUILayout.LabelField(path, EditorStyles.miniLabel);
+            EditorGUILayout.SelectableLabel(path, EditorStyles.wordWrappedMiniLabel, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
         EditorGUILayout.EndScrollView();
 
         EditorGUILayout.Space(6);
@@ -252,9 +255,13 @@ public class VFXAssetBatchTools : EditorWindow
 
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("检测平台", GUILayout.Width(70));
-        for (int i = 0; i < CRD_PLATFORMS.Length; i++)
-            crdPlatformFilter[i] = GUILayout.Toggle(crdPlatformFilter[i], CRD_PLATFORMS[i], GUILayout.Width(90));
         EditorGUILayout.EndHorizontal();
+        for (int i = 0; i < CRD_PLATFORMS.Length; i++)
+        {
+            if (i % 3 == 0) EditorGUILayout.BeginHorizontal();
+            crdPlatformFilter[i] = GUILayout.Toggle(crdPlatformFilter[i], CRD_PLATFORMS[i], GUILayout.Width(100));
+            if (i % 3 == 2 || i == CRD_PLATFORMS.Length - 1) EditorGUILayout.EndHorizontal();
+        }
 
         EditorGUILayout.Space(6);
         EditorGUI.BeginDisabledGroup(crdIsScanning);
@@ -309,15 +316,19 @@ public class VFXAssetBatchTools : EditorWindow
 
         foreach (var entry in filtered)
         {
-            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             if (GUILayout.Button(entry.assetPath, EditorStyles.miniLabel, GUILayout.ExpandWidth(true)))
                 EditorGUIUtility.PingObject(entry.texture);
             EditorGUILayout.LabelField(
-                string.Join(", ", entry.crunchedPlatforms.Select((p, i) => $"{p}(Q{entry.crunchQuality[i]})")),
-                crdStyleRed, GUILayout.Width(280));
-            if (GUILayout.Button("→", GUILayout.Width(26)))
-            { Selection.activeObject = entry.texture; EditorGUIUtility.PingObject(entry.texture); }
-            EditorGUILayout.EndHorizontal();
+                "平台：" + string.Join(", ", entry.crunchedPlatforms.Select((p, i) => $"{p}(Q{entry.crunchQuality[i]})")),
+                crdStyleRed);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("定位", GUILayout.Width(60)))
+                { Selection.activeObject = entry.texture; EditorGUIUtility.PingObject(entry.texture); }
+            }
+            EditorGUILayout.EndVertical();
         }
         EditorGUILayout.EndScrollView();
         if (filtered.Count == 0 && !string.IsNullOrEmpty(crdSearchFilter))

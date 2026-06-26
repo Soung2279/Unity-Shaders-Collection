@@ -13,12 +13,14 @@ public class VFXToolsWindow : EditorWindow
     // 通用
     // ============================================================
     private int activeTab = 0;
+    private Vector2 mainScrollPos;
     private readonly string[] tabNames = { "引用查找", "格式扫描", "VFX性能", "模型面数", "材质复用" };
 
     [MenuItem("TATools/ToolHub/整合 - 资源检查")]
     public static void ShowWindow()
     {
-        GetWindow<VFXToolsWindow>("资源检查工具");
+        var window = GetWindow<VFXToolsWindow>("资源检查工具");
+        window.minSize = new Vector2(560, 460);
     }
 
     void OnGUI()
@@ -26,6 +28,7 @@ public class VFXToolsWindow : EditorWindow
         activeTab = GUILayout.Toolbar(activeTab, tabNames);
         EditorGUILayout.Space();
 
+        mainScrollPos = EditorGUILayout.BeginScrollView(mainScrollPos);
         switch (activeTab)
         {
             case 0: DrawRefFinderTab(); break;
@@ -34,6 +37,7 @@ public class VFXToolsWindow : EditorWindow
             case 3: DrawModelCheckerTab(); break;
             case 4: DrawMatSimilarityTab(); break;
         }
+        EditorGUILayout.EndScrollView();
     }
 
     // ============================================================
@@ -322,7 +326,7 @@ public class VFXToolsWindow : EditorWindow
 
         EditorGUILayout.Space();
 
-        refScrollPos = EditorGUILayout.BeginScrollView(refScrollPos);
+        refScrollPos = EditorGUILayout.BeginScrollView(refScrollPos, GUILayout.MinHeight(140));
 
         // 预制体列表
         showRefPrefabs = EditorGUILayout.Foldout(showRefPrefabs, $"预制体引用 ({referencingPrefabs.Count})", true, EditorStyles.foldoutHeader);
@@ -351,18 +355,21 @@ public class VFXToolsWindow : EditorWindow
 
     void DrawAssetRow<T>(string path) where T : Object
     {
-        EditorGUILayout.BeginHorizontal();
-
         T asset = AssetDatabase.LoadAssetAtPath<T>(path);
-        EditorGUILayout.ObjectField(asset, typeof(T), false);
-
-        if (GUILayout.Button("定位", GUILayout.Width(44)))
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            EditorGUIUtility.PingObject(asset);
-            Selection.activeObject = asset;
-        }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.ObjectField(asset, typeof(T), false);
 
-        EditorGUILayout.EndHorizontal();
+                if (GUILayout.Button("定位", GUILayout.Width(52)))
+                {
+                    EditorGUIUtility.PingObject(asset);
+                    Selection.activeObject = asset;
+                }
+            }
+            EditorGUILayout.SelectableLabel(path, EditorStyles.wordWrappedMiniLabel, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
+        }
     }
 
     void ScanUnusedAssets()
@@ -460,30 +467,35 @@ public class VFXToolsWindow : EditorWindow
             $"发现 {unusedResults.Count} 个疑似未使用的资源。\n请人工复核后再决定是否删除！",
             MessageType.Warning);
 
-        unusedScrollPos = EditorGUILayout.BeginScrollView(unusedScrollPos, GUILayout.MaxHeight(320));
+        unusedScrollPos = EditorGUILayout.BeginScrollView(unusedScrollPos, GUILayout.MaxHeight(360));
 
         foreach (string path in unusedResults)
         {
-            EditorGUILayout.BeginHorizontal();
-            Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
-            if (asset != null)
-                EditorGUILayout.ObjectField(asset, typeof(Object), false);
-            else
-                EditorGUILayout.LabelField(path);
-
-            if (GUILayout.Button("定位", GUILayout.Width(44)))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                if (asset != null)
+                Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUIUtility.PingObject(asset);
-                    Selection.activeObject = asset;
+                    if (asset != null)
+                        EditorGUILayout.ObjectField(asset, typeof(Object), false);
+                    else
+                        EditorGUILayout.LabelField(Path.GetFileName(path), EditorStyles.boldLabel);
+
+                    if (GUILayout.Button("定位", GUILayout.Width(52)))
+                    {
+                        if (asset != null)
+                        {
+                            EditorGUIUtility.PingObject(asset);
+                            Selection.activeObject = asset;
+                        }
+                        else
+                        {
+                            EditorUtility.RevealInFinder(path);
+                        }
+                    }
                 }
-                else
-                {
-                    EditorUtility.RevealInFinder(path);
-                }
+                EditorGUILayout.SelectableLabel(path, EditorStyles.wordWrappedMiniLabel, GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2));
             }
-            EditorGUILayout.EndHorizontal();
         }
 
         EditorGUILayout.EndScrollView();

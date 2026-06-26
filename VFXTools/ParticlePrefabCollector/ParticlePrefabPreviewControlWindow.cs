@@ -114,38 +114,34 @@ namespace Game.Editor.ParticlePrefabCollector
                 // Push bottom toolbar to window bottom
                 GUILayout.FlexibleSpace();
 
-                // Bottom bar: page nav + End Preview on the right
-                using (new EditorGUILayout.HorizontalScope(_bottomBarStyle, GUILayout.Height(42)))
+                using (new EditorGUILayout.VerticalScope(_bottomBarStyle, GUILayout.Height(72)))
                 {
-                    // Query page info first
                     ParticlePrefabCollectorWindow.GetPageInfo(out var cur, out var max, out var startIdx,
                         out var endIdx, out var total);
 
-                    // Show paging buttons only when more than one page (max > 0)
-                    if (max > 0)
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        if (GUILayout.Button("上一页", GUILayout.Width(70)))
+                        if (max > 0)
                         {
-                            ParticlePrefabCollectorWindow.PrevPageFromControl();
-                        }
+                            if (GUILayout.Button("上一页"))
+                                ParticlePrefabCollectorWindow.PrevPageFromControl();
 
-                        if (GUILayout.Button("下一页", GUILayout.Width(70)))
-                        {
-                            ParticlePrefabCollectorWindow.NextPageFromControl();
+                            if (GUILayout.Button("下一页"))
+                                ParticlePrefabCollectorWindow.NextPageFromControl();
                         }
+                        GUILayout.Label($"第 {cur + 1}/{max + 1} 页", GUILayout.Width(90));
                     }
 
-                    GUILayout.Label($"第 {cur + 1}/{max + 1} 页 显示 {startIdx}-{endIdx}/{total}", GUILayout.Width(220));
-
-                    GUILayout.FlexibleSpace();
-                    var prevColor = GUI.backgroundColor;
-                    GUI.backgroundColor = new Color(0.86f, 0.27f, 0.27f);
-                    if (GUILayout.Button("结束预览", GUILayout.Height(28), GUILayout.Width(120)))
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        EndPreviewAndClose();
+                        GUILayout.Label($"显示 {startIdx}-{endIdx}/{total}", EditorStyles.miniLabel);
+                        GUILayout.FlexibleSpace();
+                        var prevColor = GUI.backgroundColor;
+                        GUI.backgroundColor = new Color(0.86f, 0.27f, 0.27f);
+                        if (GUILayout.Button("结束预览", GUILayout.Height(24), GUILayout.Width(120)))
+                            EndPreviewAndClose();
+                        GUI.backgroundColor = prevColor;
                     }
-
-                    GUI.backgroundColor = prevColor;
                 }
             }
         }

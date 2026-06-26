@@ -75,16 +75,16 @@ public class ParticleSystemSpawner : EditorWindow
 
     // ===================== OnGUI =====================
 
-    private void OnGUI()
-    {
-        selectedTab = GUILayout.Toolbar(selectedTab, TAB_NAMES);
-        EditorGUILayout.Space();
+        private void OnGUI()
+        {
+            selectedTab = GUILayout.Toolbar(selectedTab, TAB_NAMES);
+            EditorGUILayout.Space(4);
 
-        if (selectedTab == 0)
-            DrawEmptyVFXTab();
-        else
-            DrawPresetVFXTab();
-    }
+            if (selectedTab == 0)
+                DrawEmptyVFXTab();
+            else
+                DrawPresetVFXTab();
+        }
 
     // ===================== Tab 1：空特效生成 =====================
 
@@ -167,70 +167,76 @@ public class ParticleSystemSpawner : EditorWindow
         }
     }
 
-    private void DrawPresetConfig()
-    {
-        EditorGUILayout.Space();
-
-        // JSON 路径行
-        EditorGUILayout.BeginHorizontal();
-        jsonConfigPath = EditorGUILayout.TextField("配置文件路径", jsonConfigPath);
-        if (GUILayout.Button("浏览", GUILayout.Width(50)))
+        private void DrawPresetConfig()
         {
-            string absPath = EditorUtility.OpenFilePanel("选择JSON配置文件", Application.dataPath, "json");
-            if (!string.IsNullOrEmpty(absPath))
-                jsonConfigPath = "Assets" + absPath.Substring(Application.dataPath.Length).Replace('\\', '/');
-        }
-        EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("重新加载"))
-            LoadJsonConfig();
-        if (GUILayout.Button("打开配置文件"))
-            OpenJsonFile();
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.Space();
-        GUILayout.Label("预设条目 (编辑后点击[保存到JSON]) ", EditorStyles.boldLabel);
-
-        presetScrollPos = EditorGUILayout.BeginScrollView(presetScrollPos, GUILayout.MaxHeight(300));
-
-        for (int i = 0; i < presetEntries.Count; i++)
-        {
-            VFXPresetEntry entry = presetEntries[i];
-            bool removed = false;
-
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.BeginHorizontal();
-
-            entry.function  = (FunctionType)EditorGUILayout.EnumPopup(entry.function, GUILayout.Width(60));
-            GUI.backgroundColor = GetAttributeColor(entry.attribute);
-            entry.attribute = (AttributeType)EditorGUILayout.EnumPopup(entry.attribute, GUILayout.Width(60));
-            GUI.backgroundColor = Color.white;
-            entry.weapon    = (WeaponType)EditorGUILayout.EnumPopup(entry.weapon, GUILayout.Width(60));
-            entry.prefab    = (GameObject)EditorGUILayout.ObjectField(entry.prefab, typeof(GameObject), false);
-
-            if (GUILayout.Button("×", GUILayout.Width(22)))
-                removed = true;
-
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndVertical();
-
-            if (removed)
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                presetEntries.RemoveAt(i);
-                i--;
+                EditorGUILayout.LabelField("配置文件", EditorStyles.boldLabel);
+                jsonConfigPath = EditorGUILayout.TextField("路径", jsonConfigPath);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("浏览"))
+                    {
+                        string absPath = EditorUtility.OpenFilePanel("选择JSON配置文件", Application.dataPath, "json");
+                        if (!string.IsNullOrEmpty(absPath))
+                            jsonConfigPath = "Assets" + absPath.Substring(Application.dataPath.Length).Replace('\\', '/');
+                    }
+                    if (GUILayout.Button("重新加载"))
+                        LoadJsonConfig();
+                    if (GUILayout.Button("打开配置文件"))
+                        OpenJsonFile();
+                }
             }
+
+            EditorGUILayout.Space();
+            GUILayout.Label("预设条目 (编辑后点击[保存到JSON]) ", EditorStyles.boldLabel);
+
+            presetScrollPos = EditorGUILayout.BeginScrollView(presetScrollPos, GUILayout.MaxHeight(360));
+
+            for (int i = 0; i < presetEntries.Count; i++)
+            {
+                VFXPresetEntry entry = presetEntries[i];
+                bool removed = false;
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField($"#{i + 1}", EditorStyles.miniLabel, GUILayout.Width(34));
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("删除", EditorStyles.miniButton, GUILayout.Width(48)))
+                        removed = true;
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    entry.function = (FunctionType)EditorGUILayout.EnumPopup("功能", entry.function);
+                    GUI.backgroundColor = GetAttributeColor(entry.attribute);
+                    entry.attribute = (AttributeType)EditorGUILayout.EnumPopup("属性", entry.attribute);
+                    GUI.backgroundColor = Color.white;
+                    entry.weapon = (WeaponType)EditorGUILayout.EnumPopup("武器", entry.weapon);
+                }
+                entry.prefab = (GameObject)EditorGUILayout.ObjectField("预制体", entry.prefab, typeof(GameObject), false);
+
+                EditorGUILayout.EndVertical();
+
+                if (removed)
+                {
+                    presetEntries.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            EditorGUILayout.EndScrollView();
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("添加预设"))
+                presetEntries.Add(new VFXPresetEntry());
+            if (GUILayout.Button("保存到JSON", GUILayout.Width(120)))
+                SaveToJson();
+            EditorGUILayout.EndHorizontal();
         }
-
-        EditorGUILayout.EndScrollView();
-
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("添加预设"))
-            presetEntries.Add(new VFXPresetEntry());
-        if (GUILayout.Button("保存到JSON", GUILayout.Width(100)))
-            SaveToJson();
-        EditorGUILayout.EndHorizontal();
-    }
 
     // ===================== JSON 操作 =====================
 

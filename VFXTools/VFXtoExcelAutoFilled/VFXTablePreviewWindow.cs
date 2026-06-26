@@ -244,6 +244,12 @@ public class VFXTablePreviewWindow : EditorWindow
 
             GUILayout.FlexibleSpace();
 
+            using (new EditorGUI.DisabledScope(selectedRowIndex < 0 || selectedRowIndex >= filteredRows.Count))
+            {
+                if (GUILayout.Button("查看详情", EditorStyles.toolbarButton, GUILayout.Width(64f)))
+                    OpenSelectedRowDetail();
+            }
+
             Color savedBg = GUI.backgroundColor;
             GUI.backgroundColor = new Color(0.35f, 0.75f, 1f);
             if (GUILayout.Button("刷新缓存", EditorStyles.toolbarButton, GUILayout.Width(64f)))
@@ -316,7 +322,7 @@ public class VFXTablePreviewWindow : EditorWindow
             ? new Color(0.16f, 0.16f, 0.16f)
             : new Color(0.68f, 0.68f, 0.68f));
 
-        float x = rect.x;
+        float x = rect.x - scrollPos.x;
         for (int c = 0; c < COL_NAMES.Length; c++)
         {
             EditorGUI.LabelField(new Rect(x, rect.y, colWidths[c], ROW_HEIGHT), COL_NAMES[c], headerStyle);
@@ -425,6 +431,60 @@ public class VFXTablePreviewWindow : EditorWindow
             PingResource(row.resource);
 
         GUI.backgroundColor = saved;
+    }
+
+    private void OpenSelectedRowDetail()
+    {
+        if (selectedRowIndex < 0 || selectedRowIndex >= filteredRows.Count)
+            return;
+
+        var row = filteredRows[selectedRowIndex];
+        var sb = new StringBuilder();
+        sb.AppendLine($"ID: {row.id}");
+        sb.AppendLine($"名称: {row.name}");
+        sb.AppendLine($"类型: {GetLabel(row.vfxType, VFX_TYPE_LABELS)} ({row.vfxType})");
+        sb.AppendLine($"资源路径: {row.resource}");
+        sb.AppendLine($"范围: {row.rangeSize}");
+        sb.AppendLine($"缩放: {row.scaleFactor}");
+        sb.AppendLine($"挂接点: {GetLabel(row.attachPoint, ATTACH_LABELS)} ({row.attachPoint})");
+        sb.AppendLine($"旋转规则: {GetLabel(row.rotationRule, ROTATION_LABELS)} ({row.rotationRule})");
+        sb.AppendLine($"音效ID: {row.soundId}");
+        if (!string.IsNullOrEmpty(row.remark))
+            sb.AppendLine($"备注: {row.remark}");
+
+        VFXTableDetailWindow.Open($"VFX 配置详情 - {row.id}", sb.ToString());
+    }
+
+    private class VFXTableDetailWindow : EditorWindow
+    {
+        private string detailText;
+        private Vector2 detailScroll;
+
+        public static void Open(string title, string text)
+        {
+            var win = CreateInstance<VFXTableDetailWindow>();
+            win.titleContent = new GUIContent(title);
+            win.detailText = text;
+            win.minSize = new Vector2(560f, 360f);
+            win.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            {
+                GUILayout.Label("完整信息", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("复制", EditorStyles.toolbarButton, GUILayout.Width(48f)))
+                    GUIUtility.systemCopyBuffer = detailText;
+                if (GUILayout.Button("关闭", EditorStyles.toolbarButton, GUILayout.Width(48f)))
+                    Close();
+            }
+
+            detailScroll = EditorGUILayout.BeginScrollView(detailScroll);
+            detailText = EditorGUILayout.TextArea(detailText, GUILayout.ExpandHeight(true));
+            EditorGUILayout.EndScrollView();
+        }
     }
 
     private static string GetLabel(string val, string[] labels)

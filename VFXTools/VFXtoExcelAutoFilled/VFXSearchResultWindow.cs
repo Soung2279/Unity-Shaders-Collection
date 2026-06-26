@@ -74,7 +74,7 @@ public class VFXSearchResultWindow : EditorWindow
 
             Color savedBg = GUI.backgroundColor;
             GUI.backgroundColor = new Color(1f, 0.9f, 0.2f);
-            bool doSearch = GUILayout.Button("搜索特效", GUILayout.Width(66f));
+            bool doSearch = GUILayout.Button("搜索特效", GUILayout.Width(76f));
             GUI.backgroundColor = savedBg;
 
             if (doSearch)
