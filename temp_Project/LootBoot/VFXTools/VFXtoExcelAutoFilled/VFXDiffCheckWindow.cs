@@ -461,63 +461,78 @@ public class VFXDiffCheckWindow : EditorWindow
         }
 
         var savedIndices = new HashSet<int>();
-        var failMessages = new List<string>();
-
-        for (int i = 0; i < diffRows.Count; i++)
+        string tempJson = Path.GetTempFileName();
+        try
         {
-            if (string.IsNullOrEmpty(overrideResources[i])) continue;
-
-            var row = diffRows[i];
-            // 覆盖写入时，所有字段完全取自缓存原始数据，仅将 resource 替换为新路径，
-            // 确保 Excel 中其它字段（名称、类型、挂接点等）不被改动。
-            var sb  = new StringBuilder();
-            sb.Append("{");
-            sb.Append($"\"id\":{IntFieldToJson(row.id)},");
-            sb.Append($"\"name\":\"{EscapeJson(row.name)}\",");
-            sb.Append($"\"resource\":\"{EscapeJson(overrideResources[i])}\",");
-            sb.Append($"\"vfxType\":{IntFieldToJson(!string.IsNullOrEmpty(overrideVfxTypes?[i]) ? overrideVfxTypes[i] : row.vfxType)},");
-            sb.Append($"\"rangeSize\":{IntFieldToJson(row.rangeSize)},");
-            sb.Append($"\"scaleFactor\":{IntFieldToJson(row.scaleFactor)},");
-            sb.Append($"\"attachPoint\":{IntFieldToJson(row.attachPoint)},");
-            sb.Append($"\"rotationRule\":{IntFieldToJson(row.rotationRule)},");
-            sb.Append($"\"soundId\":{IntFieldToJson(row.soundId)},");
-            sb.Append($"\"remark\":\"{EscapeJson(row.remark)}\"");
-            sb.Append("}");
-
-            string tempJson = Path.GetTempFileName();
-            try
+            var batch = new StringBuilder();
+            batch.Append("[");
+            bool first = true;
+            for (int i = 0; i < diffRows.Count; i++)
             {
-                File.WriteAllText(tempJson, sb.ToString(), new UTF8Encoding(false));
-                var psi = BuildPsi(scriptPath, $"--overwrite \"{excelPath}\" \"{tempJson}\"");
-                using (var proc = Process.Start(psi))
-                {
-                    string stdout = proc.StandardOutput.ReadToEnd();
-                    string stderr = proc.StandardError.ReadToEnd();
-                    proc.WaitForExit();
+                if (string.IsNullOrEmpty(overrideResources[i])) continue;
 
-                    if (proc.ExitCode == 0)
-                        savedIndices.Add(i);
-                    else
-                    {
-                        string msg = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
-                        failMessages.Add($"ID={row.id}（{row.name}）：{msg.Trim()}");
-                    }
+                var row = diffRows[i];
+                if (!first) batch.Append(",");
+                first = false;
+
+                batch.Append("{");
+                batch.Append($"\"rowIndex\":{IntFieldToJson(row.rowIndex)},");
+                batch.Append($"\"id\":{IntFieldToJson(row.id)},");
+                batch.Append($"\"name\":\"{EscapeJson(row.name)}\",");
+                batch.Append($"\"resource\":\"{EscapeJson(overrideResources[i])}\",");
+                batch.Append($"\"vfxType\":{IntFieldToJson(!string.IsNullOrEmpty(overrideVfxTypes?[i]) ? overrideVfxTypes[i] : row.vfxType)},");
+                batch.Append($"\"rangeSize\":{IntFieldToJson(row.rangeSize)},");
+                batch.Append($"\"scaleFactor\":{IntFieldToJson(row.scaleFactor)},");
+                batch.Append($"\"attachPoint\":{IntFieldToJson(row.attachPoint)},");
+                batch.Append($"\"rotationRule\":{IntFieldToJson(row.rotationRule)},");
+                batch.Append($"\"soundId\":{IntFieldToJson(row.soundId)},");
+                batch.Append($"\"remark\":\"{EscapeJson(row.remark)}\"");
+                batch.Append("}");
+
+                savedIndices.Add(i);
+            }
+            batch.Append("]");
+
+            File.WriteAllText(tempJson, batch.ToString(), new UTF8Encoding(false));
+            var psi = BuildPsi(scriptPath, $"--overwrite-batch \"{excelPath}\" \"{tempJson}\"");
+            using (var proc = Process.Start(psi))
+            {
+                if (proc == null)
+                {
+                    EditorUtility.DisplayDialog("保存失败", "启动 Python 进程失败（返回 null），请确认 Python 已正确安装。", "确定");
+                    return;
+                }
+
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit();
+
+                if (proc.ExitCode != 0)
+                {
+                    string msg = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+                    EditorUtility.DisplayDialog("保存失败",
+                        string.IsNullOrWhiteSpace(msg)
+                            ? $"Python 脚本异常退出（退出码 {proc.ExitCode}）"
+                            : msg.Trim(),
+                        "确定");
+                    return;
                 }
             }
-            catch (Exception ex)
-            {
-                failMessages.Add($"ID={row.id}（{row.name}）：{ex.Message}");
-            }
-            finally
-            {
-                if (File.Exists(tempJson)) File.Delete(tempJson);
-            }
+        }
+        catch (Exception ex)
+        {
+            EditorUtility.DisplayDialog("保存失败", ex.Message, "确定");
+            return;
+        }
+        finally
+        {
+            if (File.Exists(tempJson)) File.Delete(tempJson);
         }
 
         // 从列表移除已成功保存的行
-        var newDiff         = new List<LootBootVFXtoExcel.VFXRowData>();
-        var newPrefabs      = new List<GameObject>();
-        var newOverrides    = new List<string>();
+        var newDiff          = new List<LootBootVFXtoExcel.VFXRowData>();
+        var newPrefabs       = new List<GameObject>();
+        var newOverrides     = new List<string>();
         var newTypeOverrides = new List<string>();
         for (int i = 0; i < diffRows.Count; i++)
         {
@@ -532,10 +547,9 @@ public class VFXDiffCheckWindow : EditorWindow
         overrideResources = newOverrides.ToArray();
         overrideVfxTypes  = newTypeOverrides.ToArray();
 
-        string resultMsg = failMessages.Count == 0
-            ? $"成功修改 {savedIndices.Count} 条记录。\n\n数据已写入 Excel，请点击工具栏「刷新缓存」使全表预览同步。"
-            : $"成功 {savedIndices.Count} 条，失败 {failMessages.Count} 条：\n{string.Join("\n", failMessages)}；\n成功部分已写入 Excel，请点击「刷新缓存」同步。";
-        EditorUtility.DisplayDialog("保存完成", resultMsg, "确定");
+        EditorUtility.DisplayDialog("保存完成",
+            $"成功修改 {savedIndices.Count} 条记录。\n\n数据已写入 Excel，请点击工具栏「刷新缓存」使全表预览同步。",
+            "确定");
 
         if (diffRows.Count == 0)
             Close();

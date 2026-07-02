@@ -263,11 +263,11 @@ public class LootBootVFXtoExcel : EditorWindow
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            GUI.backgroundColor = new Color(0.35f, 0.85f, 0.35f);
+            GUI.backgroundColor = new Color(0.196f, 0.804f, 0.196f);
             if (GUILayout.Button("保存配置", GUILayout.Height(32f)))
                 SaveToExcel();
 
-            GUI.backgroundColor = new Color(1f, 0.6f, 0.15f);
+            GUI.backgroundColor = new Color(1f, 0.647f, 0f);
             if (GUILayout.Button("覆盖配置", GUILayout.Height(32f)))
                 OverwriteToExcel();
 
@@ -277,17 +277,23 @@ public class LootBootVFXtoExcel : EditorWindow
         using (new EditorGUILayout.HorizontalScope())
         {
             Color savedBgPrev = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(0.25f, 0.55f, 1f);
+            GUI.backgroundColor = new Color(0.53f, 0.81f, 0.92f);
             if (GUILayout.Button(new GUIContent("预览表格",
                 "打开全表预览窗口，可浏览 Excel 中所有特效配置，支持实时搜索。"),
                 GUILayout.Height(26f)))
                 OpenPreviewTable();
 
-            GUI.backgroundColor = new Color(0.9f, 0.55f, 0.2f);
-            if (GUILayout.Button(new GUIContent("检查差异",
+            GUI.backgroundColor = new Color(1f, 0.75f, 0.8f);
+            if (GUILayout.Button(new GUIContent("差异检查",
                 "检查 Excel 中所有配置项的资源路径是否存在于当前工程，列出缺失项并允许拖入新预制体补充修正。"),
                 GUILayout.Height(26f)))
                 CheckDiff();
+
+            GUI.backgroundColor = new Color(1f, 0.5f, 0.31f);
+            if (GUILayout.Button(new GUIContent("范围检查",
+                "批量检查表格中的范围大小是否与预制体 Collider2D 半径一致，并可一键修复。"),
+                GUILayout.Height(26f)))
+                CheckRangeSize();
 
             GUI.backgroundColor = savedBgPrev;
         }
@@ -652,6 +658,7 @@ public class LootBootVFXtoExcel : EditorWindow
     [System.Serializable]
     internal class VFXRowData
     {
+        public string rowIndex;
         public string id;
         public string remark;
         public string name;
@@ -851,6 +858,246 @@ public class LootBootVFXtoExcel : EditorWindow
         {
             prefabMatchWarning = $"读取缓存时出错：{ex.Message}";
         }
+    }
+
+    private void CheckRangeSize()
+    {
+        if (!File.Exists(cachePath))
+        {
+            string cacheErr = RefreshCache();
+            if (!File.Exists(cachePath))
+            {
+                EditorUtility.DisplayDialog("缓存生成失败",
+                    string.IsNullOrEmpty(cacheErr) ? "缓存文件未生成，原因未知。" : cacheErr, "确定");
+                return;
+            }
+        }
+
+        var mismatches = new List<RangeSizeMismatch>();
+        int checkedCount = 0;
+        int noColliderCount = 0;
+        int missingPrefabCount = 0;
+        int unconfiguredRangeCount = 0;
+        int invalidRangeCount = 0;
+
+        try
+        {
+            string json = File.ReadAllText(cachePath, Encoding.UTF8);
+            VFXRowDataList list = JsonUtility.FromJson<VFXRowDataList>("{\"items\":" + json + "}");
+            if (list?.items == null)
+            {
+                EditorUtility.DisplayDialog("错误", "缓存数据解析失败，请重新生成缓存。", "确定");
+                return;
+            }
+
+            foreach (var row in list.items)
+            {
+                if (row == null || string.IsNullOrWhiteSpace(row.resource))
+                    continue;
+
+                string assetPath = GetEffectPrefabAssetPath(row.resource);
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (prefab == null)
+                {
+                    missingPrefabCount++;
+                    continue;
+                }
+
+                if (!TryCalculateColliderRangeSize(prefab, out int expectedRangeSize, out string colliderInfo))
+                {
+                    noColliderCount++;
+                    continue;
+                }
+
+                checkedCount++;
+                if (string.IsNullOrWhiteSpace(row.rangeSize))
+                {
+                    unconfiguredRangeCount++;
+                    mismatches.Add(new RangeSizeMismatch(row, assetPath, row.rangeSize, expectedRangeSize, colliderInfo));
+                    continue;
+                }
+
+                if (!int.TryParse(row.rangeSize.Trim(), out int currentRangeSize))
+                {
+                    invalidRangeCount++;
+                    mismatches.Add(new RangeSizeMismatch(row, assetPath, row.rangeSize, expectedRangeSize, colliderInfo));
+                    continue;
+                }
+
+                if (currentRangeSize != expectedRangeSize)
+                    mismatches.Add(new RangeSizeMismatch(row, assetPath, row.rangeSize, expectedRangeSize, colliderInfo));
+            }
+        }
+        catch (System.Exception ex)
+        {
+            EditorUtility.DisplayDialog("错误", $"读取缓存或检查预制体时出错：{ex.Message}", "确定");
+            return;
+        }
+
+        if (mismatches.Count == 0)
+        {
+            EditorUtility.DisplayDialog("范围检查完成",
+                $"已检查 {checkedCount} 条带 Collider2D 的配置，未发现范围大小不匹配。\n跳过无 Collider：{noColliderCount} 条\n未配置范围：{unconfiguredRangeCount} 条",
+                "确定");
+            return;
+        }
+
+        VFXRangeSizeCheckWindow.Open(cachePath, excelPath, scriptPath, mismatches,
+            checkedCount, noColliderCount, unconfiguredRangeCount, invalidRangeCount);
+    }
+
+    internal class RangeSizeMismatch
+    {
+        internal VFXRowData row;
+        internal string assetPath;
+        internal string currentRangeSize;
+        internal int expectedRangeSize;
+        internal string colliderInfo;
+
+        internal RangeSizeMismatch(VFXRowData row, string assetPath, string currentRangeSize, int expectedRangeSize, string colliderInfo)
+        {
+            this.row = row;
+            this.assetPath = assetPath;
+            this.currentRangeSize = currentRangeSize;
+            this.expectedRangeSize = expectedRangeSize;
+            this.colliderInfo = colliderInfo;
+        }
+    }
+
+    internal static string GetEffectPrefabAssetPath(string resource)
+    {
+        string normalized = (resource ?? "").Trim().Replace('\\', '/').TrimStart('/');
+        if (normalized.EndsWith(".prefab"))
+            normalized = normalized.Substring(0, normalized.Length - ".prefab".Length);
+        if (normalized.StartsWith("Assets/"))
+            return normalized + ".prefab";
+        return "Assets/GameAsset/Effect/" + normalized + ".prefab";
+    }
+
+    internal static bool TryCalculateColliderRangeSize(GameObject prefab, out int rangeSize, out string colliderInfo)
+    {
+        rangeSize = 0;
+        colliderInfo = "";
+        if (prefab == null)
+            return false;
+
+        Collider2D[] colliders = prefab.GetComponentsInChildren<Collider2D>(true);
+        if (colliders == null || colliders.Length == 0)
+            return false;
+
+        float bestRadius = -1f;
+        string bestInfo = "";
+        foreach (var collider in colliders)
+        {
+            if (collider == null)
+                continue;
+
+            float radius;
+            string typeName;
+            if (collider is CircleCollider2D circle)
+            {
+                Vector3 scale = circle.transform.lossyScale;
+                radius = circle.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y));
+                typeName = "CircleCollider2D";
+            }
+            else if (collider is BoxCollider2D box)
+            {
+                radius = CalculateBoxColliderRadius(box);
+                typeName = "BoxCollider2D";
+            }
+            else if (collider is PolygonCollider2D polygon)
+            {
+                radius = CalculatePolygonColliderRadius(polygon);
+                typeName = "PolygonCollider2D";
+            }
+            else
+            {
+                continue;
+            }
+
+            if (radius > bestRadius)
+            {
+                bestRadius = radius;
+                bestInfo = $"{typeName}  r={radius:0.###}";
+            }
+        }
+
+        if (bestRadius < 0f)
+            return false;
+
+        rangeSize = Mathf.RoundToInt(bestRadius * 100f);
+        colliderInfo = bestInfo;
+        return true;
+    }
+
+    private static float CalculateBoxColliderRadius(BoxCollider2D box)
+    {
+        Vector2 half = box.size * 0.5f;
+        Vector2 offset = box.offset;
+        Vector2[] points =
+        {
+            offset + new Vector2(-half.x, -half.y),
+            offset + new Vector2(-half.x,  half.y),
+            offset + new Vector2( half.x, -half.y),
+            offset + new Vector2( half.x,  half.y),
+        };
+        return CalculateWorldPointRadius(box.transform, points);
+    }
+
+    private static float CalculatePolygonColliderRadius(PolygonCollider2D polygon)
+    {
+        var points = new List<Vector2>();
+        for (int path = 0; path < polygon.pathCount; path++)
+        {
+            Vector2[] pathPoints = polygon.GetPath(path);
+            for (int i = 0; i < pathPoints.Length; i++)
+                points.Add(pathPoints[i] + polygon.offset);
+        }
+        return points.Count == 0 ? 0f : CalculateWorldPointRadius(polygon.transform, points);
+    }
+
+    private static float CalculateWorldPointRadius(Transform transform, IList<Vector2> localPoints)
+    {
+        if (localPoints == null || localPoints.Count == 0)
+            return 0f;
+
+        Vector3 min = transform.TransformPoint(localPoints[0]);
+        Vector3 max = min;
+        var worldPoints = new Vector3[localPoints.Count];
+        worldPoints[0] = min;
+        for (int i = 1; i < localPoints.Count; i++)
+        {
+            Vector3 world = transform.TransformPoint(localPoints[i]);
+            worldPoints[i] = world;
+            min = Vector3.Min(min, world);
+            max = Vector3.Max(max, world);
+        }
+
+        Vector3 center = (min + max) * 0.5f;
+        float radius = 0f;
+        for (int i = 0; i < worldPoints.Length; i++)
+            radius = Mathf.Max(radius, Vector2.Distance(center, worldPoints[i]));
+        return radius;
+    }
+
+    private static string GetTransformPath(Transform root, Transform target)
+    {
+        if (target == null)
+            return "<空>";
+        if (root == null || target == root)
+            return target.name;
+
+        var names = new List<string>();
+        Transform current = target;
+        while (current != null)
+        {
+            names.Add(current.name);
+            if (current == root)
+                break;
+            current = current.parent;
+        }
+        names.Reverse();
+        return string.Join("/", names.ToArray());
     }
 
     /// <summary>
