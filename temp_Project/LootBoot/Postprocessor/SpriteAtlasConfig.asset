@@ -22,14 +22,17 @@ MonoBehaviour:
   - Assets/GameAsset/Sprite/Icon/Item
   - Assets/GameAsset/Sprite/Icon/Monster
   - Assets/GameAsset/Sprite/Icon/PlayerHead
+  - Assets/GameAsset/Sprite/UI/7Day
   - Assets/GameAsset/Sprite/UI/Abilities
   - Assets/GameAsset/Sprite/UI/Alliance
   - Assets/GameAsset/Sprite/UI/Battle
   - Assets/GameAsset/Sprite/UI/BattleMain
   - Assets/GameAsset/Sprite/UI/BattlePass
+  - Assets/GameAsset/Sprite/UI/Chat
   - Assets/GameAsset/Sprite/UI/Common
   - Assets/GameAsset/Sprite/UI/Equip
   - Assets/GameAsset/Sprite/UI/FuBen
+  - Assets/GameAsset/Sprite/UI/GiftPack
   - Assets/GameAsset/Sprite/UI/Main
   - Assets/GameAsset/Sprite/UI/QualityUI
   - Assets/GameAsset/Sprite/UI/Rank

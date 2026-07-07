@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.EditorTools;
 using UnityEditor.Tilemaps;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace GameFramework.Editor
 {
@@ -15,6 +17,7 @@ namespace GameFramework.Editor
 
         private readonly List<PaletteTheme> _themes = new List<PaletteTheme>();
         private readonly List<PaletteItem> _visibleItems = new List<PaletteItem>();
+        private readonly List<GameObject> _paintTargets = new List<GameObject>();
 
         private string _prefabRoot = DefaultPrefabRoot;
         private string _brushRoot = DefaultBrushRoot;
@@ -52,6 +55,8 @@ namespace GameFramework.Editor
         {
             DrawToolbar();
             DrawThemeBar();
+            DrawPaintTargetBar();
+            DrawBrushToolBar();
             DrawPaletteGrid();
             DrawStatusBar();
         }
@@ -65,6 +70,8 @@ namespace GameFramework.Editor
             EditorGUILayout.BeginHorizontal();
             _searchText = EditorGUILayout.TextField("搜索", _searchText);
             _cellSize = EditorGUILayout.Slider("格子大小", _cellSize, 56f, 128f, GUILayout.Width(260));
+            if (GUILayout.Button("返回瓦片模式", GUILayout.Width(110)))
+                ReturnToTileMode();
             if (GUILayout.Button("刷新", GUILayout.Width(72)))
                 ScanThemes();
             EditorGUILayout.EndHorizontal();
@@ -76,13 +83,108 @@ namespace GameFramework.Editor
         {
             if (_themes.Count == 0)
             {
-                EditorGUILayout.HelpBox("未找到装饰Prefab。请先用“装饰物 Prefab Brush 生成器”生成Prefab。", MessageType.Info);
+                EditorGUILayout.HelpBox("未找到装饰Prefab。请先用“装饰物 Prefab Brush 生成器”生成Prefab，或在PrefabBrush目录下放入带Prefab引用的PrefabBrush。", MessageType.Info);
                 return;
             }
 
             var names = _themes.Select(t => $"{t.Name} ({t.Items.Count})").ToArray();
             _themeIndex = Mathf.Clamp(_themeIndex, 0, names.Length - 1);
             _themeIndex = EditorGUILayout.Popup("主题", _themeIndex, names);
+        }
+
+
+        private void DrawPaintTargetBar()
+        {
+            RefreshPaintTargets();
+            if (_paintTargets.Count == 0)
+            {
+                EditorGUILayout.HelpBox("当前场景中没有可用的Tilemap/Grid绘制目标。", MessageType.Info);
+                return;
+            }
+
+            var currentTarget = GridPaintingState.scenePaintTarget;
+            var currentIndex = Mathf.Max(0, _paintTargets.IndexOf(currentTarget));
+            var names = _paintTargets.Select(GetPaintTargetDisplayName).ToArray();
+            EditorGUI.BeginChangeCheck();
+            var selectedIndex = EditorGUILayout.Popup("绘制目标", currentIndex, names);
+            if (EditorGUI.EndChangeCheck() && selectedIndex >= 0 && selectedIndex < _paintTargets.Count)
+                GridPaintingState.scenePaintTarget = _paintTargets[selectedIndex];
+        }
+
+        private void RefreshPaintTargets()
+        {
+            _paintTargets.Clear();
+            foreach (var target in GridPaintingState.validTargets)
+            {
+                if (target == null)
+                    continue;
+                if (target.GetComponent<Tilemap>() == null)
+                    continue;
+                _paintTargets.Add(target);
+            }
+        }
+
+        private static string GetPaintTargetDisplayName(GameObject target)
+        {
+            if (target == null)
+                return "None";
+
+            return target.name;
+        }
+
+        private void DrawBrushToolBar()
+        {
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            {
+                GUILayout.Label("工具", GUILayout.Width(34));
+                DrawBrushToolButton<SelectTool>("选择");
+                DrawBrushToolButton<MoveTool>("移动");
+                DrawBrushToolButton<PaintTool>("画笔");
+                DrawBrushToolButton<BoxTool>("框填充");
+                DrawBrushToolButton<PickingTool>("吸管");
+                DrawBrushToolButton<EraseTool>("擦除");
+                DrawBrushToolButton<FillTool>("填充");
+            }
+        }
+
+        private static void DrawBrushToolButton<TTool>(string label) where TTool : EditorTool
+        {
+            var icon = GetToolIcon<TTool>();
+            var content = new GUIContent(label, icon, icon != null ? label : string.Empty);
+            var isActive = IsActiveTilemapTool<TTool>();
+            if (GUILayout.Toggle(isActive, content, EditorStyles.toolbarButton) && !isActive)
+                SetActiveTilemapTool<TTool>();
+        }
+
+        private static void SetActiveTilemapTool<TTool>() where TTool : EditorTool
+        {
+            var method = typeof(TilemapEditorTool).GetMethod(
+                "SetActiveEditorTool",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            method?.Invoke(null, new object[] { typeof(TTool) });
+            RepaintGridPaintPaletteWindow();
+            SceneView.RepaintAll();
+        }
+
+        private static bool IsActiveTilemapTool<TTool>() where TTool : EditorTool
+        {
+            var method = typeof(TilemapEditorTool).GetMethod(
+                "IsActive",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            return method != null && (bool)method.Invoke(null, new object[] { typeof(TTool) });
+        }
+
+        private static Texture GetToolIcon<TTool>() where TTool : EditorTool
+        {
+            var tool = CreateInstance<TTool>();
+            try
+            {
+                return tool.toolbarIcon?.image;
+            }
+            finally
+            {
+                DestroyImmediate(tool);
+            }
         }
 
         private void DrawPaletteGrid()
@@ -236,7 +338,7 @@ namespace GameFramework.Editor
 
         private void ActivateSingleBrush(PaletteItem item)
         {
-            var brush = item.PrefabBrush != null ? item.PrefabBrush : CreateOrUpdatePrefabBrush(item);
+            var brush = item.Brush != null ? item.Brush : CreateOrUpdatePrefabBrush(item);
             var serializedObject = new SerializedObject(brush);
             var anchorProperty = serializedObject.FindProperty("m_Anchor");
             if (anchorProperty != null)
@@ -275,6 +377,21 @@ namespace GameFramework.Editor
             _activeInfo = selected.Count + " objects / GameObject Brush";
         }
 
+        private static void ReturnToTileMode()
+        {
+            var stateType = typeof(GridPaintingState);
+            var defaultBrushProperty = stateType.GetProperty(
+                "defaultBrush",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            var defaultBrush = defaultBrushProperty?.GetValue(null) as GridBrushBase;
+            if (defaultBrush != null)
+                GridPaintingState.gridBrush = defaultBrush;
+
+            SetActiveTilemapTool<PaintTool>();
+            EditorApplication.ExecuteMenuItem("Window/2D/Tile Palette");
+            RepaintGridPaintPaletteWindow();
+        }
+
         private static void RepaintGridPaintPaletteWindow()
         {
             var method = typeof(GridPaintingState).GetMethod(
@@ -305,7 +422,7 @@ namespace GameFramework.Editor
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(brush);
             AssetDatabase.SaveAssets();
-            item.PrefabBrush = brush;
+            item.Brush = brush;
             return brush;
         }
 
@@ -326,34 +443,29 @@ namespace GameFramework.Editor
         private void ScanThemes()
         {
             _themes.Clear();
-            if (!AssetDatabase.IsValidFolder(_prefabRoot))
-                return;
-
-            var prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { _prefabRoot });
             var themeMap = new Dictionary<string, PaletteTheme>();
-            foreach (var guid in prefabGuids)
+
+            if (AssetDatabase.IsValidFolder(_prefabRoot))
             {
-                var prefabPath = AssetDatabase.GUIDToAssetPath(guid);
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                if (prefab == null)
-                    continue;
-
-                var relative = prefabPath.Substring(_prefabRoot.TrimEnd('/').Length).TrimStart('/');
-                var themeName = relative.Contains("/") ? relative.Substring(0, relative.IndexOf('/')) : "Default";
-                if (!themeMap.TryGetValue(themeName, out var theme))
+                var prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { _prefabRoot });
+                foreach (var guid in prefabGuids)
                 {
-                    theme = new PaletteTheme(themeName);
-                    themeMap.Add(themeName, theme);
+                    var prefabPath = AssetDatabase.GUIDToAssetPath(guid);
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    if (prefab == null)
+                        continue;
+
+                    var themeName = GetThemeName(_prefabRoot, prefabPath);
+                    var name = Path.GetFileNameWithoutExtension(prefabPath);
+                    var brushPath = CombineAssetPath(CombineAssetPath(_brushRoot, themeName), name + "_PrefabBrush.asset");
+                    AddPaletteItem(themeMap, themeName, name, prefab, AssetDatabase.LoadAssetAtPath<GridBrushBase>(brushPath));
                 }
+            }
 
-                var name = Path.GetFileNameWithoutExtension(prefabPath);
-                var brushPath = CombineAssetPath(CombineAssetPath(_brushRoot, themeName), name + "_PrefabBrush.asset");
-                theme.Items.Add(new PaletteItem
-                {
-                    Name = name,
-                    Prefab = prefab,
-                    PrefabBrush = AssetDatabase.LoadAssetAtPath<PrefabBrush>(brushPath)
-                });
+            if (AssetDatabase.IsValidFolder(_brushRoot))
+            {
+                ScanBrushAssets(themeMap, "t:PrefabBrush");
+                ScanBrushAssets(themeMap, "t:PrefabRandomBrush");
             }
 
             foreach (var theme in themeMap.Values)
@@ -363,6 +475,81 @@ namespace GameFramework.Editor
             }
             _themes.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
             _themeIndex = Mathf.Clamp(_themeIndex, 0, Mathf.Max(0, _themes.Count - 1));
+        }
+
+        private void ScanBrushAssets(Dictionary<string, PaletteTheme> themeMap, string filter)
+        {
+            var brushGuids = AssetDatabase.FindAssets(filter, new[] { _brushRoot });
+            foreach (var guid in brushGuids)
+            {
+                var brushPath = AssetDatabase.GUIDToAssetPath(guid);
+                var brush = AssetDatabase.LoadAssetAtPath<GridBrushBase>(brushPath);
+                var prefab = GetPreviewPrefabFromBrush(brush);
+                if (prefab == null)
+                    continue;
+
+                var themeName = GetThemeName(_brushRoot, brushPath);
+                var name = Path.GetFileNameWithoutExtension(brushPath);
+                if (name.EndsWith("_PrefabBrush", StringComparison.Ordinal))
+                    name = name.Substring(0, name.Length - "_PrefabBrush".Length);
+                if (name.EndsWith("_PrefabRandomBrush", StringComparison.Ordinal))
+                    name = name.Substring(0, name.Length - "_PrefabRandomBrush".Length);
+                AddPaletteItem(themeMap, themeName, name, prefab, brush);
+            }
+        }
+
+        private static string GetThemeName(string root, string assetPath)
+        {
+            var relative = assetPath.Substring(root.TrimEnd('/').Length).TrimStart('/');
+            return relative.Contains("/") ? relative.Substring(0, relative.IndexOf('/')) : "Default";
+        }
+
+        private static GameObject GetPreviewPrefabFromBrush(GridBrushBase brush)
+        {
+            if (brush == null)
+                return null;
+
+            var serializedObject = new SerializedObject(brush);
+            var prefabProperty = serializedObject.FindProperty("m_Prefab");
+            if (prefabProperty != null)
+                return prefabProperty.objectReferenceValue as GameObject;
+
+            var prefabsProperty = serializedObject.FindProperty("m_Prefabs");
+            if (prefabsProperty == null || !prefabsProperty.isArray || prefabsProperty.arraySize == 0)
+                return null;
+
+            for (var i = 0; i < prefabsProperty.arraySize; i++)
+            {
+                var prefab = prefabsProperty.GetArrayElementAtIndex(i).objectReferenceValue as GameObject;
+                if (prefab != null)
+                    return prefab;
+            }
+            return null;
+        }
+
+        private static void AddPaletteItem(Dictionary<string, PaletteTheme> themeMap, string themeName, string name, GameObject prefab, GridBrushBase brush)
+        {
+            if (!themeMap.TryGetValue(themeName, out var theme))
+            {
+                theme = new PaletteTheme(themeName);
+                themeMap.Add(themeName, theme);
+            }
+
+            var prefabPath = AssetDatabase.GetAssetPath(prefab);
+            var existing = theme.Items.FirstOrDefault(i => AssetDatabase.GetAssetPath(i.Prefab) == prefabPath);
+            if (existing != null)
+            {
+                if (existing.Brush == null)
+                    existing.Brush = brush;
+                return;
+            }
+
+            theme.Items.Add(new PaletteItem
+            {
+                Name = name,
+                Prefab = prefab,
+                Brush = brush
+            });
         }
 
         private static Texture GetPreview(GameObject prefab)
@@ -408,7 +595,7 @@ namespace GameFramework.Editor
         {
             public string Name;
             public GameObject Prefab;
-            public PrefabBrush PrefabBrush;
+            public GridBrushBase Brush;
         }
 
         private readonly struct SelectedCell
