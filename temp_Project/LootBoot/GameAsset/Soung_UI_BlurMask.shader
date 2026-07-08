@@ -85,17 +85,17 @@ Shader "Soung/UI/BlurMask"
                 float2 uv     = i.texcoord;
                 float2 offset = _MainTex_TexelSize.xy * _BlurSpread;
 
-                // 9-tap box blur，RT 本身已是 1/4 分辨率，texel 尺寸已放大，模糊半径足够
+                // 9-tap 加权模糊，采样次数不变，比 box blur 更柔和且减少块状感
                 fixed4 col  = tex2D(_MainTex, uv + float2(-offset.x, -offset.y));
-                       col += tex2D(_MainTex, uv + float2( 0.0,      -offset.y));
+                       col += tex2D(_MainTex, uv + float2( 0.0,      -offset.y)) * 2.0;
                        col += tex2D(_MainTex, uv + float2( offset.x, -offset.y));
-                       col += tex2D(_MainTex, uv + float2(-offset.x,  0.0));
-                       col += tex2D(_MainTex, uv);
-                       col += tex2D(_MainTex, uv + float2( offset.x,  0.0));
+                       col += tex2D(_MainTex, uv + float2(-offset.x,  0.0))      * 2.0;
+                       col += tex2D(_MainTex, uv)                                * 4.0;
+                       col += tex2D(_MainTex, uv + float2( offset.x,  0.0))      * 2.0;
                        col += tex2D(_MainTex, uv + float2(-offset.x,  offset.y));
-                       col += tex2D(_MainTex, uv + float2( 0.0,       offset.y));
+                       col += tex2D(_MainTex, uv + float2( 0.0,       offset.y)) * 2.0;
                        col += tex2D(_MainTex, uv + float2( offset.x,  offset.y));
-                col /= 9.0;
+                col *= 0.0625;
 
                 // 叠加暗色蒙层
                 col.rgb = lerp(col.rgb, fixed3(0.0, 0.0, 0.0), _DarkIntensity);

@@ -439,7 +439,7 @@ Shader "Soung/Effect/FullFx"
                     float2 panner50 = ( 1.0 * _Time.y * appendResult54 + noiseUV);
                     float4 tex2DNode17 = tex2D( _NoiseTex, panner50 );
                     float lerpResult63 = lerp( tex2DNode17.r , tex2DNode17.a , _NoiseTexP);
-                    float noisePower = ( _NoisePower * lerp( 1.0 , saturate( input.ase_texcoord7.w ) , _NoiseUseCustom1w ) );
+                    float noisePower = lerp( _NoisePower , input.ase_texcoord7.w , _NoiseUseCustom1w );
                     lerpResult60 = ( (-0.5 + (lerpResult63 - 0.0) * (0.5 - -0.5) / (1.0 - 0.0)) * noisePower );
                 #endif
                 float2 appendResult34 = (float2(_MainTexUspeed , _MainTexVspeed));

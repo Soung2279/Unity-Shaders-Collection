@@ -121,20 +121,27 @@ Shader "Soung/Effect/SmoothFlipbook"
                 float framePos = fmod(t, (float)totalFrames);
 
                 uint frameA = (uint)framePos;
-                uint frameB = (frameA + 1u) % totalFrames;
                 float f = frac(framePos); // 当前帧内进度 [0, 1)
 
                 float2 uvA = GetFrameUV(baseUV, frameA);
-                float2 uvB = GetFrameUV(baseUV, frameB);
-
                 half4 colA = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uvA);
+
+                [branch]
+                if (_Blend <= 0.001)
+                {
+                    half3 finalRGB = colA.rgb * baseColorRGB;
+                    float blendAlpha = lerp(colA.r, colA.a, _SwitchP);
+                    float finalAlpha = blendAlpha * baseColorA;
+                    return half4(finalRGB, finalAlpha) * i.color;
+                }
+
+                uint frameB = (frameA + 1u) % totalFrames;
+                float2 uvB = GetFrameUV(baseUV, frameB);
                 half4 colB = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uvB);
 
                 // 混合仅发生在每帧末尾的 _Blend 窗口内，大部分时间为清晰单帧
                 float blendStart = 1.0 - _Blend;
-                float blendWeight = (_Blend > 0.001)
-                    ? smoothstep(0.0, 1.0, saturate((f - blendStart) / _Blend))
-                    : 0.0;
+                float blendWeight = smoothstep(0.0, 1.0, saturate((f - blendStart) / _Blend));
 
                 half4 col = lerp(colA, colB, blendWeight);
                 half3 finalRGB = col.rgb * baseColorRGB;

@@ -423,6 +423,7 @@ namespace GameFramework.Editor
             spriteRenderer.sprite = item.Sprite;
             spriteRenderer.sortingLayerName = _sortingLayerName;
             spriteRenderer.sortingOrder = 0;
+            spriteRenderer.spriteSortPoint = SpriteSortPoint.Pivot;
 
             var tile = item.TileBase as Tile;
             if (tile != null)

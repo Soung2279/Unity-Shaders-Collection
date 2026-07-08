@@ -2,7 +2,9 @@
     "name": "VFXTool",
     "rootNamespace": "",
     "references": [
-        "GUID:f3af4a344f8222f4ea61ec09aff8f226"
+        "GUID:f3af4a344f8222f4ea61ec09aff8f226",
+        "GUID:ace45c611494857438716731a8e67983",
+        "GUID:68765d262e2128e4ab49c983f3411946"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c948748b0b9f98e4f8b1eb0315b70c43, type: 3}
+  m_Name: SpineWeaponPreviewConfig
+  m_EditorClassIdentifier: 
+  showBoundaries: 0
+  showLabels: 1
+  previewSpacing: 3
+  prefabsPerRow: 5
+  defaultWeaponId: 10400053
+  defaultWeaponQuality: 8
+  defaultAnimation: idle
+  animationOptions:
+  - idle
+  - run
+  - dead
+  - attack1
+  - attack2
+  - attack3
+  - skill1
+  - skill2
+  - skill3
