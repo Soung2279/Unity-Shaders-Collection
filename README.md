@@ -215,6 +215,12 @@ https://github.com/Soung2279/SoungFXShaders.git
 
 ## 更新日志
 
+### 2026.7.30 | 更新说明 | Standard V2.0.3
+
+#### 修复
+
+修复 FullFx 的若干Bug。修复其shaderGUI的若干参数不匹配问题。
+
 ### 2026.5.11 | 更新说明 | Standard V2.0.2
 
 #### 新增
