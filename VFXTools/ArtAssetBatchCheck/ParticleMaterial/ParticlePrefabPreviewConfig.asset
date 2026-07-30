@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9caa15e75e0204e428a69c22b24eb6da, type: 3}
   m_Name: ParticlePrefabPreviewConfig
   m_EditorClassIdentifier: 
-  showBoundaries: 0
+  showBoundaries: 1
   showLabels: 0
   previewSpacing: 4
   loopAllParticles: 1

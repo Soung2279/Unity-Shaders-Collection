@@ -101,7 +101,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
 
                 if (_animationOptions.Length == 0)
                 {
-                    _animationOptions = new[] { "idle", "run", "dead", "attack1", "attack2", "attack3", "skill1", "skill2", "skill3" };
+                    _animationOptions = new[] { "idle", "run", "dead", "attack1", "attack2", "attack3", "skill1", "skill2", "skill3", "ui_wearequip" };
                 }
 
                 var nextAnimIndex = EditorGUILayout.Popup("预览动画", _selectedAnimationIndex, _animationOptions);
@@ -214,8 +214,15 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
         private void BuildAnimationOptions()
         {
             _animationOptions = _config.animationOptions == null || _config.animationOptions.Length == 0
-                ? new[] { "idle", "run", "dead", "attack1", "attack2", "attack3", "skill1", "skill2", "skill3" }
+                ? new[] { "idle", "run", "dead", "attack1", "attack2", "attack3", "skill1", "skill2", "skill3", "ui_wearequip" }
                 : _config.animationOptions;
+            if (Array.IndexOf(_animationOptions, "ui_wearequip") < 0)
+            {
+                Array.Resize(ref _animationOptions, _animationOptions.Length + 1);
+                _animationOptions[_animationOptions.Length - 1] = "ui_wearequip";
+                _config.animationOptions = _animationOptions;
+                _config.Save();
+            }
             _selectedAnimationIndex = Mathf.Max(0, Array.IndexOf(_animationOptions, _config.defaultAnimation));
             if (_selectedAnimationIndex >= _animationOptions.Length)
             {

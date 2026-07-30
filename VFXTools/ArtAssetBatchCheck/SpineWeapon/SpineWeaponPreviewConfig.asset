@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   showBoundaries: 0
   showLabels: 1
-  previewSpacing: 3
-  prefabsPerRow: 5
-  defaultWeaponId: 10400053
-  defaultWeaponQuality: 8
+  previewSpacing: 2
+  prefabsPerRow: 4
+  defaultWeaponId: 10300012
+  defaultWeaponQuality: 12
   defaultAnimation: idle
   animationOptions:
   - idle
@@ -29,3 +29,4 @@ MonoBehaviour:
   - skill1
   - skill2
   - skill3
+  - ui_wearequip

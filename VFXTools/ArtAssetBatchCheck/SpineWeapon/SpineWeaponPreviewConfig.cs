@@ -13,7 +13,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
         public int defaultWeaponId = 10100011;
         public int defaultWeaponQuality = 2;
         public string defaultAnimation = "idle";
-        public string[] animationOptions = { "idle", "run", "dead", "attack1", "attack2", "attack3", "skill1", "skill2", "skill3" };
+        public string[] animationOptions = { "idle", "run", "dead", "attack1", "attack2", "attack3", "skill1", "skill2", "skill3", "ui_wearequip" };
 
         private const string DefaultAssetPath =
             "Assets/Editor/VFXTools/ArtAssetBatchCheck/SpineWeapon/SpineWeaponPreviewConfig.asset";

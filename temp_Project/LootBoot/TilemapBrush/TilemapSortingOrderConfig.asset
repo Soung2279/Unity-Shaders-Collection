@@ -17,35 +17,35 @@ MonoBehaviour:
   sortingLayerName: Default
   sortingRules:
   - enabled: 1
-    objectName: Land
-    sortingOrder: -15
-  - enabled: 1
-    objectName: Water
-    sortingOrder: -10
-  - enabled: 1
-    objectName: Ground
-    sortingOrder: -9
-  - enabled: 1
-    objectName: Way
-    sortingOrder: -8
-  - enabled: 1
-    objectName: WallUp
-    sortingOrder: -6
-  - enabled: 1
-    objectName: Mountain
-    sortingOrder: -4
-  - enabled: 1
-    objectName: ObjectDown
-    sortingOrder: -3
-  - enabled: 1
     objectName: ObjectUp
-    sortingOrder: 3
+    sortingOrder: 4
   - enabled: 1
     objectName: BossWall
-    sortingOrder: 2
+    sortingOrder: 0
+  - enabled: 1
+    objectName: ObjectDown
+    sortingOrder: -4
+  - enabled: 1
+    objectName: ObjectSmall
+    sortingOrder: -9
+  - enabled: 1
+    objectName: Mountain
+    sortingOrder: -10
+  - enabled: 1
+    objectName: Trap
+    sortingOrder: -11
   - enabled: 1
     objectName: Grass
-    sortingOrder: -3
+    sortingOrder: -11
   - enabled: 1
-    objectName: Sand
-    sortingOrder: -10
+    objectName: Way
+    sortingOrder: -12
+  - enabled: 1
+    objectName: Ground
+    sortingOrder: -13
+  - enabled: 1
+    objectName: Water
+    sortingOrder: -14
+  - enabled: 1
+    objectName: Land
+    sortingOrder: -15

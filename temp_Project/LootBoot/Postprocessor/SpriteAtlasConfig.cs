@@ -45,6 +45,12 @@ public enum SpriteAtlasPackMode
 public class SpriteAtlasConfig : ScriptableObject
 {
     [Header("路径")]
+    [Tooltip("自动扫描的根目录列表。点击自动扫描时，会添加每个根目录下最多两层的子目录")]
+    public string[] autoScanRootDirs = new string[]
+    {
+        "Assets/GameAsset/Sprite",
+    };
+
     [Tooltip("手动重生成时的Sprite扫描目录列表")]
     public string[] atlasScanDirs = new string[]
     {
@@ -68,8 +74,8 @@ public class SpriteAtlasConfig : ScriptableObject
     public AtlasDirectoryRule[] directoryRules;
 
     [Header("图集生成门槛")]
-    [Tooltip("目录下sprite数量低于此值时跳过，不生成图集")]
-    [Range(0, 20)]
+    [Tooltip("目录中的Sprite数量低于此值时跳过生成。0表示不限制")]
+    [Min(0)]
     public int minSpriteCount = 1;
 
     [Header("导入自动修正")]

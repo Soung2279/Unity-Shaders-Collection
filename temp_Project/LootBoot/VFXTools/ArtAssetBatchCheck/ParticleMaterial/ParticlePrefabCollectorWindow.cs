@@ -9,6 +9,11 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
 {
     public class ParticlePrefabCollectorWindow : EditorWindow
     {
+        private const string PendingParticlePreviewPrefsKey = "ParticlePrefabPreview.Pending";
+        private const string PendingParticlePreviewPathsPrefsKey = "ParticlePrefabPreview.Paths";
+        private const string PendingParticlePreviewPagePrefsKey = "ParticlePrefabPreview.Page";
+        private const char PendingPathSeparator = '\n';
+
         private static ParticlePrefabCollectorWindow _instance;
 
         private class Entry
@@ -130,12 +135,16 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
         private void OnEnable()
         {
             _instance = this;
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             LoadOrCreateScanResult();
+            TryRestorePendingParticlePreview();
         }
 
         private void OnDisable()
         {
             StopScan();
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             if (ReferenceEquals(_instance, this))
             {
                 _instance = null;
@@ -555,8 +564,15 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
                     _previewToolMode = previewMode;
                     _previewPage = 0;
                     BuildPreviewTargets(previewMode);
-                    ShowPreviewScene();
-                    ParticlePrefabPreviewSceneHelper.OpenControlWindow();
+                    if (previewMode == ToolMode.ParticlePrefab && !EditorApplication.isPlaying)
+                    {
+                        RequestParticlePlayModePreview();
+                    }
+                    else
+                    {
+                        ShowPreviewScene();
+                        ParticlePrefabPreviewSceneHelper.OpenControlWindow();
+                    }
                 }
                 GUI.enabled = true;
             }
@@ -590,6 +606,70 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
                 : _previewSelected
                     .Where(path => GetFilteredEntriesCached().Any(e => e.PrefabPath == path))
                     .ToList();
+        }
+
+        private void RequestParticlePlayModePreview()
+        {
+            var paths = _previewTargets ?? new List<string>();
+            EditorPrefs.SetString(PendingParticlePreviewPathsPrefsKey, string.Join(PendingPathSeparator.ToString(), paths));
+            EditorPrefs.SetInt(PendingParticlePreviewPagePrefsKey, _previewPage);
+            EditorPrefs.SetBool(PendingParticlePreviewPrefsKey, true);
+            ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
+            ParticlePrefabPreviewSceneHelper.PrepareEmptyPlayModeStartScene();
+            EditorApplication.EnterPlaymode();
+        }
+
+        private void TryRestorePendingParticlePreview()
+        {
+            if (!EditorApplication.isPlaying || !EditorPrefs.GetBool(PendingParticlePreviewPrefsKey, false))
+            {
+                return;
+            }
+
+            _previewTargets = EditorPrefs.GetString(PendingParticlePreviewPathsPrefsKey, string.Empty)
+                .Split(new[] { PendingPathSeparator }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(path => AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+                .ToList();
+            _previewPage = Mathf.Max(0, EditorPrefs.GetInt(PendingParticlePreviewPagePrefsKey, 0));
+            _previewToolMode = ToolMode.ParticlePrefab;
+            _isPreviewing = _previewTargets.Count > 0;
+            if (!_isPreviewing)
+            {
+                Debug.LogWarning("[ParticlePrefabPreview] 进入PlayMode后没有读取到有效的粒子Prefab路径，预览已取消。");
+                ClearPendingParticlePreviewState();
+                return;
+            }
+
+            ShowPreviewScene();
+            ParticlePrefabPreviewSceneHelper.OpenControlWindow();
+            Repaint();
+        }
+
+        private void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                TryRestorePendingParticlePreview();
+            }
+            else if (state == PlayModeStateChange.ExitingPlayMode)
+            {
+                ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
+            }
+            else if (state == PlayModeStateChange.EnteredEditMode && EditorPrefs.GetBool(PendingParticlePreviewPrefsKey, false))
+            {
+                _isPreviewing = false;
+                _previewTargets = null;
+                ParticlePrefabPreviewSceneHelper.ClearPlayModeStartScene();
+                ClearPendingParticlePreviewState();
+                Repaint();
+            }
+        }
+
+        private static void ClearPendingParticlePreviewState()
+        {
+            EditorPrefs.DeleteKey(PendingParticlePreviewPrefsKey);
+            EditorPrefs.DeleteKey(PendingParticlePreviewPathsPrefsKey);
+            EditorPrefs.DeleteKey(PendingParticlePreviewPagePrefsKey);
         }
 
         private void DrawEntries(float scrollHeight)
@@ -1027,6 +1107,15 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
             _instance._previewTargets = null;
             _instance._materialPreviewTargets = null;
+            if (EditorPrefs.GetBool(PendingParticlePreviewPrefsKey, false))
+            {
+                ParticlePrefabPreviewSceneHelper.ClearPlayModeStartScene();
+                ClearPendingParticlePreviewState();
+                if (EditorApplication.isPlaying)
+                {
+                    EditorApplication.ExitPlaymode();
+                }
+            }
             _instance.Repaint();
         }
 
@@ -1037,6 +1126,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             if (all.Count == 0) return;
             var maxPage = Mathf.Max(0, Mathf.CeilToInt(all.Count / (float)PreviewPageSize) - 1);
             _instance._previewPage = _instance._previewPage >= maxPage ? 0 : _instance._previewPage + 1;
+            EditorPrefs.SetInt(PendingParticlePreviewPagePrefsKey, _instance._previewPage);
             _instance.ShowPreviewScene();
         }
 
@@ -1047,6 +1137,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             if (all.Count == 0) return;
             var maxPage = Mathf.Max(0, Mathf.CeilToInt(all.Count / (float)PreviewPageSize) - 1);
             _instance._previewPage = _instance._previewPage <= 0 ? maxPage : _instance._previewPage - 1;
+            EditorPrefs.SetInt(PendingParticlePreviewPagePrefsKey, _instance._previewPage);
             _instance.ShowPreviewScene();
         }
 

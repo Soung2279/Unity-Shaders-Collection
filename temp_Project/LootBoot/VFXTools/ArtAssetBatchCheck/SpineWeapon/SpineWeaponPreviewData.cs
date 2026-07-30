@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -235,9 +236,23 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
                 return new List<T>();
             }
 
-            var json = File.ReadAllText(path);
-            var wrapper = JsonUtility.FromJson<JsonArray<T>>($"{{\"items\":{json}}}");
-            return wrapper?.items ?? new List<T>();
+            try
+            {
+                var json = File.ReadAllText(path);
+                var trimmed = json.TrimStart();
+                if (trimmed.StartsWith("["))
+                {
+                    return JsonConvert.DeserializeObject<List<T>>(json) ?? new List<T>();
+                }
+
+                var dictionary = JsonConvert.DeserializeObject<Dictionary<string, T>>(json);
+                return dictionary != null ? new List<T>(dictionary.Values) : new List<T>();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[SpineWeaponPreview] 配置表解析失败：path={path}; error={exception.Message}");
+                return new List<T>();
+            }
         }
 
         public static GameObject LoadGameAssetPrefab(string runtimeLocation)

@@ -60,7 +60,9 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
         public static void OpenPreviewScene()
         {
             if (_previewScene.IsValid() && _previewScene.isLoaded) return;
-            _previewScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            _previewScene = EditorApplication.isPlaying
+                ? SceneManager.CreateScene("ParticlePrefabPreview")
+                : EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
             SceneManager.SetActiveScene(_previewScene);
             // Load config and apply
             LoadOrCreateConfigObject();
@@ -71,11 +73,56 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             EnsureSceneGuiHook();
         }
 
+        public static void PrepareEmptyPlayModeStartScene()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+
+            const string scenePath = "Assets/Editor/VFXTools/ArtAssetBatchCheck/ParticleMaterial/ParticlePrefabPreviewPlayMode.unity";
+            var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+            if (sceneAsset == null)
+            {
+                var previousActiveScene = SceneManager.GetActiveScene();
+                var tempScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                EditorSceneManager.SaveScene(tempScene, scenePath);
+                EditorSceneManager.CloseScene(tempScene, true);
+                if (previousActiveScene.IsValid() && previousActiveScene.isLoaded)
+                {
+                    SceneManager.SetActiveScene(previousActiveScene);
+                }
+                sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+            }
+
+            EditorSceneManager.playModeStartScene = sceneAsset;
+        }
+
+        public static void ClearPlayModeStartScene()
+        {
+            const string scenePath = "Assets/Editor/VFXTools/ArtAssetBatchCheck/ParticleMaterial/ParticlePrefabPreviewPlayMode.unity";
+            if (EditorSceneManager.playModeStartScene != null &&
+                AssetDatabase.GetAssetPath(EditorSceneManager.playModeStartScene) == scenePath)
+            {
+                EditorSceneManager.playModeStartScene = null;
+            }
+        }
+
         public static void ClosePreviewScene()
         {
             if (_previewScene.IsValid() && _previewScene.isLoaded)
             {
-                EditorSceneManager.CloseScene(_previewScene, true);
+                if (EditorApplication.isPlaying)
+                {
+                    foreach (var go in SpawnedPrefabs)
+                    {
+                        if (go) Object.Destroy(go);
+                    }
+                }
+                else
+                {
+                    EditorSceneManager.CloseScene(_previewScene, true);
+                }
                 _previewScene = default;
             }
 
@@ -89,7 +136,11 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
         {
             foreach (var go in SpawnedPrefabs)
             {
-                if (go) Object.DestroyImmediate(go);
+                if (!go) continue;
+                if (EditorApplication.isPlaying)
+                    Object.Destroy(go);
+                else
+                    Object.DestroyImmediate(go);
             }
 
             SpawnedPrefabs.Clear();
@@ -108,7 +159,19 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             {
                 var prefab = prefabs[i];
                 if (!prefab) continue;
-                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, _previewScene);
+                var go = EditorApplication.isPlaying
+                    ? Object.Instantiate(prefab)
+                    : (GameObject)PrefabUtility.InstantiatePrefab(prefab, _previewScene);
+                if (EditorApplication.isPlaying)
+                {
+                    SceneManager.MoveGameObjectToScene(go, _previewScene);
+                }
+
+                var player = go.GetComponent<ParticleGroupPlayer>();
+                if (player == null)
+                {
+                    player = go.AddComponent<ParticleGroupPlayer>();
+                }
                 var row = i / PrefabsPerRow;
                 var col = i % PrefabsPerRow;
                 // XY plane: X across, Y down
@@ -119,6 +182,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
                     new Vector3(col * _previewSpacing, 0, -row * _previewSpacing);
 
                 SpawnedPrefabs.Add(go);
+                player.Restart();
 
                 // Collect initially non-looping particle systems for selective control
                 foreach (var ps in go.GetComponentsInChildren<ParticleSystem>(true))
@@ -271,11 +335,12 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             foreach (var go in SpawnedPrefabs)
             {
                 if (!go) continue;
-                foreach (var ps in go.GetComponentsInChildren<ParticleSystem>(true))
+                var player = go.GetComponent<ParticleGroupPlayer>();
+                if (player == null)
                 {
-                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                    ps.Play(true);
+                    player = go.AddComponent<ParticleGroupPlayer>();
                 }
+                player.Restart();
             }
         }
 
@@ -397,11 +462,11 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
                 if (!ps) continue;
                 var main = ps.main;
                 main.loop = enable;
-                if (enable && restartOnEnable)
-                {
-                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                    ps.Play(true);
-                }
+            }
+
+            if (enable && restartOnEnable)
+            {
+                PlayAllParticles();
             }
         }
 

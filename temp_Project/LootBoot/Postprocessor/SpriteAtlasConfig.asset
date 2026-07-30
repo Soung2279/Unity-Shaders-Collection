@@ -12,13 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae8dac3c1a202a84cb78673ac9e2c831, type: 3}
   m_Name: SpriteAtlasConfig
   m_EditorClassIdentifier: 
+  autoScanRootDirs:
+  - Assets/GameAsset/Sprite/Icon
+  - Assets/GameAsset/Sprite/UI
   atlasScanDirs:
+  - Assets/Art/Sprite/object
   - Assets/GameAsset/Sprite/Icon/Activity
   - Assets/GameAsset/Sprite/Icon/Battle
+  - Assets/GameAsset/Sprite/Icon/BattleMapTypeIcon
   - Assets/GameAsset/Sprite/Icon/Battle_Buff
   - Assets/GameAsset/Sprite/Icon/Battle_obj
   - Assets/GameAsset/Sprite/Icon/Battle_weapon
   - Assets/GameAsset/Sprite/Icon/BgFrame
+  - Assets/GameAsset/Sprite/Icon/FuLi
   - Assets/GameAsset/Sprite/Icon/Item
   - Assets/GameAsset/Sprite/Icon/Monster
   - Assets/GameAsset/Sprite/Icon/PlayerHead
@@ -32,6 +38,7 @@ MonoBehaviour:
   - Assets/GameAsset/Sprite/UI/Common
   - Assets/GameAsset/Sprite/UI/Equip
   - Assets/GameAsset/Sprite/UI/FuBen
+  - Assets/GameAsset/Sprite/UI/FuLi
   - Assets/GameAsset/Sprite/UI/GiftPack
   - Assets/GameAsset/Sprite/UI/Main
   - Assets/GameAsset/Sprite/UI/QualityUI

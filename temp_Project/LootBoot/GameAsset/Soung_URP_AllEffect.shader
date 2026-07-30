@@ -7,6 +7,7 @@ Shader "Soung/Effect/FullFx"
         [Enum(ON,1,OFF,0)]_Zwrite("深度写入", Float) = 0
         [Enum(Less or Equal,4,Always,8)]_ZTestMode("深度测试", Float) = 4
         [Enum(Additive,1,AlphaBlend,10)]_BlendMode("混合模式", Float) = 1
+        _AlphaClipThreshold("透明剔除阈值", Range(0.001, 0.5)) = 0
 
         [Header(MainTex)]_MainTex("主贴图", 2D) = "white" {}
         [Enum(R,0,A,1)]_MainTexP("主帖图通道", Float) = 0
@@ -50,7 +51,7 @@ Shader "Soung/Effect/FullFx"
         [Enum(Notuse,0,Use,1)]_GamAlphaMode("颜色叠加Alpha模式", Float) = 0
 
         [Header(ProgramMask)][Enum(ON,0,OFF,1)]_ProMaskSwitch("程序遮罩开关", Float) = 0
-        [KeywordEnum(UP,DOWN,LEFT,RIGHT)] _ProMaskDir("程序遮罩方向", Float) = 0
+        [Enum(UP,0,DOWN,1,LEFT,2,RIGHT,3)] _ProMaskDir("程序遮罩方向", Float) = 0
         [Enum(Linear,0,Circle,1)]_ProMaskShape("程序遮罩形状", Float) = 0
         _ProMaskRange("程序遮罩范围", Range( 1 , 8)) = 1
         [Header(MaskTex)][Toggle(_MASKTEX_ON)]_MaskSwitch("遮罩开关", Float) = 0
@@ -152,7 +153,6 @@ Shader "Soung/Effect/FullFx"
 		
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
-            #pragma shader_feature_local _PROMASKDIR_UP _PROMASKDIR_DOWN _PROMASKDIR_LEFT _PROMASKDIR_RIGHT
             #pragma shader_feature_local _LIUGUANGTEXUVMODE_LOCAL _LIUGUANGTEXUVMODE_POLAR _LIUGUANGTEXUVMODE_SCREEN
             #pragma shader_feature_local _MAINTEXUVMODE_LOCAL _MAINTEXUVMODE_POLAR _MAINTEXUVMODE_POLARDISTORTION
             #pragma shader_feature_local _USE_HSV_ON
@@ -182,7 +182,6 @@ Shader "Soung/Effect/FullFx"
                 float4 ase_texcoord7 : TEXCOORD2;         // Custom1.xyzw
                 float4 ase_color : COLOR;
                 float4 ase_texcoord8 : TEXCOORD3;         // Custom2.xy
-                UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -212,6 +211,7 @@ Shader "Soung/Effect/FullFx"
                 float _Zwrite;
                 float _ZTestMode;
                 float _BlendMode;
+                float _AlphaClipThreshold;
                 
                 // 组2: 主纹理
                 float _MainTexP;
@@ -230,7 +230,6 @@ Shader "Soung/Effect/FullFx"
                 float _MainTexPolarDistortionUVScale;
 
                 // 组5: 噪声
-                float _NoiseSwitch;
                 float _NoisePower;
                 float _NoiseTexP;
                 float _NoiseTexUspeed;
@@ -320,6 +319,7 @@ Shader "Soung/Effect/FullFx"
                 float _NoiseAffectLiuguang;
                 float _NoiseAffectDissolve;
                 float _ProMaskShape;
+                float _ProMaskDir;
                 float _DissolveTexUVMode;
             CBUFFER_END
 
@@ -391,7 +391,6 @@ Shader "Soung/Effect/FullFx"
             {
                 PackedVaryings output = (PackedVaryings)0;
                 UNITY_SETUP_INSTANCE_ID(input);
-                UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
                 output.ase_texcoord6.xy = input.texcoord.xy;
@@ -416,7 +415,6 @@ Shader "Soung/Effect/FullFx"
 
             half4 frag ( PackedVaryings input ) : SV_Target
             {
-                UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                 float4 ScreenPos = ComputeScreenPos( input.clipPosV );
@@ -476,7 +474,6 @@ Shader "Soung/Effect/FullFx"
                 float custom1y10 = texCoord8.y;
                 float2 appendResult31 = (float2(custom1x9 , custom1y10));
                 float2 lerpResult443 = lerp( panner35 , ( finalUV + appendResult31 ) , _MainTexFlowMode);
-                float ValueHalfCircle = 180.0;
                 float2 rotator42 = RotateUV( lerpResult60 + lerpResult443, _MainTexRotator );
                 float2 lerpResult40 = lerp( rotator42 , saturate( rotator42 ) , _MainTexClamp);
                 float4 tex2DNode15 = tex2D( _MainTex, lerpResult40 );
@@ -555,18 +552,24 @@ Shader "Soung/Effect/FullFx"
                 #endif
 
                 float lerpResult275 = lerp( tex2DNode303.r , tex2DNode303.a , _DissolveTexPlusP);
-                float2 texCoord406 = input.ase_texcoord6.xy * float2( 1,1 ) + float2( 0,0 );
-                #if defined( _PROMASKDIR_UP )
-                float staticSwitch425 = ( 1.0 - texCoord406.y );
-                #elif defined( _PROMASKDIR_DOWN )
-                float staticSwitch425 = texCoord406.y;
-                #elif defined( _PROMASKDIR_LEFT )
-                float staticSwitch425 = texCoord406.x;
-                #elif defined( _PROMASKDIR_RIGHT )
-                float staticSwitch425 = ( 1.0 - texCoord406.x );
-                #else
-                float staticSwitch425 = ( 1.0 - texCoord406.y );
-                #endif
+                float2 texCoord406 = input.ase_texcoord6.xy;
+                float staticSwitch425;
+                if ( _ProMaskDir < 0.5 )
+                {
+                    staticSwitch425 = 1.0 - texCoord406.y;
+                }
+                else if ( _ProMaskDir < 1.5 )
+                {
+                    staticSwitch425 = texCoord406.y;
+                }
+                else if ( _ProMaskDir < 2.5 )
+                {
+                    staticSwitch425 = texCoord406.x;
+                }
+                else
+                {
+                    staticSwitch425 = 1.0 - texCoord406.x;
+                }
                 float ProMask431 = ValueZero;
                 if ( _ProMaskShape == 1 )
                 {
@@ -580,13 +583,22 @@ Shader "Soung/Effect/FullFx"
                     ProMask431 = lerp( saturate( ( smoothstepResult409 * ( _ProMaskRange / 0.4 ) ) ) , ValueZero , _ProMaskSwitch);
                 }
                 float lerpResult432 = lerp( lerpResult275 , ProMask431 , _DissolveTexPlusUsePro);
-                float lerpResult278 = lerp( lerpResult276 , lerpResult432 , _DissolveTexPlusSwitch);
-                float temp_output_283_0 = saturate( ( ( lerpResult278 + ( lerpResult276 / _DissolveTexPlusPower ) ) / 2.0 ) );
-                float smoothstepResult286 = smoothstep( ( DissolveValue334 - _DissolveSmooth ) , DissolveValue334 , temp_output_283_0);
+                float directionalDissolve = saturate( ( lerpResult432 + ( lerpResult276 / _DissolveTexPlusPower ) ) * 0.5 );
+                float temp_output_283_0 = lerp( lerpResult276, directionalDissolve, _DissolveTexPlusSwitch );
+                float smoothstepResult286;
+                if ( _DissolveSmooth > 0.0001 )
+                {
+                    smoothstepResult286 = smoothstep( ( DissolveValue334 - _DissolveSmooth ) , DissolveValue334 , temp_output_283_0);
+                }
+                else
+                {
+                    smoothstepResult286 = step( DissolveValue334 , temp_output_283_0 );
+                }
                 float4 temp_cast_7 = (smoothstepResult286).xxxx;
 
                 float4 dissolvealphaEDGE = ( _DissolveEdgeColor * ( step( ( DissolveValue334 - _DissolveEdgeWide ) , temp_output_283_0 ) - step( DissolveValue334 , temp_output_283_0 ) ) );
-                float4 lerpResult299 = lerp( temp_cast_7 , ( smoothstepResult286 + dissolvealphaEDGE), _DissolveEdgeSwitch);
+                float4 activeDissolveEdge = dissolvealphaEDGE * _DissolveEdgeSwitch;
+                float4 lerpResult299 = temp_cast_7 + activeDissolveEdge;
 
                 float3 appendResult301 = (float3(lerpResult299.rgb));
                 float3 lerpResult356 = lerp( temp_cast_6 , appendResult301 , _DissolveTexSwitch);
@@ -597,7 +609,7 @@ Shader "Soung/Effect/FullFx"
                 float4 baseColor = ( MainTexColor113 * float4( GamColor103 , 0.0 ) * input.ase_color );
                 float4 dissolveBlendedColor = lerp( 
                     ( baseColor * float4( DissolveColor304 , 0.0 ) ),  // 乘法混合
-                    ( baseColor + dissolvealphaEDGE),  // 加法混合
+                    ( baseColor + activeDissolveEdge),  // 加法混合
                     _DissolveColorMode
                 );
                 float4 temp_output_338_0 = dissolveBlendedColor;
@@ -653,8 +665,8 @@ Shader "Soung/Effect/FullFx"
                 #endif
 
                 float lerpResult171 = lerp( tex2DNode158.r , tex2DNode158.a , _MaskTexP);
-                float smoothstepResult383 = smoothstep( 1.0 , -1.0 , lerpResult171);
-                float lerpResult380 = lerp( lerpResult171 , smoothstepResult383 , _OneMinusMask);
+                float inverseMask = 1.0 - lerpResult171;
+                float lerpResult380 = lerp( lerpResult171 , inverseMask , _OneMinusMask);
                 float lerpResult247 = lerp( Toggle168 , lerpResult380 , _MaskSwitch);
                 float MaskTexAlpha193 = lerpResult247;
                 float2 appendResult180 = (float2(_MaskTexPlusUspeed , _MaskTexPlusVspeed));
@@ -680,6 +692,9 @@ Shader "Soung/Effect/FullFx"
                 float lerpResult371 = lerp( temp_output_365_0 , ( temp_output_365_0 * GamAlpha123 ) , _GamAlphaMode);
                 float3 Color = (( temp_output_338_0 + LiuguangColor223 )).rgb;
                 float Alpha = saturate( lerpResult371 );
+
+                // clip 只丢弃负值；减去极小量，使阈值0也能丢弃 Alpha=0 的像素。
+                clip(Alpha - _AlphaClipThreshold);
 
                 return half4( Color, Alpha );
             }

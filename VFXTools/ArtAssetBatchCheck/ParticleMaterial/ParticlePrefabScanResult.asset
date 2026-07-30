@@ -15,17 +15,20 @@ MonoBehaviour:
   prefabPaths:
   - Assets/GameAsset/Effect/Custom/eft_arrow_attack.prefab
   - Assets/GameAsset/Effect/Custom/eft_arrow_big_attack.prefab
+  - Assets/GameAsset/Effect/Custom/eft_Buff_Posion.prefab
   - Assets/GameAsset/Effect/Custom/eft_weapon_arrow_jianyuzhinu_a.prefab
   - Assets/GameAsset/Effect/Custom/eft_weapon_arrow_jianyuzhinu_a_big.prefab
   - Assets/GameAsset/Effect/Custom/eft_weapon_arrow_jianyuzhinu_b.prefab
   - Assets/GameAsset/Effect/Custom/eft_weapon_arrow_jianyuzhinu_b_big.prefab
   - Assets/GameAsset/Effect/Custom/eft_weapon_arrow_jianyuzhinu_c.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_battle_dropItem.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_common_buff_atk.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_common_buff_kuangbao.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_guaiwushuliang_buff_01_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_hit_01_P.prefab
-  - Assets/GameAsset/Effect/Particle/Common/eft_item_wing_speedstatus.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_item_wing_speedstatus_burst.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_monster_skill_04_Particle.prefab
+  - Assets/GameAsset/Effect/Particle/Common/eft_monster_skill_chongci.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_npc_shandianLong_01.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_npc_shandianLong_02.prefab
   - Assets/GameAsset/Effect/Particle/Common/eft_player_run_smoke.prefab
@@ -36,6 +39,8 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Common/eft_staff_weapon_trigger_Posion.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_desert_smoke.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_forest_leaves.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_guideCircle.prefab
+  - Assets/GameAsset/Effect/Particle/Map/eft_map_guideCircle_First.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_snow_snows.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_tomb_dots.prefab
   - Assets/GameAsset/Effect/Particle/Map/eft_map_windline.prefab
@@ -43,15 +48,53 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_atk_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_skill.prefab
   - Assets/GameAsset/Effect/Particle/Monster/eft_monster_21boss_skill_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_38_aboss_atk_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Monster/eft_monster_38_aboss_skill_01.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_monster_38_bboss_atk_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Monster/eft_monster_38_bboss_skill_01.prefab
+  - Assets/GameAsset/Effect/Particle/Monster/eft_shirenhua_zidan_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Player/AnYing/eft_player_AnYing_hit.prefab
   - Assets/GameAsset/Effect/Particle/Player/AoBing/eft_player_aobing_Skill_1.prefab
   - Assets/GameAsset/Effect/Particle/Player/AoBing/eft_player_aobing_Skill_2.prefab
+  - Assets/GameAsset/Effect/Particle/Player/AoDing/eft_player_AoDing_Cloud.prefab
+  - Assets/GameAsset/Effect/Particle/Player/AoDing/eft_player_AoDing_SpawnText.prefab
+  - Assets/GameAsset/Effect/Particle/Player/AoDing/eft_Player_AoDing_Thunder.prefab
+  - Assets/GameAsset/Effect/Particle/Player/AoDing/eft_Player_AoDing_Thunder_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Player/AoDing/eft_Player_AoDing_Warn.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GoneBen_GainMoon.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GoneBen_GainSun.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GongBen_Ball.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GongBen_Hit.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GongBen_ShockWave.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GongBen_ShockWave_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GongBen_SpawnText.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GongBen/eft_player_GongBen_Sword.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_Buff_WuShengZhiWei.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_GuanYunZhang_buff_WuDi_LV1.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_GuanYunZhang_buff_WuDi_LV2.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_GuanYunZhang_buff_WuDi_LV3.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_GuanYunZhang_WuDi_Text.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_player_GuanYunZhang_Dragon.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_player_GuanYunZhang_Dragon_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_player_GuanYunZhang_Dragon_Hit.prefab
+  - Assets/GameAsset/Effect/Particle/Player/GuanYunChang/eft_player_GYC_SpawnText.prefab
+  - Assets/GameAsset/Effect/Particle/Player/KaKaLeTou/eft_Player_KKLT_Hand.prefab
+  - Assets/GameAsset/Effect/Particle/Player/KaKaLeTou/eft_Player_KKLT_Wave.prefab
+  - Assets/GameAsset/Effect/Particle/Player/KaKaLeTou/eft_Player_KKLT_Wave_Hit.prefab
   - Assets/GameAsset/Effect/Particle/Player/LiangLiang/eft_player_xueren_skill_1_Income.prefab
   - Assets/GameAsset/Effect/Particle/Player/LiangLiang/eft_player_xueren_skill_1_Last.prefab
+  - Assets/GameAsset/Effect/Particle/Player/LvFengXian/eft_player_LvBu_SpawnText.prefab
+  - Assets/GameAsset/Effect/Particle/Player/LvFengXian/eft_Player_LvFengXian_Halo.prefab
+  - Assets/GameAsset/Effect/Particle/Player/LvFengXian/eft_Player_LvFengXian_HaloHit.prefab
+  - Assets/GameAsset/Effect/Particle/Player/LvFengXian/eft_Player_LvFengXian_SwordATK.prefab
+  - Assets/GameAsset/Effect/Particle/Player/LvFengXian/eft_Player_LvFengXian_SwordATK_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Player/LvFengXian/eft_Player_LvFengXian_SwordHIT.prefab
+  - Assets/GameAsset/Effect/Particle/Player/PiLiHuo/eft_Player_Pilihuo_Fireball.prefab
   - Assets/GameAsset/Effect/Particle/Player/SunWuKong/eft_player_sunwukong_Skill_1.prefab
+  - Assets/GameAsset/Effect/Particle/Player/TuoEr/eft_Player_Tuoer_Hammer.prefab
+  - Assets/GameAsset/Effect/Particle/Player/TuoEr/eft_Player_Tuoer_Hammer_Thunder.prefab
   - Assets/GameAsset/Effect/Particle/Player/XianYuJiang/eft_player_xianyu_Skill_1.prefab
+  - Assets/GameAsset/Effect/Particle/Player/YingWu/eft_Player_14_skill_BornSmoke.prefab
   - Assets/GameAsset/Effect/Particle/Skill/AnYingJian/eft_hit_arrow_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/AnYingJian/eft_hit_big_arrow_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/AoShuJiaoTu/eft_fire_01_01_P.prefab
@@ -88,15 +131,31 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_03_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_03_P.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_7Day_HeroBg_Anying.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Alliance_BossRewardNotice.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Alliance_BossStatus.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Alliance_CompeteMatchVS.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Alliance_CompeteMatchVS_Stay.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_BattleSkill_Refresh.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_BeginnerPack_OpenFX.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_Anjin.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_baoshi.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_fivestar.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_gold.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_HeroGacha.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_sliver.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_weapon_A.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_weapon_B.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_weapon_C.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_weapon_D.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_CommonItemReward.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_CommonItemReward_Loop.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Dazhaohuo_02_P.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_DBBuy_Saoguang.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_EquipDetailBaseInfo_Saoguang.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_FuLi_Bg_Flower.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_GiftPackShop_GainProgress_Glow.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_GiftPackShop_ProgressFX.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Hero_StarUp_A.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Hero_StarUp_A_End.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Hero_StarUp_B.prefab
@@ -113,15 +172,31 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_A.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Icon_Liuguang_B.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_IconAward_Idle.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_JewelryDetail_New.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_JewelryReforge_Refresh.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Libao_BaseIdle.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_PrizeWheel_OpenFX.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_RankSettle_OpenFX.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_RewardBox_Gain_blue.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_RewardBox_Gain_green.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_RewardBox_Gain_orange.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_RewardBox_Gain_purple.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_RewardBox_Gain_red.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_ShopPage_Edge_blue.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_ShopPage_Edge_orange.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_ShopPage_Edge_purple.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_StageInfo_RewardIdle.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_1.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_2.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Tower_RankCrown_3.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UIFX_EquipUnlock_Circle.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UIFX_Gacha_GainHeroes.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UIFX_GachaHero_Show.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UIFX_WeaponConfirePage_Upgrade.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_baofeng_01_boom_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_baofeng_02_boom_P.prefab
-  - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_baofeng_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_baofeng_03_P.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_staff_baofeng_sword.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_blade_caijue_01_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_blade_caijue_01_b_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_blade_caijue_01_P.prefab
@@ -135,6 +210,29 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_hit_blade_normal_fire_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_hit_blade_normal_ice_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/CaiJueZhiRen/eft_hit_blade_normal_P.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_atk.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_atk_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_buff_KuangBao_LvBu.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_buff_WangHun.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_buff_WangHun_LvBu.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_buff_WuDi.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_Halo.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_HaloGround.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_HaloSpawn.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_atk.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_atk_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_atkUP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_atkUP_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_hitUP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_skill.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_skill_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_LvBu_skillUP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_petFX.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_petFX_UP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_skill_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/FangTianHuaJi/eft_staff_FangTian_thunderchain.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_01_a_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_01_b_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_01_Particle.prefab
@@ -153,6 +251,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_03_b_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_03_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_04_a_hit_Particle.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_04_a_hit_Particle_Anim.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_04_a_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_04_b_hit_Particle.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/HuiXingLingHe/eft_staff_hxlh_04_b_Particle.prefab
@@ -174,12 +273,15 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockBullet.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockBullet_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockHit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockHit_Anim.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockHit_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockHit_Enhanced_Anim.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_HuoRockHitGround.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_Pu.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_Pu_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuHit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuHit_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuHit_Enhanced_Anim.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuRockBullet.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuRockBullet_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_PuRockHit.prefab
@@ -189,6 +291,37 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_ShadowWave.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_Slash.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_SlashHit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_atk.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_atk_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_atkUP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_atkUP_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_Dragon.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_Dragon_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_Dragon_Hit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_DragonBurst.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_Halo.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_hitUP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_petFX
+    Up.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_petFX.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atk_1.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atk_1_Enh.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atk_2.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atk_2_Enh.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atk_3.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atk_3_Enh.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atkUP_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atkUP_01_Enh.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atkUP_02.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atkUP_02_Enh.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atkUP_03.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_atkUP_03_Enh.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_hitUP.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_SCREENUI.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_skill.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/LongDanLiangYingQiang/eft_staff_LD_ZhaoYun_skill_Hit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LongJuanChangQiang/eft_hit_longjuan_b_P.prefab
@@ -242,7 +375,6 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_daozu_hit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_daozu_spawn.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_daozu_ultra.prefab
-  - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_daozu_ultra_text.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_engball.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_engball_hit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/WanXiangZhiJing/eft_staff_wxzj_a_hit.prefab
@@ -319,6 +451,11 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skill_cloud_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skillhit_01.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_a_skillhit_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_b_bullet_01.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_b_fallbullet_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_b_skillhit_01_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_b_ultra.prefab
+  - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_b_ultra_hit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_bullet_01.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_bullet_01_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/YongFaDaGong/eft_staff_yfdg_shoot_01.prefab
@@ -486,6 +623,15 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/Material/effect_ui_alliance_smoke.mat
   - Assets/GameAsset/Mat/Material/effect_ui_alliance_star.mat
   - Assets/GameAsset/Mat/Material/effect_ui_alliance_teleport.mat
+  - Assets/GameAsset/Mat/Material/effect_UI_GiftPackShop_GainProgress_Glow_01.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_01.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_02.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_03.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_04.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_05.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_09.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_rewardbox_gain_10.mat
+  - Assets/GameAsset/Mat/Material/effect_ui_weaponconfirmpage_01.mat
   - Assets/GameAsset/Mat/Material/effect_weapon_arrow_glow.mat
   - Assets/GameAsset/Mat/Material/effect_weapon_caijuezhiren_body 1.mat
   - Assets/GameAsset/Mat/Material/effect_weapon_caijuezhiren_body.mat
@@ -796,12 +942,71 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/Material/eft_spear_qianji_boom1.mat
   - Assets/GameAsset/Mat/Material/eft_staff_baofeng_trail_01 1.mat
   - Assets/GameAsset/Mat/Material/eft_staff_baofeng_trail_01.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_01.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_02.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_03.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_04.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_05.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_07 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_07 2.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_07.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_08 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_08 2.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_08.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_09 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_09 2.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_09 3.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_09.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_10 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_10 2.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_10 3.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_10.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_11.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_12.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_13.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_14.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_15.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_16.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_17.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_18.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_19.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_20.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_21.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_22.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_23.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_24.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_25.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_26 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_26.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_27 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_27.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_28 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_28.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_29.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_30.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_31.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_32 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_32.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_33.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_34.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_35.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_36.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_37.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_38.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_40.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_41.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_42.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_43.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_44.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_45.mat
   - Assets/GameAsset/Mat/Material/eft_staff_fangtian_lvbu_01.mat
   - Assets/GameAsset/Mat/Material/eft_staff_fangtian_lvbu_02.mat
   - Assets/GameAsset/Mat/Material/eft_staff_fangtian_lvbu_03.mat
   - Assets/GameAsset/Mat/Material/eft_staff_fangtian_lvbu_04.mat
   - Assets/GameAsset/Mat/Material/eft_staff_fangtian_lvbu_05.mat
   - Assets/GameAsset/Mat/Material/eft_staff_fangtian_lvbu_06.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_ui_01.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_fangtian_ui_02.mat
   - Assets/GameAsset/Mat/Material/eft_staff_hxlh_02_b_01 1.mat
   - Assets/GameAsset/Mat/Material/eft_staff_hxlh_02_b_01.mat
   - Assets/GameAsset/Mat/Material/eft_staff_hxlh_02_b_03 1.mat
@@ -836,6 +1041,7 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/Material/eft_staff_ld_24 1.mat
   - Assets/GameAsset/Mat/Material/eft_staff_ld_24.mat
   - Assets/GameAsset/Mat/Material/eft_staff_ld_25 1.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_ld_25 2.mat
   - Assets/GameAsset/Mat/Material/eft_staff_ld_25.mat
   - Assets/GameAsset/Mat/Material/eft_staff_LD_26.mat
   - Assets/GameAsset/Mat/Material/eft_staff_ld_27.mat
@@ -932,6 +1138,7 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/Material/eft_staff_lxl_03_57.mat
   - Assets/GameAsset/Mat/Material/eft_staff_lxl_03_HuoRockHit_Enhanced_mat.mat
   - Assets/GameAsset/Mat/Material/eft_staff_lxl_03_HuoRockHit_mat.mat
+  - Assets/GameAsset/Mat/Material/eft_staff_lxl_03_PuHit_Enhanced_mat.mat
   - Assets/GameAsset/Mat/Material/eft_staff_shengguang_01_p_01.mat
   - Assets/GameAsset/Mat/Material/eft_staff_shengguang_01_p_02.mat
   - Assets/GameAsset/Mat/Material/eft_staff_shengguang_01_p_04.mat
@@ -1170,17 +1377,6 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/Material/UITileMove.mat
   - Assets/GameAsset/Mat/Material/UITileMove2.mat
   - Assets/GameAsset/Mat/Material/UITileMove_GachaBG.mat
-  - Assets/GameAsset/Mat/Models/Dao1111.fbx
-  - Assets/GameAsset/Mat/Models/Dao1111Thin.fbx
-  - Assets/GameAsset/Mat/Models/DaoGlow.fbx
-  - Assets/GameAsset/Mat/Models/daoguang05.FBX
-  - Assets/GameAsset/Mat/Models/DaoModelAdd.fbx
-  - Assets/GameAsset/Mat/Models/DaoModelCore.fbx
-  - Assets/GameAsset/Mat/Models/DaoModelTD_01.fbx
-  - Assets/GameAsset/Mat/Models/DMD1.fbx
-  - Assets/GameAsset/Mat/Models/HalfConeRing.fbx
-  - Assets/GameAsset/Mat/Models/WavePlane.fbx
-  - Assets/GameAsset/Mat/Models/WindPlane.fbx
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_7day_01.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_7day_02.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_alliance_bossstatus_01.mat
@@ -1214,9 +1410,11 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_01light.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_01liuguang1.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_01liuguang2.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_01liuguangBaoshi.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_01ringb.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_01trail.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_BoxA.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_BoxBaoShi.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_BoxDiamond.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_BoxGold.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_box_BoxSliver.mat
@@ -1235,9 +1433,13 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_burstglow.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_common_line.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_common_line1.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_EquipDetailBaseInfo_Strategy_Saog.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_UI_fire.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_gacha_gainhr 02.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_gacha_gainhr.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_giftpack_shop_progress_01.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_giftpack_shop_progress_02.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_giftpackshop_progress.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_UI_glow.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_glows.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_glows1.mat
@@ -1260,14 +1462,21 @@ MonoBehaviour:
   - Assets/GameAsset/Mat/UIMaterial/effect_UI_Icon.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_Icon_anjing 1.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_Icon_anjing.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_jewelrydetail_new_idle.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_jewelryreforge_refresh_01.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_jewelryreforge_refresh_02.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_jewelryreforge_refresh_03.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_liuguangs 1.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_liuguangs.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_liuguangs1.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_liuguangs2.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_qualityitem_orange.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_qualityitem_purple.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_StageReward_01.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_tiles.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_tower_rankcrown_01.mat
   - Assets/GameAsset/Mat/UIMaterial/effect_ui_tower_rankcrown_02.mat
+  - Assets/GameAsset/Mat/UIMaterial/effect_ui_weaponcomfirm_black_gold.mat
   - Assets/GameAsset/Mat/UIMaterial/SpineUIDefault.mat
   - Assets/GameAsset/Mat/UIMaterial/UIBlurMask.mat
   - Assets/GameAsset/Mat/UIMaterial/UIBreath.mat
@@ -1291,3 +1500,4 @@ MonoBehaviour:
   - Spine/SkeletonGraphic
   - MyShader/UIImageGrey
   - Custom/UvMoveXShader_NoTest
+  - Soung/Effect/FlowMap

@@ -528,6 +528,145 @@ namespace GameFramework.Editor
             return $"{atlasDir}/{atlasName}.spriteatlasv2";
         }
 
+        public static int AddAtlasScanDirectories(IEnumerable<string> folderPaths)
+        {
+            var cfg = GetConfig();
+            if (cfg == null || folderPaths == null)
+                return 0;
+
+            var directories = new HashSet<string>(StringComparer.Ordinal);
+            if (cfg.atlasScanDirs != null)
+            {
+                foreach (var existingPath in cfg.atlasScanDirs)
+                {
+                    var normalized = existingPath?.Trim().Replace("\\", "/");
+                    if (!string.IsNullOrEmpty(normalized) && AssetDatabase.IsValidFolder(normalized))
+                        directories.Add(normalized);
+                }
+            }
+
+            int addedCount = 0;
+            foreach (var folderPath in folderPaths)
+            {
+                var normalized = folderPath?.Trim().Replace("\\", "/");
+                if (!string.IsNullOrEmpty(normalized) && AssetDatabase.IsValidFolder(normalized) && directories.Add(normalized))
+                    addedCount++;
+            }
+
+            var sortedDirectories = new List<string>(directories);
+            sortedDirectories.Sort(StringComparer.Ordinal);
+            Undo.RecordObject(cfg, "记录图集扫描目录");
+            cfg.atlasScanDirs = sortedDirectories.ToArray();
+            EditorUtility.SetDirty(cfg);
+            AssetDatabase.SaveAssets();
+            return addedCount;
+        }
+
+        public static bool IsUnderAutoScanRoot(string folderPath, SpriteAtlasConfig cfg = null)
+        {
+            cfg = cfg != null ? cfg : GetConfig();
+            if (cfg == null || cfg.autoScanRootDirs == null || string.IsNullOrEmpty(folderPath))
+                return false;
+
+            string normalizedFolder = folderPath.TrimEnd('/', '\\').Replace("\\", "/");
+            foreach (var rootPath in cfg.autoScanRootDirs)
+            {
+                string normalizedRoot = rootPath?.TrimEnd('/', '\\').Replace("\\", "/");
+                if (string.IsNullOrEmpty(normalizedRoot) || !AssetDatabase.IsValidFolder(normalizedRoot))
+                    continue;
+
+                if (normalizedFolder.Equals(normalizedRoot, StringComparison.Ordinal) ||
+                    normalizedFolder.StartsWith(normalizedRoot + "/", StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static int GetSpriteCount(string folderPath)
+        {
+            folderPath = folderPath?.Trim().Replace("\\", "/");
+            return string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath)
+                ? 0
+                : AssetDatabase.FindAssets("t:sprite", new[] { folderPath }).Length;
+        }
+
+        public static bool MeetsMinimumSpriteCount(string folderPath, out int spriteCount, out int minimumCount)
+        {
+            var cfg = GetConfig();
+            spriteCount = GetSpriteCount(folderPath);
+            minimumCount = cfg != null ? Mathf.Max(0, cfg.minSpriteCount) : 0;
+            return spriteCount >= minimumCount;
+        }
+
+        public static bool CreateFolderAtlas(string folderPath, bool overwriteExisting = false)
+        {
+            folderPath = folderPath?.Trim().Replace("\\", "/");
+            if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
+            {
+                Debug.LogError($"创建图集失败，目录不存在: {folderPath}");
+                return false;
+            }
+
+            if (!MeetsMinimumSpriteCount(folderPath, out int spriteCount, out int minimumCount))
+            {
+                Debug.LogWarning($"创建图集已跳过，Sprite数量低于配置门槛: {folderPath}（当前={spriteCount}，最低={minimumCount}）");
+                return false;
+            }
+
+            string atlasName = GetContextFolderAtlasName(folderPath);
+            if (string.IsNullOrEmpty(atlasName))
+            {
+                Debug.LogError($"创建图集失败，无法根据父目录和当前目录生成名称: {folderPath}");
+                return false;
+            }
+
+            string atlasPath = $"{folderPath}/{atlasName}.spriteatlasv2";
+            if (AtlasExists(atlasPath))
+            {
+                if (!overwriteExisting)
+                {
+                    Debug.Log($"图集已存在，已跳过: {atlasPath}");
+                    return false;
+                }
+
+                AssetDatabase.DeleteAsset(atlasPath);
+            }
+
+            var folder = AssetDatabase.LoadAssetAtPath<Object>(folderPath);
+            if (folder == null)
+            {
+                Debug.LogError($"创建图集失败，无法加载目录: {folderPath}");
+                return false;
+            }
+
+            var atlas = new SpriteAtlasAsset();
+            atlas.Add(new[] { folder });
+            SpriteAtlasAsset.Save(atlas, atlasPath);
+            AssetDatabase.Refresh();
+            ApplyAtlasImporterSettings(atlasPath, GetConfig());
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            NormalizeAtlasTextFiles(atlasPath);
+            Debug.Log($"已从目录创建图集: {atlasPath}");
+            return true;
+        }
+
+        public static string GetContextFolderAtlasName(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath))
+                return "";
+
+            folderPath = folderPath.TrimEnd('/', '\\').Replace("\\", "/");
+            string currentFolderName = Path.GetFileName(folderPath);
+            string parentPath = Path.GetDirectoryName(folderPath)?.Replace("\\", "/");
+            string parentFolderName = string.IsNullOrEmpty(parentPath) ? "" : Path.GetFileName(parentPath);
+            if (string.IsNullOrEmpty(parentFolderName) || string.IsNullOrEmpty(currentFolderName))
+                return "";
+
+            return $"Atlas_{parentFolderName}_{currentFolderName}";
+        }
+
         private static string GetAtlasPathForFolder(string folderPath)
         {
             folderPath = folderPath.Replace("\\", "/");
@@ -710,38 +849,49 @@ namespace GameFramework.Editor
         private static readonly Dictionary<string, List<string>> m_tempAllASprites = new Dictionary<string, List<string>>();
 
         /// <summary>
-        /// 由配置窗口调用，执行全量图集重生成
+        /// 由配置窗口调用，仅为尚不存在图集的扫描目录生成图集
         /// </summary>
         public static void ForceGenAtlas()
         {
             var cfg = GetConfig();
-            if (cfg == null || cfg.atlasScanDirs == null || cfg.atlasScanDirs.Length == 0)
+            if (cfg == null)
             {
-                EditorUtility.DisplayDialog("错误", "未配置扫描目录", "确定");
+                EditorUtility.DisplayDialog("错误", "图集配置加载失败", "确定");
                 return;
             }
 
-            // 强制重新扫描已有图集，确保对比的是最新状态
-            _isInit = false;
-            Init();
+            cfg.atlasScanDirs = GetValidDistinctDirectories(cfg.atlasScanDirs, out int removedInvalidCount);
+            if (removedInvalidCount > 0)
+            {
+                EditorUtility.SetDirty(cfg);
+                AssetDatabase.SaveAssets();
+                Debug.LogWarning($"执行重生成前已从扫描列表移除 {removedInvalidCount} 个不存在或重复的目录。");
+            }
+
+            if (cfg.atlasScanDirs.Length == 0)
+            {
+                EditorUtility.DisplayDialog("错误", "未配置有效的扫描目录", "确定");
+                return;
+            }
 
             if (cfg.packMode == SpriteAtlasPackMode.FolderReference)
             {
-                ForceGenFolderReferenceAtlases(cfg);
+                GenerateMissingFolderReferenceAtlases(cfg, removedInvalidCount);
                 return;
             }
 
-            List<string> needSaveAtlas = new List<string>();
-            m_tempAllASprites.Clear();
-
+            var externalDirectories = GetExternalScanDirectories(cfg);
+            var regularDirectories = new List<string>();
             foreach (var scanDir in cfg.atlasScanDirs)
             {
-                if (string.IsNullOrEmpty(scanDir) || !AssetDatabase.IsValidFolder(scanDir))
-                {
-                    Debug.LogWarning($"扫描目录不存在或无效: {scanDir}");
-                    continue;
-                }
+                if (!externalDirectories.Contains(scanDir))
+                    regularDirectories.Add(scanDir);
+            }
+            var generatedExternalPaths = GenerateMissingExternalFolderAtlases(cfg, externalDirectories);
 
+            m_tempAllASprites.Clear();
+            foreach (var scanDir in regularDirectories)
+            {
                 var findAssets = AssetDatabase.FindAssets("t:sprite", new[] { scanDir });
                 foreach (var findAsset in findAssets)
                 {
@@ -750,7 +900,6 @@ namespace GameFramework.Editor
                     if (string.IsNullOrEmpty(atlasName))
                         continue;
 
-                    // 检查排除规则
                     var rule = cfg.FindRuleForPath(path);
                     if (rule != null && rule.IsFileExcluded(Path.GetFileNameWithoutExtension(path)))
                         continue;
@@ -762,139 +911,170 @@ namespace GameFramework.Editor
                     }
 
                     if (!spriteList.Contains(path))
-                    {
                         spriteList.Add(path);
-                    }
                 }
             }
 
-            foreach (var kv in m_tempAllASprites)
+            int minCount = cfg.minSpriteCount;
+            var atlasNames = new List<string>(m_tempAllASprites.Keys);
+            atlasNames.Sort(StringComparer.Ordinal);
+            int generatedCount = 0;
+            int existingCount = 0;
+            int belowThresholdCount = 0;
+
+            foreach (var atlasName in atlasNames)
             {
-                kv.Value.Sort(StringComparer.Ordinal);
+                var spritePaths = m_tempAllASprites[atlasName];
+                if (spritePaths.Count < minCount)
+                {
+                    belowThresholdCount++;
+                    continue;
+                }
+
+                spritePaths.Sort(StringComparer.Ordinal);
+                var atlasPath = GetAtlasPath(atlasName, spritePaths);
+                if (AtlasExists(atlasPath))
+                {
+                    existingCount++;
+                    continue;
+                }
+
+                _allASprites[atlasName] = new List<string>(spritePaths);
+                Debug.Log($"生成缺失图集: {atlasPath}");
+                SaveAtlas(atlasName, false);
+                generatedCount++;
             }
-
-            // 过滤：sprite数低于门槛的不生成图集
-            int minCount = cfg != null ? cfg.minSpriteCount : 1;
-            var toRemove = new List<string>();
-            foreach (var kv in m_tempAllASprites)
-            {
-                if (kv.Value.Count < minCount)
-                    toRemove.Add(kv.Key);
-            }
-            foreach (var key in toRemove)
-            {
-                m_tempAllASprites.Remove(key);
-                if (_allASprites.ContainsKey(key))
-                {
-                    _allASprites.Remove(key);
-                    DeleteAtlasByName(key);
-                }
-            }
-
-            // 有变化的才刷
-            var iter = m_tempAllASprites.GetEnumerator();
-            while (iter.MoveNext())
-            {
-                bool needSave = false;
-                var atlasName = iter.Current.Key;
-                var newSpritesList = iter.Current.Value;
-
-                if (_allASprites.TryGetValue(atlasName, out var existSprites))
-                {
-                    if (existSprites.Count != newSpritesList.Count)
-                    {
-                        needSave = true;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < newSpritesList.Count; i++)
-                        {
-                            if (!existSprites.Contains(newSpritesList[i]))
-                            {
-                                needSave = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    needSave = true;
-                    _allASprites.Add(atlasName, new List<string>());
-                }
-
-                if (!needSave && IsAtlasImporterSettingsChanged(GetAtlasPath(atlasName, newSpritesList), cfg))
-                {
-                    needSave = true;
-                }
-
-                if (!needSave && !IsAtlasPackablesEqual(GetAtlasPath(atlasName, newSpritesList), newSpritesList))
-                {
-                    needSave = true;
-                }
-
-                if (needSave)
-                {
-                    _allASprites[atlasName].Clear();
-                    _allASprites[atlasName].AddRange(newSpritesList);
-                }
-
-                if (needSave && !needSaveAtlas.Contains(atlasName))
-                {
-                    needSaveAtlas.Add(atlasName);
-                }
-            }
-
-            iter.Dispose();
-            foreach (var atlas in needSaveAtlas)
-            {
-                Debug.LogFormat("Gen atlas:{0}", atlas);
-                SaveAtlas(atlas, cfg.packMode == SpriteAtlasPackMode.FolderReference);
-            }
-
-            CleanupGeneratedAtlases(cfg, m_tempAllASprites);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            if (generatedCount > 0 || generatedExternalPaths.Count > 0)
+                SpriteAtlasUtility.PackAllAtlases(EditorUserBuildSettings.activeBuildTarget);
 
-            SpriteAtlasUtility.PackAllAtlases(EditorUserBuildSettings.activeBuildTarget);
-            Debug.Log("Gen end");
+            Debug.Log($"图集增量生成完成：新生成={generatedCount}，根目录外新生成={generatedExternalPaths.Count}，已存在跳过={existingCount}，低于门槛跳过={belowThresholdCount}，无效目录移除={removedInvalidCount}");
+            ShowExternalAtlasGenerationResult(generatedExternalPaths);
         }
 
-        private static void ForceGenFolderReferenceAtlases(SpriteAtlasConfig cfg)
+        private static void GenerateMissingFolderReferenceAtlases(SpriteAtlasConfig cfg, int removedInvalidCount)
         {
-            var validAtlases = new Dictionary<string, List<string>>();
-            int minCount = cfg != null ? cfg.minSpriteCount : 1;
+            var externalDirectories = GetExternalScanDirectories(cfg);
+            var generatedExternalPaths = GenerateMissingExternalFolderAtlases(cfg, externalDirectories);
+
+            int minCount = cfg.minSpriteCount;
+            int generatedCount = 0;
+            int existingCount = 0;
+            int belowThresholdCount = 0;
 
             foreach (var scanDir in cfg.atlasScanDirs)
             {
-                if (string.IsNullOrEmpty(scanDir) || !AssetDatabase.IsValidFolder(scanDir))
-                {
-                    Debug.LogWarning($"扫描目录不存在或无效: {scanDir}");
+                if (externalDirectories.Contains(scanDir))
                     continue;
-                }
 
                 var findAssets = AssetDatabase.FindAssets("t:sprite", new[] { scanDir });
                 if (findAssets.Length < minCount)
+                {
+                    belowThresholdCount++;
                     continue;
+                }
 
                 string atlasName = GetFolderPackageTag(scanDir);
                 if (string.IsNullOrEmpty(atlasName))
+                {
+                    Debug.LogWarning($"扫描目录不包含路径标记“{cfg.pathMarker}”，无法生成图集名: {scanDir}");
+                    continue;
+                }
+
+                var atlasPath = GetAtlasPathForFolder(scanDir);
+                if (AtlasExists(atlasPath))
+                {
+                    existingCount++;
+                    continue;
+                }
+
+                Debug.Log($"生成缺失图集: {atlasPath}");
+                SaveFolderAtlas(scanDir);
+                generatedCount++;
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            if (generatedCount > 0 || generatedExternalPaths.Count > 0)
+                SpriteAtlasUtility.PackAllAtlases(EditorUserBuildSettings.activeBuildTarget);
+
+            Debug.Log($"文件夹引用图集增量生成完成：新生成={generatedCount}，根目录外新生成={generatedExternalPaths.Count}，已存在跳过={existingCount}，低于门槛跳过={belowThresholdCount}，无效目录移除={removedInvalidCount}");
+            ShowExternalAtlasGenerationResult(generatedExternalPaths);
+        }
+
+        private static HashSet<string> GetExternalScanDirectories(SpriteAtlasConfig cfg)
+        {
+            var externalDirectories = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var scanDir in cfg.atlasScanDirs)
+            {
+                if (!IsUnderAutoScanRoot(scanDir, cfg))
+                    externalDirectories.Add(scanDir);
+            }
+            return externalDirectories;
+        }
+
+        private static List<string> GenerateMissingExternalFolderAtlases(SpriteAtlasConfig cfg, HashSet<string> externalDirectories)
+        {
+            var generatedPaths = new List<string>();
+            int minimumCount = Mathf.Max(0, cfg.minSpriteCount);
+            foreach (var folderPath in externalDirectories)
+            {
+                int spriteCount = GetSpriteCount(folderPath);
+                if (spriteCount == 0)
+                {
+                    Debug.LogWarning($"根目录外扫描目录没有Sprite，跳过生成: {folderPath}");
+                    continue;
+                }
+
+                if (spriteCount < minimumCount)
                     continue;
 
-                validAtlases[atlasName] = new List<string> { scanDir };
-                if (IsFolderAtlasChanged(scanDir, cfg))
+                string atlasName = GetContextFolderAtlasName(folderPath);
+                string atlasPath = $"{folderPath}/{atlasName}.spriteatlasv2";
+                if (AtlasExists(atlasPath))
+                    continue;
+
+                if (CreateFolderAtlas(folderPath))
+                    generatedPaths.Add(atlasPath);
+            }
+            return generatedPaths;
+        }
+
+        private static void ShowExternalAtlasGenerationResult(List<string> generatedPaths)
+        {
+            if (generatedPaths == null || generatedPaths.Count == 0)
+                return;
+
+            EditorUtility.DisplayDialog(
+                "根目录外图集生成完成",
+                $"本次生成了 {generatedPaths.Count} 个不在自动扫描根目录下的图集，已使用 Atlas_父文件夹_当前文件夹 命名：\n\n{string.Join("\n", generatedPaths)}",
+                "确定");
+        }
+
+        private static bool AtlasExists(string assetPath)
+        {
+            return AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null;
+        }
+
+        private static string[] GetValidDistinctDirectories(string[] directories, out int removedCount)
+        {
+            removedCount = 0;
+            var valid = new HashSet<string>(StringComparer.Ordinal);
+            if (directories != null)
+            {
+                foreach (var directory in directories)
                 {
-                    Debug.LogFormat("Gen atlas:{0}", atlasName);
-                    SaveFolderAtlas(scanDir);
+                    var normalized = directory?.Trim().Replace("\\", "/");
+                    if (string.IsNullOrEmpty(normalized) || !AssetDatabase.IsValidFolder(normalized) || !valid.Add(normalized))
+                        removedCount++;
                 }
             }
 
-            CleanupGeneratedAtlases(cfg, validAtlases);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            SpriteAtlasUtility.PackAllAtlases(EditorUserBuildSettings.activeBuildTarget);
-            Debug.Log("Gen end");
+            var result = new List<string>(valid);
+            result.Sort(StringComparer.Ordinal);
+            return result.ToArray();
         }
 
         private static void CleanupGeneratedAtlases(SpriteAtlasConfig cfg, Dictionary<string, List<string>> validAtlases)

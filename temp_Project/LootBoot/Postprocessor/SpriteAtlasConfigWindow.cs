@@ -113,20 +113,27 @@ public class SpriteAtlasConfigWindow : EditorWindow
     // ============================================================
     void DrawRegenTab()
     {
-        // --- 扫描目录 ---
-        EditorGUILayout.LabelField("扫描目录", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("自动扫描根目录", EditorStyles.boldLabel);
         EditorGUI.indentLevel++;
-        EditorGUILayout.LabelField("拖拽文件夹到此区域，或手动输入路径:", EditorStyles.miniLabel);
-        DrawFolderArray(ref _config.atlasScanDirs);
+        EditorGUILayout.LabelField("可配置多个根目录；自动扫描会添加每个根目录下最多两层的子目录:", EditorStyles.miniLabel);
+        DrawFolderArray(ref _config.autoScanRootDirs);
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.Space(40);
-        if (GUILayout.Button("自动扫描 Assets/GameAsset/Sprite/ (最多2层)", GUILayout.Width(320)))
+        if (GUILayout.Button("自动扫描并更新目录列表", GUILayout.Width(220)))
         {
             AutoScanSpriteDirs();
         }
         EditorGUILayout.EndHorizontal();
+        EditorGUI.indentLevel--;
+        EditorGUILayout.Space(8);
 
+        EditorGUILayout.LabelField("图集生成目录", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        EditorGUILayout.HelpBox(
+            "拖拽文件夹到此区域，或手动输入路径。执行重生成时会校验目录是否位于上方任一自动扫描根目录内；根目录外的目录统一使用 Atlas_父文件夹名_当前文件夹名 命名，并在实际生成后弹窗提示。",
+            MessageType.Info);
+        DrawFolderArray(ref _config.atlasScanDirs);
         EditorGUI.indentLevel--;
         EditorGUILayout.Space(8);
 
@@ -171,7 +178,13 @@ public class SpriteAtlasConfigWindow : EditorWindow
         EditorGUILayout.Space(8);
 
         // --- 生成门槛 ---
-        _config.minSpriteCount = EditorGUILayout.IntSlider("最小Sprite数（低于此值跳过）", _config.minSpriteCount, 0, 20);
+        EditorGUILayout.LabelField("图集生成规则", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        _config.minSpriteCount = Mathf.Max(0, EditorGUILayout.IntField("低于多少张Sprite时跳过", _config.minSpriteCount));
+        EditorGUILayout.HelpBox(
+            $"当前规则：目录内少于 {_config.minSpriteCount} 张Sprite时不生成图集。该配置同时作用于“执行重生成”和文件夹右键生成图集；设为0表示不限制。",
+            MessageType.Info);
+        EditorGUI.indentLevel--;
         EditorGUILayout.Space(8);
 
         // --- Texture ---
@@ -486,47 +499,69 @@ public class SpriteAtlasConfigWindow : EditorWindow
     // ============================================================
     void AutoScanSpriteDirs()
     {
-        const string rootDir = "Assets/GameAsset/Sprite";
-        if (!AssetDatabase.IsValidFolder(rootDir))
+        int removedCount = RemoveInvalidPaths(ref _config.atlasScanDirs);
+        RemoveInvalidPaths(ref _config.autoScanRootDirs);
+
+        if (_config.autoScanRootDirs == null || _config.autoScanRootDirs.Length == 0)
         {
-            EditorUtility.DisplayDialog("错误", $"目录不存在: {rootDir}", "确定");
+            EditorUtility.DisplayDialog("提示", "请先添加至少一个有效的自动扫描根目录。", "确定");
             return;
         }
 
-        var foundDirs = new System.Collections.Generic.List<string>();
-
-        // 第一层子目录
-        var level1 = AssetDatabase.GetSubFolders(rootDir);
-        foreach (var dir in level1)
+        var foundDirs = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+        foreach (var rootDir in _config.autoScanRootDirs)
         {
-            foundDirs.Add(dir);
-
-            // 第二层子目录
-            var level2 = AssetDatabase.GetSubFolders(dir);
-            foreach (var subDir in level2)
+            var level1 = AssetDatabase.GetSubFolders(rootDir);
+            foreach (var dir in level1)
             {
-                foundDirs.Add(subDir);
+                foundDirs.Add(dir);
+                foreach (var subDir in AssetDatabase.GetSubFolders(dir))
+                {
+                    foundDirs.Add(subDir);
+                }
             }
         }
 
-        if (foundDirs.Count == 0)
-        {
-            EditorUtility.DisplayDialog("提示", $"{rootDir}\n下未找到任何子目录", "确定");
-            return;
-        }
-
-        // 去重合并到现有列表
-        var existing = new System.Collections.Generic.HashSet<string>(_config.atlasScanDirs ?? new string[0]);
-        foreach (var dir in foundDirs)
-        {
-            existing.Add(dir);
-        }
+        var existing = new System.Collections.Generic.HashSet<string>(_config.atlasScanDirs ?? Array.Empty<string>(), StringComparer.Ordinal);
+        existing.UnionWith(foundDirs);
 
         var list = new System.Collections.Generic.List<string>(existing);
-        list.Sort();
+        list.Sort(StringComparer.Ordinal);
         _config.atlasScanDirs = list.ToArray();
+        SaveConfig();
 
-        Debug.Log($"自动扫描完成，共 {_config.atlasScanDirs.Length} 个扫描目录");
+        Debug.Log($"自动扫描完成：根目录={_config.autoScanRootDirs.Length}，新增候选={foundDirs.Count}，移除失效目录={removedCount}，当前生成目录={_config.atlasScanDirs.Length}");
+    }
+
+    static int RemoveInvalidPaths(ref string[] paths)
+    {
+        if (paths == null || paths.Length == 0)
+        {
+            paths = Array.Empty<string>();
+            return 0;
+        }
+
+        var valid = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+        int removedCount = 0;
+        foreach (var path in paths)
+        {
+            var normalized = path?.Trim().Replace("\\", "/");
+            if (string.IsNullOrEmpty(normalized) || !AssetDatabase.IsValidFolder(normalized))
+            {
+                removedCount++;
+                continue;
+            }
+
+            if (!valid.Add(normalized))
+            {
+                removedCount++;
+            }
+        }
+
+        var list = new System.Collections.Generic.List<string>(valid);
+        list.Sort(StringComparer.Ordinal);
+        paths = list.ToArray();
+        return removedCount;
     }
 
     // ============================================================
