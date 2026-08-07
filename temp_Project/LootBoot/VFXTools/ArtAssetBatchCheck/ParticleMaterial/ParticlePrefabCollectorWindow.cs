@@ -150,10 +150,13 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
                 _instance = null;
             }
 
-            if (_isPreviewing)
+            if (!EditorApplication.isPlayingOrWillChangePlaymode &&
+                (_isPreviewing || EditorPrefs.GetBool(PendingParticlePreviewPrefsKey, false)))
             {
                 _isPreviewing = false;
                 ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
+                ParticlePrefabPreviewSceneHelper.ClearPlayModeStartScene();
+                ClearPendingParticlePreviewState();
             }
         }
 
@@ -1098,6 +1101,20 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             var start = _previewPage * PreviewPageSize;
             var end = Mathf.Min(start + PreviewPageSize, all.Count);
             return all.GetRange(start, end - start);
+        }
+
+        public static void CancelParticlePreviewLifecycle()
+        {
+            if (_instance != null)
+            {
+                _instance._isPreviewing = false;
+                _instance._previewTargets = null;
+                _instance._materialPreviewTargets = null;
+            }
+
+            ParticlePrefabPreviewSceneHelper.ClosePreviewScene();
+            ParticlePrefabPreviewSceneHelper.ClearPlayModeStartScene();
+            ClearPendingParticlePreviewState();
         }
 
         public static void EndPreviewFromControl()

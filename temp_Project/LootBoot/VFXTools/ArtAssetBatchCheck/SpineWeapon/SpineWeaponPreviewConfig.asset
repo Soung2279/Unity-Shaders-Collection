@@ -16,7 +16,7 @@ MonoBehaviour:
   showLabels: 1
   previewSpacing: 2
   prefabsPerRow: 4
-  defaultWeaponId: 10300012
+  defaultWeaponId: 10200043
   defaultWeaponQuality: 12
   defaultAnimation: idle
   animationOptions:

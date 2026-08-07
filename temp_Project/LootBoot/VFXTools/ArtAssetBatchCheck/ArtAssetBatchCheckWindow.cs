@@ -36,6 +36,10 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck
 
         private void OnDisable()
         {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                ParticlePrefabCollectorWindow.CancelParticlePreviewLifecycle();
+            }
             DestroyChildWindows();
         }
 

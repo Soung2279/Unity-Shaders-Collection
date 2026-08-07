@@ -11,6 +11,7 @@ namespace Game.Editor.VFXTools.Utilities
         {
             public ParticleGroupPlayer Player;
             public ParticleSystem[] ParticleSystems;
+            public SerializedObject[] SerializedParticles;
             public uint[] OriginalSeeds;
             public uint[] PreviewSeeds;
             public bool[] AutoRandomSeeds;
@@ -325,11 +326,6 @@ namespace Game.Editor.VFXTools.Utilities
             {
                 if (restart)
                 {
-                    if (resimulate)
-                    {
-                        AssignNewPreviewSeeds(state);
-                        ApplyPreviewSeeds(state);
-                    }
                     player.Restart();
                     state.PlaybackTime = 0f;
                 }
@@ -361,7 +357,6 @@ namespace Game.Editor.VFXTools.Utilities
                 {
                     AssignNewPreviewSeeds(state);
                 }
-                SimulateAtTime(state, 0f);
             }
             RegisterUpdate();
             SceneView.RepaintAll();
@@ -428,20 +423,24 @@ namespace Game.Editor.VFXTools.Utilities
             }
 
             ParticleSystem[] particleSystems = player.GetComponentsInChildren<ParticleSystem>(true);
+            SerializedObject[] serializedParticles = new SerializedObject[particleSystems.Length];
             uint[] originalSeeds = new uint[particleSystems.Length];
             uint[] previewSeeds = new uint[particleSystems.Length];
             bool[] autoRandomSeeds = new bool[particleSystems.Length];
             for (int i = 0; i < particleSystems.Length; i++)
             {
-                originalSeeds[i] = particleSystems[i].randomSeed;
-                previewSeeds[i] = originalSeeds[i];
-                autoRandomSeeds[i] = particleSystems[i].useAutoRandomSeed;
+                SerializedObject serializedParticle = new SerializedObject(particleSystems[i]);
+                serializedParticles[i] = serializedParticle;
+                originalSeeds[i] = (uint)serializedParticle.FindProperty("randomSeed").longValue;
+                previewSeeds[i] = particleSystems[i].randomSeed;
+                autoRandomSeeds[i] = serializedParticle.FindProperty("autoRandomSeed").boolValue;
             }
 
             state = new PreviewState
             {
                 Player = player,
                 ParticleSystems = particleSystems,
+                SerializedParticles = serializedParticles,
                 OriginalSeeds = originalSeeds,
                 PreviewSeeds = previewSeeds,
                 AutoRandomSeeds = autoRandomSeeds,
@@ -503,7 +502,24 @@ namespace Game.Editor.VFXTools.Utilities
             }
         }
 
-        private static void ApplyPreviewSeeds(PreviewState state)
+        private static void RestoreSerializedSeedSettings(PreviewState state)
+        {
+            for (int i = 0; i < state.SerializedParticles.Length; i++)
+            {
+                SerializedObject serializedParticle = state.SerializedParticles[i];
+                if (serializedParticle == null || !serializedParticle.targetObject)
+                {
+                    continue;
+                }
+
+                serializedParticle.Update();
+                serializedParticle.FindProperty("randomSeed").longValue = state.OriginalSeeds[i];
+                serializedParticle.FindProperty("autoRandomSeed").boolValue = state.AutoRandomSeeds[i];
+                serializedParticle.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        private static void SimulateAtTime(PreviewState state, float playbackTime)
         {
             StopAndClearParticleSystems(state);
 
@@ -515,40 +531,17 @@ namespace Game.Editor.VFXTools.Utilities
                     particleSystem.randomSeed = state.PreviewSeeds[i];
                 }
             }
-        }
-
-        private static void SimulateAtTime(PreviewState state, float playbackTime)
-        {
-            StopAndClearParticleSystems(state);
 
             for (int i = 0; i < state.ParticleSystems.Length; i++)
             {
                 ParticleSystem particleSystem = state.ParticleSystems[i];
-                if (!particleSystem)
-                {
-                    continue;
-                }
-
-                particleSystem.randomSeed = state.PreviewSeeds[i];
-                if (particleSystem.gameObject.activeInHierarchy)
+                if (particleSystem && particleSystem.gameObject.activeInHierarchy)
                 {
                     particleSystem.Simulate(playbackTime, false, true, false);
                 }
             }
-        }
 
-        private static void AdvancePreview(PreviewState state, float deltaTime)
-        {
-            for (int i = 0; i < state.ParticleSystems.Length; i++)
-            {
-                ParticleSystem particleSystem = state.ParticleSystems[i];
-                if (!particleSystem || !particleSystem.gameObject.activeInHierarchy)
-                {
-                    continue;
-                }
-
-                particleSystem.Simulate(deltaTime, false, false, false);
-            }
+            RestoreSerializedSeedSettings(state);
         }
 
         private static bool HasPlayingPreview()
@@ -614,7 +607,7 @@ namespace Game.Editor.VFXTools.Utilities
                 }
 
                 state.PlaybackTime += deltaTime;
-                AdvancePreview(state, deltaTime);
+                SimulateAtTime(state, state.PlaybackTime);
                 repaint = true;
             }
 
@@ -653,18 +646,7 @@ namespace Game.Editor.VFXTools.Utilities
         private static void RestoreOriginalSeeds(PreviewState state)
         {
             StopAndClearParticleSystems(state);
-
-            for (int i = 0; i < state.ParticleSystems.Length; i++)
-            {
-                ParticleSystem particleSystem = state.ParticleSystems[i];
-                if (!particleSystem)
-                {
-                    continue;
-                }
-
-                particleSystem.randomSeed = state.OriginalSeeds[i];
-                particleSystem.useAutoRandomSeed = state.AutoRandomSeeds[i];
-            }
+            RestoreSerializedSeedSettings(state);
         }
 
         private static void StopState(PreviewState state)

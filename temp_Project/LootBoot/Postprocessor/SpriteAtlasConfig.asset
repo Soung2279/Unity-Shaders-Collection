@@ -16,7 +16,6 @@ MonoBehaviour:
   - Assets/GameAsset/Sprite/Icon
   - Assets/GameAsset/Sprite/UI
   atlasScanDirs:
-  - Assets/Art/Sprite/object
   - Assets/GameAsset/Sprite/Icon/Activity
   - Assets/GameAsset/Sprite/Icon/Battle
   - Assets/GameAsset/Sprite/Icon/BattleMapTypeIcon
@@ -45,6 +44,7 @@ MonoBehaviour:
   - Assets/GameAsset/Sprite/UI/Rank
   - Assets/GameAsset/Sprite/UI/Shop
   - Assets/GameAsset/Sprite/UI/TeQuan
+  - Assets/GameAsset/Sprite/UI/VIP
   autoImportWatchDirs:
   - Assets/GameAsset/Sprite
   pathMarker: Sprite

@@ -112,16 +112,27 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
         {
             if (_previewScene.IsValid() && _previewScene.isLoaded)
             {
+                var previewScene = _previewScene;
                 if (EditorApplication.isPlaying)
                 {
+                    if (SceneManager.GetActiveScene() == previewScene)
+                    {
+                        SetFallbackActiveScene(previewScene);
+                    }
+
                     foreach (var go in SpawnedPrefabs)
                     {
                         if (go) Object.Destroy(go);
                     }
+
+                    if (SceneManager.sceneCount > 1)
+                    {
+                        SceneManager.UnloadSceneAsync(previewScene);
+                    }
                 }
                 else
                 {
-                    EditorSceneManager.CloseScene(_previewScene, true);
+                    EditorSceneManager.CloseScene(previewScene, true);
                 }
                 _previewScene = default;
             }
@@ -129,7 +140,21 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             SpawnedPrefabs.Clear();
             IssueObjects.Clear();
             IssueMessages.Clear();
+            InitialNonLoopParticles.Clear();
             RemoveSceneGuiHook();
+        }
+
+        private static void SetFallbackActiveScene(Scene closingScene)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var scene = SceneManager.GetSceneAt(i);
+                if (scene != closingScene && scene.isLoaded)
+                {
+                    SceneManager.SetActiveScene(scene);
+                    return;
+                }
+            }
         }
 
         private static void ClearPreviewObjects()

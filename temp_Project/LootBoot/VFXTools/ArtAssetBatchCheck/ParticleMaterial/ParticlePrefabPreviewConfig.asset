@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   showBoundaries: 1
   showLabels: 0
-  previewSpacing: 4
+  previewSpacing: 3
   loopAllParticles: 1
   verticalLayout: 1
