@@ -20,6 +20,7 @@ public class VFXTablePreviewWindow : EditorWindow
     private string scriptPath = "";
     private Action<LootBootVFXtoExcel.VFXRowData> fillCallback;
     private int highlightId = -1;
+    private bool hitOnlyMode;
 
     private readonly List<LootBootVFXtoExcel.VFXRowData> allRows = new List<LootBootVFXtoExcel.VFXRowData>();
     private readonly List<LootBootVFXtoExcel.VFXRowData> filteredRows = new List<LootBootVFXtoExcel.VFXRowData>();
@@ -56,14 +57,14 @@ public class VFXTablePreviewWindow : EditorWindow
     private const float MIN_COL_WIDTH = 30f;
     private static readonly Color MODIFIED_CELL_COLOR = new Color(1f, 0.72f, 0.25f, 0.65f);
 
-    private float[] colWidths = { 50f, 200f, 65f, 300f, 55f, 55f, 55f, 55f, 60f, 300f, 80f };
+    private float[] colWidths = { 50f, 200f, 65f, 300f, 55f, 55f, 55f, 55f, 60f, 70f, 300f, 80f };
 
     private int resizingCol = -1;
     private float resizeStartX;
     private float resizeStartWidth;
 
     private static readonly string[] COL_NAMES =
-        { "ID", "名称", "类型", "资源路径", "范围", "缩放", "挂接点", "旋转规则", "音效ID", "备注", "操作" };
+        { "ID", "名称", "类型", "资源路径", "范围", "缩放", "挂接点", "旋转规则", "音效ID", "受击特效", "备注", "操作" };
 
     private static readonly string[] COL_TOOLTIPS =
     {
@@ -76,6 +77,7 @@ public class VFXTablePreviewWindow : EditorWindow
         "特效挂接点：原点 / 中心 / 头部。",
         "旋转规则：不旋转 / 旋转 / 旋转翻转。",
         "绑定播放的音效配置 ID。",
+        "是否为受击特效：0 = 非受击特效，1 = 受击特效。",
         "Excel 中的备注说明。",
         "选择填回主窗口，或定位资源。"
     };
@@ -83,6 +85,7 @@ public class VFXTablePreviewWindow : EditorWindow
     private static readonly string[] VFX_TYPE_LABELS = { "Spine", "粒子", "复合" };
     private static readonly string[] ATTACH_LABELS = { "原点", "中心", "头部" };
     private static readonly string[] ROTATION_LABELS = { "不旋转", "旋转", "旋转翻转" };
+    private static readonly string[] IS_HIT_LABELS = { "否", "是" };
 
     private static readonly Color[] VFX_TYPE_COLORS = {
         new Color(0.75f, 0.50f, 1.00f),
@@ -99,6 +102,10 @@ public class VFXTablePreviewWindow : EditorWindow
         new Color(0.35f, 0.90f, 1.00f),
         new Color(1.00f, 0.50f, 0.85f),
     };
+    private static readonly Color[] IS_HIT_COLORS = {
+        new Color(0.75f, 0.75f, 0.75f),
+        new Color(1.00f, 0.45f, 0.35f),
+    };
 
     [Serializable]
     private class VFXRowDataWrapper
@@ -111,14 +118,18 @@ public class VFXTablePreviewWindow : EditorWindow
         string excelPath,
         string scriptPath,
         Action<LootBootVFXtoExcel.VFXRowData> fillCallback,
-        int highlightId = -1)
+        int highlightId = -1,
+        bool hitOnlyMode = false)
     {
-        var window = GetWindow<VFXTablePreviewWindow>("VFX 全表预览");
+        string title = hitOnlyMode ? "VFX 受击检查" : "VFX 全表预览";
+        var window = GetWindow<VFXTablePreviewWindow>(title);
+        window.titleContent = new GUIContent(title);
         window.cachePath = cachePath;
         window.excelPath = excelPath;
         window.scriptPath = scriptPath;
         window.fillCallback = fillCallback;
         window.highlightId = highlightId;
+        window.hitOnlyMode = hitOnlyMode;
         window.searchInput = "";
         window.minSize = new Vector2(990f, 480f);
         window.LoadCache();
@@ -190,13 +201,20 @@ public class VFXTablePreviewWindow : EditorWindow
 
         if (string.IsNullOrEmpty(kw))
         {
-            filteredRows.AddRange(allRows);
+            foreach (var row in allRows)
+            {
+                if (!hitOnlyMode || row.isHit == "1")
+                    filteredRows.Add(row);
+            }
         }
         else
         {
             bool isInt = int.TryParse(kw, out int intKw);
             foreach (var row in allRows)
             {
+                if (hitOnlyMode && row.isHit != "1")
+                    continue;
+
                 if (isInt && row.id == intKw.ToString())
                 {
                     filteredRows.Add(row);
@@ -280,7 +298,9 @@ public class VFXTablePreviewWindow : EditorWindow
                 Repaint();
             }
 
-            GUILayout.Label($"{filteredRows.Count} / {allRows.Count} 条", GUILayout.Width(80f));
+            GUILayout.Label(hitOnlyMode
+                ? $"受击特效 {filteredRows.Count} / 全部 {allRows.Count} 条"
+                : $"{filteredRows.Count} / {allRows.Count} 条", GUILayout.Width(hitOnlyMode ? 150f : 80f));
 
             if (!string.IsNullOrEmpty(refreshStatus))
             {
@@ -436,9 +456,9 @@ public class VFXTablePreviewWindow : EditorWindow
             HandlePreviewRowClick(row, filteredIndex, rowRect);
 
         float x = rowRect.x;
-        for (int col = 0; col <= 9; col++)
+        for (int col = 0; col <= 10; col++)
             DrawCell(row, filteredIndex, col, ref x, rowRect.y);
-        DrawOperationCell(row, filteredIndex, new Rect(x, rowRect.y, colWidths[10], ROW_HEIGHT));
+        DrawOperationCell(row, filteredIndex, new Rect(x, rowRect.y, colWidths[11], ROW_HEIGHT));
     }
 
     private void DrawCell(LootBootVFXtoExcel.VFXRowData row, int filteredIndex, int col, ref float x, float y)
@@ -485,6 +505,9 @@ public class VFXTablePreviewWindow : EditorWindow
                 EditorGUI.LabelField(rect, row.soundId, cellStyle);
                 break;
             case 9:
+                DrawColoredCell(rect, row.isHit, IS_HIT_LABELS, IS_HIT_COLORS);
+                break;
+            case 10:
                 DrawTextCell(rect, row.remark);
                 break;
         }
@@ -581,8 +604,14 @@ public class VFXTablePreviewWindow : EditorWindow
         if (modified)
             DrawModifiedCellBackground(rect);
 
-        string[] labels = col == 2 ? VFX_TYPE_LABELS : (col == 6 ? ATTACH_LABELS : ROTATION_LABELS);
-        Color[] colors = col == 2 ? VFX_TYPE_COLORS : (col == 6 ? ATTACH_COLORS : ROTATION_COLORS);
+        string[] labels = col == 2 ? VFX_TYPE_LABELS
+            : col == 6 ? ATTACH_LABELS
+            : col == 7 ? ROTATION_LABELS
+            : IS_HIT_LABELS;
+        Color[] colors = col == 2 ? VFX_TYPE_COLORS
+            : col == 6 ? ATTACH_COLORS
+            : col == 7 ? ROTATION_COLORS
+            : IS_HIT_COLORS;
         string currentValue = GetCellValue(row, col) ?? "";
         bool validCurrent = int.TryParse(currentValue, out int parsed) && parsed >= 0 && parsed < labels.Length;
         string[] popupLabels = validCurrent ? labels : BuildPopupLabelsWithCurrent(currentValue, labels);
@@ -852,6 +881,11 @@ public class VFXTablePreviewWindow : EditorWindow
                 error = $"{rowLabel} 的音效ID必须为空或整数。";
                 return false;
             }
+            if (IsCellModified(row.rowIndex, 9) && !TryParseEnumValue(row.isHit, IS_HIT_LABELS.Length, out _))
+            {
+                error = $"{rowLabel} 的受击特效标记必须为 0 或 1。";
+                return false;
+            }
             if (IsCellModified(row.rowIndex, 2) && !TryParseEnumValue(row.vfxType, VFX_TYPE_LABELS.Length, out _))
             {
                 error = $"{rowLabel} 的类型超出范围。";
@@ -930,7 +964,8 @@ public class VFXTablePreviewWindow : EditorWindow
         sb.Append($"\"scaleFactor\":{IntFieldToJson(row.scaleFactor)},");
         sb.Append($"\"attachPoint\":{IntFieldToJson(row.attachPoint)},");
         sb.Append($"\"rotationRule\":{IntFieldToJson(row.rotationRule)},");
-        sb.Append($"\"soundId\":{IntFieldToJson(row.soundId)}");
+        sb.Append($"\"soundId\":{IntFieldToJson(row.soundId)},");
+        sb.Append($"\"isHit\":{IntFieldToJson(row.isHit)}");
         sb.Append("}");
         return sb.ToString();
     }
@@ -986,6 +1021,7 @@ public class VFXTablePreviewWindow : EditorWindow
         sb.AppendLine($"挂接点: {GetLabel(row.attachPoint, ATTACH_LABELS)} ({row.attachPoint})");
         sb.AppendLine($"旋转规则: {GetLabel(row.rotationRule, ROTATION_LABELS)} ({row.rotationRule})");
         sb.AppendLine($"音效ID: {row.soundId}");
+        sb.AppendLine($"受击特效: {(row.isHit == "1" ? "是" : "否")} ({row.isHit})");
         if (!string.IsNullOrEmpty(row.remark))
             sb.AppendLine($"备注: {row.remark}");
 
@@ -1210,6 +1246,12 @@ public class VFXTablePreviewWindow : EditorWindow
         return psi;
     }
 
+    internal static bool IsHitOnlyWindowOpen()
+    {
+        var wins = Resources.FindObjectsOfTypeAll<VFXTablePreviewWindow>();
+        return wins != null && wins.Length > 0 && wins[0].hitOnlyMode;
+    }
+
     internal static void RequestRefreshIfOpen()
     {
         var wins = Resources.FindObjectsOfTypeAll<VFXTablePreviewWindow>();
@@ -1327,6 +1369,7 @@ public class VFXTablePreviewWindow : EditorWindow
             attachPoint = row.attachPoint,
             rotationRule = row.rotationRule,
             soundId = row.soundId,
+            isHit = row.isHit,
         };
     }
 
@@ -1343,7 +1386,8 @@ public class VFXTablePreviewWindow : EditorWindow
             case 6: return row.attachPoint;
             case 7: return row.rotationRule;
             case 8: return row.soundId;
-            case 9: return row.remark;
+            case 9: return row.isHit;
+            case 10: return row.remark;
             default: return "";
         }
     }
@@ -1361,7 +1405,8 @@ public class VFXTablePreviewWindow : EditorWindow
             case 6: row.attachPoint = value; break;
             case 7: row.rotationRule = value; break;
             case 8: row.soundId = value; break;
-            case 9: row.remark = value; break;
+            case 9: row.isHit = value; break;
+            case 10: row.remark = value; break;
         }
     }
 
@@ -1382,7 +1427,7 @@ public class VFXTablePreviewWindow : EditorWindow
 
     private bool IsRowModified(string rowIndex)
     {
-        for (int col = 0; col <= 9; col++)
+        for (int col = 0; col <= 10; col++)
         {
             if (IsCellModified(rowIndex, col))
                 return true;
@@ -1440,7 +1485,7 @@ public class VFXTablePreviewWindow : EditorWindow
 
     private static bool IsEnumColumn(int col)
     {
-        return col == 2 || col == 6 || col == 7;
+        return col == 2 || col == 6 || col == 7 || col == 9;
     }
 
     private static int ParsePopupValue(string value, int optionCount)

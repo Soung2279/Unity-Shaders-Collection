@@ -13,10 +13,13 @@ namespace Game.Editor.VFXTools.Utilities
 
         private readonly List<DefaultAsset> scanFolders = new List<DefaultAsset>();
         private readonly List<PrefabReport> reports = new List<PrefabReport>();
+        private readonly List<string> scannedEffectPrefabPaths = new List<string>();
         private Vector2 folderScroll;
         private Vector2 resultScroll;
         private int scannedPrefabCount;
         private int effectPrefabCount;
+        private bool addPreviewAfterClean;
+        private bool scanCompleted;
 
         [MenuItem(MenuPath, false, 121)]
         public static void Open()
@@ -41,11 +44,15 @@ namespace Game.Editor.VFXTools.Utilities
             EditorGUILayout.LabelField("空粒子系统清理", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "特效 Prefab：自身或子物体包含 ParticleSystem，且整个层级不包含 SpriteRenderer 或 UIParticle；包含 UIParticle 时跳过整个 Prefab。\n" +
-                "空粒子系统：Emission 未启用、ParticleSystemRenderer 未启用、Max Particles 为 0，满足任一条件即视为空。\n" +
-                "清理时仅移除 ParticleSystem 和对应的 ParticleSystemRenderer，保留 GameObject 与其他组件。",
+                "空粒子残留：空 ParticleSystem 及其配套 ParticleSystemRenderer，或没有 ParticleSystem 的孤立 ParticleSystemRenderer。\n" +
+                "清理时仅移除上述粒子相关组件，保留 GameObject 与所有其它组件和参数。",
                 MessageType.Info);
 
             DrawFolderSection();
+
+            addPreviewAfterClean = EditorGUILayout.ToggleLeft(
+                "清理后为被清理 Prefab 的根物体添加 ParticleGroupPlayer",
+                addPreviewAfterClean);
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -54,14 +61,20 @@ namespace Game.Editor.VFXTools.Utilities
 
                 using (new EditorGUI.DisabledScope(reports.Count == 0))
                 {
-                    if (GUILayout.Button($"清理 {reports.Sum(report => report.EmptyParticles.Count)} 个空粒子系统", GUILayout.Height(28f)))
+                    if (GUILayout.Button($"清理 {reports.Sum(report => report.Remnants.Count)} 个粒子组件组", GUILayout.Height(28f)))
                         Clean();
                 }
             }
 
+            using (new EditorGUI.DisabledScope(!scanCompleted || scannedEffectPrefabPaths.Count == 0))
+            {
+                if (GUILayout.Button("批量设置预览组件", GUILayout.Height(30f)))
+                    BatchSetupPreviewComponents();
+            }
+
             EditorGUILayout.Space(4f);
             EditorGUILayout.LabelField(
-                $"扫描 Prefab：{scannedPrefabCount}  |  特效 Prefab：{effectPrefabCount}  |  待清理 Prefab：{reports.Count}  |  空粒子系统：{reports.Sum(report => report.EmptyParticles.Count)}",
+                $"扫描 Prefab：{scannedPrefabCount}  |  特效 Prefab：{effectPrefabCount}  |  待清理 Prefab：{reports.Count}  |  粒子组件组：{reports.Sum(report => report.Remnants.Count)}",
                 EditorStyles.boldLabel);
 
             DrawResults();
@@ -127,26 +140,32 @@ namespace Game.Editor.VFXTools.Utilities
                         if (GUILayout.Button(report.PrefabName, EditorStyles.linkLabel))
                             SelectAsset(report.PrefabPath);
                         GUILayout.FlexibleSpace();
-                        GUILayout.Label($"{report.EmptyParticles.Count} 个", EditorStyles.miniBoldLabel);
+                        GUILayout.Label($"{report.Remnants.Count} 组", EditorStyles.miniBoldLabel);
                     }
 
                     EditorGUILayout.SelectableLabel(report.PrefabPath, EditorStyles.wordWrappedMiniLabel,
                         GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 2f));
-                    foreach (var particle in report.EmptyParticles)
-                        EditorGUILayout.LabelField($"• {particle.HierarchyPath}：{particle.Reason}", EditorStyles.wordWrappedMiniLabel);
+                    foreach (var remnant in report.Remnants)
+                        EditorGUILayout.LabelField($"• {remnant.HierarchyPath}：{remnant.Reason}", EditorStyles.wordWrappedMiniLabel);
                 }
             }
             EditorGUILayout.EndScrollView();
         }
 
-        private void Scan()
+        private void Scan(IEnumerable<string> retainedEffectPrefabPaths = null)
         {
+            var retainedPaths = retainedEffectPrefabPaths != null
+                ? new HashSet<string>(retainedEffectPrefabPaths, StringComparer.OrdinalIgnoreCase)
+                : null;
             reports.Clear();
+            scannedEffectPrefabPaths.Clear();
             scannedPrefabCount = 0;
             effectPrefabCount = 0;
+            scanCompleted = false;
 
             string[] prefabPaths = GetPrefabPaths();
             scannedPrefabCount = prefabPaths.Length;
+            bool canceled = false;
             try
             {
                 for (int i = 0; i < prefabPaths.Length; i++)
@@ -154,31 +173,54 @@ namespace Game.Editor.VFXTools.Utilities
                     string path = prefabPaths[i];
                     if (EditorUtility.DisplayCancelableProgressBar("扫描空粒子系统", path,
                             i / (float)Math.Max(prefabPaths.Length, 1)))
+                    {
+                        canceled = true;
                         break;
+                    }
 
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     if (prefab == null)
                         continue;
 
                     var particles = prefab.GetComponentsInChildren<ParticleSystem>(true);
-                    if (!IsEffectPrefab(prefab, particles))
+                    bool isEligibleEffect = IsEffectPrefab(prefab, particles);
+                    bool retainCleanedEffect = retainedPaths != null
+                                               && retainedPaths.Contains(path)
+                                               && particles.Length == 0
+                                               && prefab.GetComponentInChildren<SpriteRenderer>(true) == null
+                                               && !HasUIParticle(prefab);
+                    if (!isEligibleEffect && !retainCleanedEffect)
                         continue;
 
                     effectPrefabCount++;
+                    scannedEffectPrefabPaths.Add(path);
                     var report = new PrefabReport(path, prefab.name);
                     foreach (var particle in particles)
                     {
                         string reason = GetEmptyReason(particle);
                         if (!string.IsNullOrEmpty(reason))
                         {
-                            report.EmptyParticles.Add(new ParticleReport(
+                            report.Remnants.Add(new ParticleRemnantReport(
                                 GetTransformAddress(prefab.transform, particle.transform),
                                 GetHierarchyPath(prefab.transform, particle.transform),
-                                reason));
+                                reason,
+                                true));
                         }
                     }
 
-                    if (report.EmptyParticles.Count > 0)
+                    foreach (var renderer in prefab.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                    {
+                        if (renderer.GetComponent<ParticleSystem>() != null)
+                            continue;
+
+                        report.Remnants.Add(new ParticleRemnantReport(
+                            GetTransformAddress(prefab.transform, renderer.transform),
+                            GetHierarchyPath(prefab.transform, renderer.transform),
+                            "孤立 ParticleSystemRenderer（缺少 ParticleSystem）",
+                            false));
+                    }
+
+                    if (report.Remnants.Count > 0)
                         reports.Add(report);
                 }
             }
@@ -187,19 +229,29 @@ namespace Game.Editor.VFXTools.Utilities
                 EditorUtility.ClearProgressBar();
             }
 
+            scanCompleted = !canceled;
+            if (canceled)
+            {
+                reports.Clear();
+                scannedEffectPrefabPaths.Clear();
+                effectPrefabCount = 0;
+            }
+
             Repaint();
         }
 
         private void Clean()
         {
-            int particleCount = reports.Sum(report => report.EmptyParticles.Count);
+            int remnantCount = reports.Sum(report => report.Remnants.Count);
             if (!EditorUtility.DisplayDialog("确认清理",
-                    $"将修改 {reports.Count} 个 Prefab，移除 {particleCount} 个空 ParticleSystem 及其 ParticleSystemRenderer。\n\n建议先确认版本控制状态。是否继续？",
+                    $"将修改 {reports.Count} 个 Prefab，清理 {remnantCount} 组空粒子相关组件（空 ParticleSystem 及配套 Renderer，或孤立 Renderer）。\nGameObject、其它组件及参数均会保留。\n\n建议先确认版本控制状态。是否继续？",
                     "清理", "取消"))
                 return;
 
             int changedPrefabs = 0;
-            int removedParticles = 0;
+            int removedComponentGroups = 0;
+            int addedPlayers = 0;
+            string[] scannedTargets = scannedEffectPrefabPaths.ToArray();
             try
             {
                 for (int i = 0; i < reports.Count; i++)
@@ -219,29 +271,20 @@ namespace Game.Editor.VFXTools.Utilities
                             continue;
                         }
 
-                        int removedInPrefab = 0;
-                        foreach (var particleReport in reports[i].EmptyParticles)
+                        int removedInPrefab = CleanReportedRemnants(root, reports[i]);
+                        bool addedPreview = false;
+                        if (removedInPrefab > 0 && addPreviewAfterClean && root.GetComponent<ParticleGroupPlayer>() == null)
                         {
-                            Transform target = FindTransformByAddress(root.transform, particleReport.TransformAddress);
-                            if (target == null)
-                                continue;
-
-                            var particle = target.GetComponent<ParticleSystem>();
-                            if (particle == null || string.IsNullOrEmpty(GetEmptyReason(particle)))
-                                continue;
-
-                            var renderer = target.GetComponent<ParticleSystemRenderer>();
-                            if (renderer != null)
-                                DestroyImmediate(renderer, true);
-                            DestroyImmediate(particle, true);
-                            removedInPrefab++;
+                            root.AddComponent<ParticleGroupPlayer>();
+                            addedPreview = true;
                         }
 
-                        if (removedInPrefab > 0)
+                        if (removedInPrefab > 0 || addedPreview)
                         {
                             PrefabUtility.SaveAsPrefabAsset(root, path);
                             changedPrefabs++;
-                            removedParticles += removedInPrefab;
+                            removedComponentGroups += removedInPrefab;
+                            if (addedPreview) addedPlayers++;
                         }
                     }
                     finally
@@ -257,9 +300,116 @@ namespace Game.Editor.VFXTools.Utilities
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[EmptyParticleSystemCleaner] 清理完成：修改 {changedPrefabs} 个 Prefab，移除 {removedParticles} 个空粒子系统。");
-            EditorUtility.DisplayDialog("清理完成", $"修改 {changedPrefabs} 个 Prefab，移除 {removedParticles} 个空粒子系统。", "确定");
-            Scan();
+            Debug.Log($"[EmptyParticleSystemCleaner] 清理完成：修改 {changedPrefabs} 个 Prefab，清理 {removedComponentGroups} 组空粒子相关组件，添加 {addedPlayers} 个 ParticleGroupPlayer。");
+            EditorUtility.DisplayDialog("清理完成",
+                $"修改 {changedPrefabs} 个 Prefab，清理 {removedComponentGroups} 组空粒子相关组件，添加 {addedPlayers} 个 ParticleGroupPlayer。", "确定");
+            Scan(scannedTargets);
+        }
+
+        private void BatchSetupPreviewComponents()
+        {
+            if (!EditorUtility.DisplayDialog("批量设置预览组件",
+                    $"将处理本次完整扫描到的 {scannedEffectPrefabPaths.Count} 个特效 Prefab。\n存在空粒子残留时会先清理，再在根物体添加 ParticleGroupPlayer。\n\n是否继续？",
+                    "执行", "取消"))
+                return;
+
+            var reportsByPath = reports.ToDictionary(report => report.PrefabPath, StringComparer.OrdinalIgnoreCase);
+            string[] scannedTargets = scannedEffectPrefabPaths.ToArray();
+            int changedPrefabs = 0;
+            int cleanedGroups = 0;
+            int addedPlayers = 0;
+            try
+            {
+                for (int i = 0; i < scannedEffectPrefabPaths.Count; i++)
+                {
+                    string path = scannedEffectPrefabPaths[i];
+                    if (EditorUtility.DisplayCancelableProgressBar("批量设置预览组件", path,
+                            i / (float)Math.Max(scannedEffectPrefabPaths.Count, 1)))
+                        break;
+
+                    GameObject root = PrefabUtility.LoadPrefabContents(path);
+                    try
+                    {
+                        var particles = root.GetComponentsInChildren<ParticleSystem>(true);
+                        bool isEligibleEffect = IsEffectPrefab(root, particles);
+                        bool isRetainedCleanedEffect = particles.Length == 0
+                                                       && root.GetComponentInChildren<SpriteRenderer>(true) == null
+                                                       && !HasUIParticle(root);
+                        if (!isEligibleEffect && !isRetainedCleanedEffect)
+                        {
+                            Debug.LogWarning($"[EmptyParticleSystemCleaner] 已跳过不再符合特效定义的 Prefab：{path}");
+                            continue;
+                        }
+
+                        int cleanedInPrefab = reportsByPath.TryGetValue(path, out var report)
+                            ? CleanReportedRemnants(root, report)
+                            : 0;
+                        bool addedPlayer = false;
+                        if (root.GetComponent<ParticleGroupPlayer>() == null)
+                        {
+                            root.AddComponent<ParticleGroupPlayer>();
+                            addedPlayer = true;
+                        }
+
+                        if (cleanedInPrefab > 0 || addedPlayer)
+                        {
+                            PrefabUtility.SaveAsPrefabAsset(root, path);
+                            changedPrefabs++;
+                            cleanedGroups += cleanedInPrefab;
+                            if (addedPlayer) addedPlayers++;
+                        }
+                    }
+                    finally
+                    {
+                        PrefabUtility.UnloadPrefabContents(root);
+                    }
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"[EmptyParticleSystemCleaner] 批量设置完成：修改 {changedPrefabs} 个 Prefab，清理 {cleanedGroups} 组残留，添加 {addedPlayers} 个 ParticleGroupPlayer。");
+            EditorUtility.DisplayDialog("设置完成",
+                $"修改 {changedPrefabs} 个 Prefab，清理 {cleanedGroups} 组残留，添加 {addedPlayers} 个 ParticleGroupPlayer。", "确定");
+            Scan(scannedTargets);
+        }
+
+        private static int CleanReportedRemnants(GameObject root, PrefabReport report)
+        {
+            int removed = 0;
+            foreach (var remnant in report.Remnants)
+            {
+                Transform target = FindTransformByAddress(root.transform, remnant.TransformAddress);
+                if (target == null)
+                    continue;
+
+                if (remnant.HasParticleSystem)
+                {
+                    var particle = target.GetComponent<ParticleSystem>();
+                    if (particle == null || string.IsNullOrEmpty(GetEmptyReason(particle)))
+                        continue;
+
+                    var renderer = target.GetComponent<ParticleSystemRenderer>();
+                    if (renderer != null)
+                        DestroyImmediate(renderer, true);
+                    DestroyImmediate(particle, true);
+                    removed++;
+                    continue;
+                }
+
+                var orphanRenderer = target.GetComponent<ParticleSystemRenderer>();
+                if (orphanRenderer == null || target.GetComponent<ParticleSystem>() != null)
+                    continue;
+
+                DestroyImmediate(orphanRenderer, true);
+                removed++;
+            }
+
+            return removed;
         }
 
         private string[] GetPrefabPaths()
@@ -391,8 +541,10 @@ namespace Game.Editor.VFXTools.Utilities
         private void InvalidateResults()
         {
             reports.Clear();
+            scannedEffectPrefabPaths.Clear();
             scannedPrefabCount = 0;
             effectPrefabCount = 0;
+            scanCompleted = false;
         }
 
         private static void SelectAsset(string path)
@@ -408,7 +560,7 @@ namespace Game.Editor.VFXTools.Utilities
         {
             public readonly string PrefabPath;
             public readonly string PrefabName;
-            public readonly List<ParticleReport> EmptyParticles = new List<ParticleReport>();
+            public readonly List<ParticleRemnantReport> Remnants = new List<ParticleRemnantReport>();
 
             public PrefabReport(string prefabPath, string prefabName)
             {
@@ -417,17 +569,19 @@ namespace Game.Editor.VFXTools.Utilities
             }
         }
 
-        private readonly struct ParticleReport
+        private readonly struct ParticleRemnantReport
         {
             public readonly int[] TransformAddress;
             public readonly string HierarchyPath;
             public readonly string Reason;
+            public readonly bool HasParticleSystem;
 
-            public ParticleReport(int[] transformAddress, string hierarchyPath, string reason)
+            public ParticleRemnantReport(int[] transformAddress, string hierarchyPath, string reason, bool hasParticleSystem)
             {
                 TransformAddress = transformAddress;
                 HierarchyPath = hierarchyPath;
                 Reason = reason;
+                HasParticleSystem = hasParticleSystem;
             }
         }
     }

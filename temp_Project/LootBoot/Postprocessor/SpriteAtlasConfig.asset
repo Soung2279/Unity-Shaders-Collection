@@ -40,6 +40,7 @@ MonoBehaviour:
   - Assets/GameAsset/Sprite/UI/FuLi
   - Assets/GameAsset/Sprite/UI/GiftPack
   - Assets/GameAsset/Sprite/UI/Main
+  - Assets/GameAsset/Sprite/UI/PVPArena
   - Assets/GameAsset/Sprite/UI/QualityUI
   - Assets/GameAsset/Sprite/UI/Rank
   - Assets/GameAsset/Sprite/UI/Shop

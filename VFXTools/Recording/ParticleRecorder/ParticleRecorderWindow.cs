@@ -748,6 +748,9 @@ public class ParticleRecorderWindow : EditorWindow
     private void StartRecording()
     {
         if (prefabToRecord == null) return;
+        if (prefabTemplate != null && !PrefabGenerator.ValidateTemplate(
+                prefabTemplate, AssetDatabase.GetAssetPath(prefabTemplate)))
+            return;
         if (!ContainsParticleSystem(prefabToRecord))
         {
             EditorUtility.DisplayDialog("无法转换预制体", "选择的对象不包含 ParticleSystem，无法转换。", "确定");
@@ -830,6 +833,9 @@ public class ParticleRecorderWindow : EditorWindow
     private void StartFastRecording()
     {
         if (prefabToRecord == null) return;
+        if (prefabTemplate != null && !PrefabGenerator.ValidateTemplate(
+                prefabTemplate, AssetDatabase.GetAssetPath(prefabTemplate)))
+            return;
         if (!ContainsParticleSystem(prefabToRecord))
         {
             EditorUtility.DisplayDialog("无法转换预制体", "选择的对象不包含 ParticleSystem，无法转换。", "确定");
@@ -1120,6 +1126,7 @@ public static class AtlasGenerator
 
         File.WriteAllBytes(outputPath, atlas.EncodeToPNG());
         UnityEngine.Object.DestroyImmediate(atlas);
+        ConfigureAtlasImporter(outputPath);
 
         Debug.Log($"[AtlasGenerator] 图集已保存：{outputPath}  ({atlasW}×{atlasH}, {cols}列×{rows}行, {n} 帧)");
 
@@ -1137,6 +1144,31 @@ public static class AtlasGenerator
         return outputPath;
     }
 
+    private static void ConfigureAtlasImporter(string atlasFilePath)
+    {
+        string assetPath = ToAssetPath(atlasFilePath);
+        if (string.IsNullOrEmpty(assetPath))
+            return;
+
+        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+        if (AssetImporter.GetAtPath(assetPath) is not TextureImporter importer)
+            return;
+
+        importer.textureType = TextureImporterType.Default;
+        importer.alphaIsTransparency = true;
+        importer.mipmapEnabled = false;
+        importer.SaveAndReimport();
+    }
+
+    private static string ToAssetPath(string filePath)
+    {
+        string normalized = Path.GetFullPath(filePath).Replace('\\', '/');
+        string dataPath = Application.dataPath.Replace('\\', '/');
+        return normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase)
+            ? "Assets" + normalized.Substring(dataPath.Length)
+            : null;
+    }
+
 }
 
 
@@ -1146,6 +1178,13 @@ public static class AtlasGenerator
 /// </summary>
 public static class PrefabGenerator
 {
+    private const string TargetParticleObjectName = "Anim";
+
+    public static bool ValidateTemplate(GameObject templateRoot, string templatePath)
+    {
+        return TryGetTargetParticleSystem(templateRoot, templatePath, out _);
+    }
+
     public static string Generate(string templatePrefabAssetPath, string atlasFilePath,
                                    string prefabOutDir, string matOutDir, string prefabName, int cols, int rows, float duration)
     {
@@ -1161,6 +1200,9 @@ public static class PrefabGenerator
             Debug.LogWarning($"[PrefabGenerator] 无法加载样板预制体：{templatePrefabAssetPath}");
             return null;
         }
+
+        if (!TryGetTargetParticleSystem(templatePrefab, templatePrefabAssetPath, out var templateParticleSystem))
+            return null;
 
         string dataPath = Application.dataPath.Replace('\\', '/');
         string outDir   = prefabOutDir.Replace('\\', '/').TrimEnd('/');
@@ -1205,6 +1247,7 @@ public static class PrefabGenerator
         {
             ti.textureType         = TextureImporterType.Default;
             ti.alphaIsTransparency = true;
+            ti.mipmapEnabled       = false;
             ti.SaveAndReimport();
         }
 
@@ -1215,7 +1258,7 @@ public static class PrefabGenerator
             return null;
         }
 
-        var templateRenderer = templatePrefab.GetComponentInChildren<ParticleSystemRenderer>(true);
+        var templateRenderer = templateParticleSystem.GetComponent<ParticleSystemRenderer>();
         var srcMat           = templateRenderer != null ? templateRenderer.sharedMaterial : null;
         string matAssetPath  = $"{assetMatDir}/{prefabName}_mat.mat";
 
@@ -1247,20 +1290,23 @@ public static class PrefabGenerator
         var go = (GameObject)PrefabUtility.InstantiatePrefab(templatePrefab);
         PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
 
-        foreach (var ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        if (!TryGetTargetParticleSystem(go, templatePrefabAssetPath, out var targetParticleSystem))
         {
-            var r = ps.GetComponent<ParticleSystemRenderer>();
-            if (r != null)
-                r.sharedMaterial = mat;
-
-            var main       = ps.main;
-            main.startLifetime = duration;
-
-            var tsam       = ps.textureSheetAnimation;
-            tsam.enabled   = true;
-            tsam.numTilesX = cols;
-            tsam.numTilesY = rows;
+            UnityEngine.Object.DestroyImmediate(go);
+            return null;
         }
+
+        var targetRenderer = targetParticleSystem.GetComponent<ParticleSystemRenderer>();
+        if (targetRenderer != null)
+            targetRenderer.sharedMaterial = mat;
+
+        var main = targetParticleSystem.main;
+        main.startLifetime = duration;
+
+        var tsam = targetParticleSystem.textureSheetAnimation;
+        tsam.enabled = true;
+        tsam.numTilesX = cols;
+        tsam.numTilesY = rows;
 
         string prefabAssetPath = $"{assetOutDir}/{prefabName}_Anim.prefab";
         PrefabUtility.SaveAsPrefabAsset(go, prefabAssetPath);
@@ -1269,6 +1315,54 @@ public static class PrefabGenerator
         AssetDatabase.SaveAssets();
         Debug.Log($"[PrefabGenerator] 预制体已生成：{prefabAssetPath}  (图集 {cols}×{rows})");
         return prefabAssetPath;
+    }
+
+    private static bool TryGetTargetParticleSystem(GameObject templateRoot, string templatePath,
+        out ParticleSystem particleSystem)
+    {
+        particleSystem = null;
+        if (templateRoot == null)
+        {
+            ShowTemplateError(templatePath, "模板对象为空。");
+            return false;
+        }
+
+        Transform target = null;
+        foreach (var transform in templateRoot.GetComponentsInChildren<Transform>(true))
+        {
+            if (transform.name != TargetParticleObjectName)
+                continue;
+
+            if (target != null)
+            {
+                ShowTemplateError(templatePath, $"模板中存在多个名为“{TargetParticleObjectName}”的节点，无法确定写入目标。");
+                return false;
+            }
+
+            target = transform;
+        }
+
+        if (target == null)
+        {
+            ShowTemplateError(templatePath, $"模板中未找到名为“{TargetParticleObjectName}”的目标节点。");
+            return false;
+        }
+
+        particleSystem = target.GetComponent<ParticleSystem>();
+        if (particleSystem == null)
+        {
+            ShowTemplateError(templatePath, $"目标节点“{TargetParticleObjectName}”上缺少 ParticleSystem 组件。");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ShowTemplateError(string templatePath, string reason)
+    {
+        string message = $"序列帧模板校验失败，已终止转换。\n\n模板：{templatePath}\n原因：{reason}";
+        Debug.LogError($"[PrefabGenerator] {message}");
+        EditorUtility.DisplayDialog("序列帧模板错误", message, "确定");
     }
 }
 }

@@ -70,6 +70,7 @@ def read_row_data(ws, row):
         "attachPoint": int_to_str(cell_int(ws.cell_value(row, 7))),
         "rotationRule": int_to_str(cell_int(ws.cell_value(row, 8))),
         "soundId": int_to_str(cell_int(ws.cell_value(row, 9))),
+        "isHit": int_to_str(cell_int(ws.cell_value(row, 10))),
     }
 
 
@@ -85,6 +86,7 @@ def build_row_values(data):
         to_cell(data['attachPoint']),
         to_cell(data['rotationRule']),
         to_cell(data['soundId']),
+        to_cell(data.get('isHit', 0)),
     ]
 
 

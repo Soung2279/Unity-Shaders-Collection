@@ -39,6 +39,7 @@ namespace GameFramework.Editor
         [SerializeField] private Vector2 resultScrollPosition;
 
         private readonly List<AudioImportItem> results = new List<AudioImportItem>();
+        private bool scanCompleted;
 
         private enum AudioCategory
         {
@@ -67,11 +68,15 @@ namespace GameFramework.Editor
             public AudioImporterSampleSettings currentAndroidSettings;
             public AudioImporterSampleSettings currentIosSettings;
             public AudioImporterSampleSettings targetSettings;
+            public bool hasAndroidOverride;
+            public bool hasIosOverride;
             public bool currentForceToMono;
             public bool targetForceToMono;
             public bool selected;
 
             public bool NeedsChange =>
+                !hasAndroidOverride ||
+                !hasIosOverride ||
                 !SampleSettingsEqual(currentAndroidSettings, targetSettings) ||
                 !SampleSettingsEqual(currentIosSettings, targetSettings) ||
                 currentForceToMono != targetForceToMono;
@@ -109,10 +114,10 @@ namespace GameFramework.Editor
             EditorGUILayout.HelpBox(
                 "分类依据优先读取 Sound.json：\n" +
                 "1. Music 组或循环音频，且时长 ≥ 10 秒 → Streaming + Vorbis，Quality 0.65\n" +
-                "2. 高频白名单且时长 ≤ 1.5 秒 → Decompress On Load + ADPCM\n" +
+                "2. 高频白名单且时长 ≤ 1.5 秒 → Decompress On Load + ADPCM，自动优化采样率\n" +
                 "3. 其他音效 → Compressed In Memory + Vorbis，Quality 0.50\n\n" +
-                "工具写入 Android 与 iOS 平台覆盖，保留默认平台设置与 Preload。" +
-                "明确 3D 或左右声道完全相同的音效会启用 Force To Mono。" +
+                "工具仅修改 AudioImporter：写入 Android 与 iOS 平台覆盖，保留默认平台设置与 Preload。" +
+                "Force To Mono 是跨平台设置；明确 3D 或左右声道完全相同的音效会启用。" +
                 "未出现在 Sound.json 的资源仅显示审计结果，不会默认勾选应用。",
                 MessageType.Info);
         }
@@ -130,6 +135,7 @@ namespace GameFramework.Editor
                     audioRoot = newRoot;
                     audioRootPath = newPath;
                     results.Clear();
+                    scanCompleted = false;
                 }
                 else
                 {
@@ -213,7 +219,10 @@ namespace GameFramework.Editor
 
             GUILayout.FlexibleSpace();
 
-            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode || results.All(item => !item.selected)))
+            using (new EditorGUI.DisabledScope(
+                       EditorApplication.isPlayingOrWillChangePlaymode ||
+                       !scanCompleted ||
+                       results.All(item => !item.selected)))
             {
                 GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
                 if (GUILayout.Button("应用到已选择资源", GUILayout.Height(34f), GUILayout.Width(170f)))
@@ -222,33 +231,42 @@ namespace GameFramework.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            if (!scanCompleted && results.Count > 0)
+                EditorGUILayout.HelpBox("上次扫描未完成，当前结果不可应用。请重新扫描。", MessageType.Warning);
+
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 EditorGUILayout.HelpBox("当前处于 Play Mode。可以扫描预览，但请退出 Play Mode 后再应用导入设置。", MessageType.Warning);
         }
 
         private void ScanAudioClips()
         {
+            results.Clear();
+            scanCompleted = false;
+
             if (!AssetDatabase.IsValidFolder(audioRootPath))
             {
                 EditorUtility.DisplayDialog("批量音频导入设置", "请先选择有效的 Audio 根目录。", "确定");
                 return;
             }
 
-            if (!TryLoadSoundConfig(out var soundConfigByName))
+            if (!TryLoadSoundConfig(out var soundConfigByPath))
                 return;
 
-            results.Clear();
             var guids = AssetDatabase.FindAssets("t:AudioClip", new[] { audioRootPath });
             Array.Sort(guids, (left, right) => string.CompareOrdinal(
                 AssetDatabase.GUIDToAssetPath(left), AssetDatabase.GUIDToAssetPath(right)));
 
+            var scanCancelled = false;
             try
             {
                 for (int i = 0; i < guids.Length; i++)
                 {
                     var path = AssetDatabase.GUIDToAssetPath(guids[i]);
                     if (EditorUtility.DisplayCancelableProgressBar("扫描 Audio Clip", path, i / (float)guids.Length))
+                    {
+                        scanCancelled = true;
                         break;
+                    }
 
                     var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
                     var importer = AssetImporter.GetAtPath(path) as AudioImporter;
@@ -256,7 +274,7 @@ namespace GameFramework.Editor
                         continue;
 
                     var assetName = Path.GetFileNameWithoutExtension(path);
-                    soundConfigByName.TryGetValue(assetName, out var soundConfig);
+                    soundConfigByPath.TryGetValue(path, out var soundConfig);
                     var category = Classify(assetName, clip.length, soundConfig);
                     var targetSettings = CreateTargetSettings(category, importer.defaultSampleSettings);
                     var targetForceToMono = importer.forceToMono || ShouldForceToMono(path, clip, soundConfig);
@@ -272,6 +290,8 @@ namespace GameFramework.Editor
                         currentAndroidSettings = GetEffectivePlatformSettings(importer, "Android"),
                         currentIosSettings = GetEffectivePlatformSettings(importer, "iOS"),
                         targetSettings = targetSettings,
+                        hasAndroidOverride = importer.ContainsSampleSettingsOverride("Android"),
+                        hasIosOverride = importer.ContainsSampleSettingsOverride("iOS"),
                         currentForceToMono = importer.forceToMono,
                         targetForceToMono = targetForceToMono
                     };
@@ -284,11 +304,24 @@ namespace GameFramework.Editor
                 EditorUtility.ClearProgressBar();
             }
 
+            scanCompleted = !scanCancelled;
+            if (scanCancelled)
+            {
+                SetSelection(item => false);
+                EditorUtility.DisplayDialog("批量音频导入设置", "扫描已取消。当前结果不完整，不能应用。", "确定");
+            }
+
             Repaint();
         }
 
         private void ApplySelectedSettings()
         {
+            if (!scanCompleted)
+            {
+                EditorUtility.DisplayDialog("批量音频导入设置", "扫描结果不完整或已失效，请重新扫描。", "确定");
+                return;
+            }
+
             var selectedItems = results.Where(item => item.selected && item.hasConfig).ToList();
             if (selectedItems.Count == 0)
                 return;
@@ -303,7 +336,7 @@ namespace GameFramework.Editor
                 $"• 长音乐/循环（Music 或 Loop，≥ {StreamingMinSeconds:F0}s）：Streaming + Vorbis，Quality {MusicVorbisQuality:F2}，保留采样率（{streamingCount} 个）\n" +
                 $"• 高频白名单（≤ {FrequentMaxSeconds:F1}s）：Decompress On Load + ADPCM，优化采样率（{frequentCount} 个）\n" +
                 $"• 其他已配置音效：Compressed In Memory + Vorbis，Quality {SfxVorbisQuality:F2}，优化采样率（{compressedCount} 个）\n" +
-                $"• Force To Mono：明确 3D、左右声道完全相同或原本已启用（{monoCount} 个）\n\n" +
+                $"• Force To Mono（跨平台）：明确 3D、左右声道完全相同或原本已启用（{monoCount} 个）\n\n" +
                 "默认平台设置和 Preload Audio Data 保持不变。是否继续？";
 
             if (!EditorUtility.DisplayDialog(
@@ -317,34 +350,51 @@ namespace GameFramework.Editor
 
             var changedCount = 0;
             var processedCount = 0;
+            var cancelled = false;
+            var failures = new List<string>();
             try
             {
                 for (int i = 0; i < selectedItems.Count; i++)
                 {
                     var item = selectedItems[i];
                     if (EditorUtility.DisplayCancelableProgressBar("应用音频导入设置", item.path, i / (float)selectedItems.Count))
-                        break;
-
-                    var importer = AssetImporter.GetAtPath(item.path) as AudioImporter;
-                    if (importer == null)
-                        continue;
-
-                    var settingsChanged =
-                        !importer.ContainsSampleSettingsOverride("Android") ||
-                        !importer.ContainsSampleSettingsOverride("iOS") ||
-                        !SampleSettingsEqual(importer.GetOverrideSampleSettings("Android"), item.targetSettings) ||
-                        !SampleSettingsEqual(importer.GetOverrideSampleSettings("iOS"), item.targetSettings);
-                    var monoChanged = importer.forceToMono != item.targetForceToMono;
-                    if (settingsChanged || monoChanged)
                     {
-                        importer.SetOverrideSampleSettings("Android", item.targetSettings);
-                        importer.SetOverrideSampleSettings("iOS", item.targetSettings);
-                        importer.forceToMono = item.targetForceToMono;
-                        importer.SaveAndReimport();
-                        changedCount++;
+                        cancelled = true;
+                        break;
                     }
 
-                    processedCount++;
+                    try
+                    {
+                        var importer = AssetImporter.GetAtPath(item.path) as AudioImporter;
+                        if (importer == null)
+                        {
+                            failures.Add($"{item.path}: 资源不再是 AudioImporter");
+                            continue;
+                        }
+
+                        var settingsChanged =
+                            !importer.ContainsSampleSettingsOverride("Android") ||
+                            !importer.ContainsSampleSettingsOverride("iOS") ||
+                            !SampleSettingsEqual(importer.GetOverrideSampleSettings("Android"), item.targetSettings) ||
+                            !SampleSettingsEqual(importer.GetOverrideSampleSettings("iOS"), item.targetSettings);
+                        var monoChanged = importer.forceToMono != item.targetForceToMono;
+                        if (settingsChanged || monoChanged)
+                        {
+                            if (!TryApplyImporterSettings(importer, item, out var failureReason))
+                            {
+                                failures.Add($"{item.path}: {failureReason}");
+                                continue;
+                            }
+
+                            changedCount++;
+                        }
+
+                        processedCount++;
+                    }
+                    catch (Exception exception)
+                    {
+                        failures.Add($"{item.path}: {exception.Message}");
+                    }
                 }
             }
             finally
@@ -353,8 +403,82 @@ namespace GameFramework.Editor
             }
 
             ScanAudioClips();
-            Debug.Log($"批量音频导入设置完成：处理 {processedCount} 个，修改 {changedCount} 个。");
-            EditorUtility.DisplayDialog("批量音频导入设置", $"完成。\n处理: {processedCount}\n修改: {changedCount}", "确定");
+            var status = cancelled ? "已取消，已完成的修改不会回滚。" : "执行完成。";
+            var summary = $"{status}\n处理: {processedCount}\n修改: {changedCount}\n失败: {failures.Count}";
+            if (failures.Count > 0)
+                summary += "\n\n失败详情：\n" + string.Join("\n", failures);
+
+            Debug.Log($"批量音频导入设置：{summary}");
+            EditorUtility.DisplayDialog("批量音频导入设置", summary, "确定");
+        }
+
+        private static bool TryApplyImporterSettings(
+            AudioImporter importer,
+            AudioImportItem item,
+            out string failureReason)
+        {
+            var hadAndroidOverride = importer.ContainsSampleSettingsOverride("Android");
+            var hadIosOverride = importer.ContainsSampleSettingsOverride("iOS");
+            var previousAndroidSettings = hadAndroidOverride
+                ? importer.GetOverrideSampleSettings("Android")
+                : default;
+            var previousIosSettings = hadIosOverride
+                ? importer.GetOverrideSampleSettings("iOS")
+                : default;
+            var previousForceToMono = importer.forceToMono;
+
+            if (!importer.SetOverrideSampleSettings("Android", item.targetSettings))
+            {
+                failureReason = "Android 平台不支持目标导入设置";
+                return false;
+            }
+
+            if (!importer.SetOverrideSampleSettings("iOS", item.targetSettings))
+            {
+                RestorePlatformOverride(importer, "Android", hadAndroidOverride, previousAndroidSettings);
+                failureReason = "iOS 平台不支持目标导入设置";
+                return false;
+            }
+
+            try
+            {
+                importer.forceToMono = item.targetForceToMono;
+                importer.SaveAndReimport();
+            }
+            catch
+            {
+                RestorePlatformOverride(importer, "Android", hadAndroidOverride, previousAndroidSettings);
+                RestorePlatformOverride(importer, "iOS", hadIosOverride, previousIosSettings);
+                importer.forceToMono = previousForceToMono;
+                throw;
+            }
+
+            var reloadedImporter = AssetImporter.GetAtPath(item.path) as AudioImporter;
+            if (reloadedImporter == null ||
+                !reloadedImporter.ContainsSampleSettingsOverride("Android") ||
+                !reloadedImporter.ContainsSampleSettingsOverride("iOS") ||
+                !SampleSettingsEqual(reloadedImporter.GetOverrideSampleSettings("Android"), item.targetSettings) ||
+                !SampleSettingsEqual(reloadedImporter.GetOverrideSampleSettings("iOS"), item.targetSettings) ||
+                reloadedImporter.forceToMono != item.targetForceToMono)
+            {
+                failureReason = "重新导入后设置校验失败";
+                return false;
+            }
+
+            failureReason = null;
+            return true;
+        }
+
+        private static void RestorePlatformOverride(
+            AudioImporter importer,
+            string platform,
+            bool hadOverride,
+            AudioImporterSampleSettings previousSettings)
+        {
+            if (hadOverride)
+                importer.SetOverrideSampleSettings(platform, previousSettings);
+            else
+                importer.ClearSampleSettingOverride(platform);
         }
 
         private static AudioCategory Classify(string assetName, float lengthSeconds, SoundConfigEntry soundConfig)
@@ -399,9 +523,9 @@ namespace GameFramework.Editor
             return settings;
         }
 
-        private static bool TryLoadSoundConfig(out Dictionary<string, SoundConfigEntry> soundConfigByName)
+        private static bool TryLoadSoundConfig(out Dictionary<string, SoundConfigEntry> soundConfigByPath)
         {
-            soundConfigByName = new Dictionary<string, SoundConfigEntry>(StringComparer.OrdinalIgnoreCase);
+            soundConfigByPath = new Dictionary<string, SoundConfigEntry>(StringComparer.OrdinalIgnoreCase);
             if (!File.Exists(SoundConfigPath))
             {
                 EditorUtility.DisplayDialog("批量音频导入设置", $"声音配置不存在：\n{SoundConfigPath}", "确定");
@@ -419,7 +543,16 @@ namespace GameFramework.Editor
                 {
                     if (entry == null || string.IsNullOrEmpty(entry.AssetName))
                         continue;
-                    soundConfigByName[entry.AssetName] = entry;
+                    var folder = entry.SoundGroupId == 1 ? "Music" : "Sound";
+                    var assetPath = $"Assets/GameAsset/Audio/{folder}/{entry.AssetName}.wav";
+                    if (!soundConfigByPath.TryGetValue(assetPath, out var existingEntry))
+                    {
+                        soundConfigByPath.Add(assetPath, entry);
+                    }
+                    else if (!SoundConfigEntriesEqual(existingEntry, entry))
+                    {
+                        throw new InvalidDataException($"Sound.json 中同一音频存在冲突配置：{assetPath}");
+                    }
                 }
 
                 return true;
@@ -429,6 +562,13 @@ namespace GameFramework.Editor
                 EditorUtility.DisplayDialog("批量音频导入设置", $"Sound.json 解析失败：\n{exception.Message}", "确定");
                 return false;
             }
+        }
+
+        private static bool SoundConfigEntriesEqual(SoundConfigEntry left, SoundConfigEntry right)
+        {
+            return left.SoundGroupId == right.SoundGroupId &&
+                   left.Loop == right.Loop &&
+                   Mathf.Approximately(left.SpatialBlend, right.SpatialBlend);
         }
 
         private static AudioImporterSampleSettings GetEffectivePlatformSettings(AudioImporter importer, string platform)
@@ -444,54 +584,82 @@ namespace GameFramework.Editor
                 return false;
             if (soundConfig != null && soundConfig.SpatialBlend > 0f)
                 return true;
+            if (!string.Equals(Path.GetExtension(assetPath), ".wav", StringComparison.OrdinalIgnoreCase))
+                return false;
             return HasIdenticalStereoChannels(assetPath);
         }
 
         private static bool HasIdenticalStereoChannels(string assetPath)
         {
-            var bytes = File.ReadAllBytes(Path.GetFullPath(assetPath));
+            byte[] bytes;
+            try
+            {
+                bytes = File.ReadAllBytes(Path.GetFullPath(assetPath));
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"音频声道检查失败：{assetPath}\n{exception.Message}");
+                return false;
+            }
+
             if (bytes.Length < 44 || ReadFourCc(bytes, 0) != "RIFF" || ReadFourCc(bytes, 8) != "WAVE")
                 return false;
 
-            var offset = 12;
+            var offset = 12L;
             var channels = 0;
             var bitsPerSample = 0;
+            var blockAlign = 0;
             var format = 0;
-            var dataOffset = 0;
-            var dataLength = 0;
-            while (offset + 8 <= bytes.Length)
+            var dataOffset = 0L;
+            var dataLength = 0L;
+            while (offset + 8L <= bytes.LongLength)
             {
-                var chunkId = ReadFourCc(bytes, offset);
-                var chunkLength = BitConverter.ToInt32(bytes, offset + 4);
-                var chunkDataOffset = offset + 8;
-                if (chunkLength < 0 || chunkDataOffset + chunkLength > bytes.Length)
+                var chunkOffset = (int)offset;
+                var chunkId = ReadFourCc(bytes, chunkOffset);
+                var chunkLength = BitConverter.ToUInt32(bytes, chunkOffset + 4);
+                var chunkDataOffset = offset + 8L;
+                var chunkEnd = chunkDataOffset + chunkLength;
+                if (chunkEnd > bytes.LongLength)
                     return false;
 
                 if (chunkId == "fmt " && chunkLength >= 16)
                 {
-                    format = BitConverter.ToUInt16(bytes, chunkDataOffset);
-                    channels = BitConverter.ToUInt16(bytes, chunkDataOffset + 2);
-                    bitsPerSample = BitConverter.ToUInt16(bytes, chunkDataOffset + 14);
+                    var fmtOffset = (int)chunkDataOffset;
+                    format = BitConverter.ToUInt16(bytes, fmtOffset);
+                    channels = BitConverter.ToUInt16(bytes, fmtOffset + 2);
+                    blockAlign = BitConverter.ToUInt16(bytes, fmtOffset + 12);
+                    bitsPerSample = BitConverter.ToUInt16(bytes, fmtOffset + 14);
                 }
-                else if (chunkId == "data")
+                else if (chunkId == "data" && dataOffset == 0L)
                 {
                     dataOffset = chunkDataOffset;
                     dataLength = chunkLength;
                 }
 
-                offset = chunkDataOffset + chunkLength + (chunkLength & 1);
+                offset = chunkEnd + (chunkLength & 1U);
             }
 
-            if (format != 1 || channels != 2 || dataOffset == 0 || bitsPerSample % 8 != 0)
+            if (format != 1 || channels != 2 || dataOffset == 0L || dataLength == 0L ||
+                bitsPerSample <= 0 || bitsPerSample % 8 != 0)
+            {
                 return false;
+            }
 
             var bytesPerSample = bitsPerSample / 8;
-            var frameSize = bytesPerSample * 2;
-            for (int frameOffset = dataOffset; frameOffset + frameSize <= dataOffset + dataLength; frameOffset += frameSize)
+            var frameSize = bytesPerSample * channels;
+            if (bytesPerSample <= 0 || frameSize <= 0 || blockAlign != frameSize || dataLength < frameSize ||
+                dataLength % frameSize != 0)
             {
+                return false;
+            }
+
+            var dataEnd = dataOffset + dataLength;
+            for (long frameOffset = dataOffset; frameOffset + frameSize <= dataEnd; frameOffset += frameSize)
+            {
+                var frameIndex = (int)frameOffset;
                 for (int byteIndex = 0; byteIndex < bytesPerSample; byteIndex++)
                 {
-                    if (bytes[frameOffset + byteIndex] != bytes[frameOffset + bytesPerSample + byteIndex])
+                    if (bytes[frameIndex + byteIndex] != bytes[frameIndex + bytesPerSample + byteIndex])
                         return false;
                 }
             }

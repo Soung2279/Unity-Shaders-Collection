@@ -25,7 +25,7 @@ public class LootBootVFXtoExcel : EditorWindow
     private VFXRowData cachedMatchedRow = null;
     private string prefabMatchWarning = "";
 
-    // ── 10 项配置字段 ─────────────────────────────────────────
+    // ── 11 项配置字段 ─────────────────────────────────────────
     private string fieldId = "";
     private string fieldRemark = "";
     private string fieldName = "";
@@ -36,6 +36,7 @@ public class LootBootVFXtoExcel : EditorWindow
     private int fieldAttachPoint;      // 下拉 0-1
     private int fieldRotationRule;     // 下拉 0-2
     private string fieldSoundId = "";
+    private bool fieldIsHit;
 
     // ── 下拉选项 ──────────────────────────────────────────────
     private static readonly string[] VFX_TYPE_OPTIONS =
@@ -240,6 +241,9 @@ public class LootBootVFXtoExcel : EditorWindow
                 new GUIContent("音效 ID", "与该特效绑定播放的音效配置 ID。\n只接受整数，留空默认写入 0。"),
                 fieldSoundId);
             EditorGUIUtility.labelWidth = 148f;
+            fieldIsHit = EditorGUILayout.Toggle(
+                new GUIContent("是否为受击特效", "关闭写入 0（非受击特效）；开启写入 1（受击特效）。"),
+                fieldIsHit);
         }
 
         EditorGUILayout.Space(6f);
@@ -297,6 +301,12 @@ public class LootBootVFXtoExcel : EditorWindow
                 GUILayout.Height(26f)))
                 CheckRangeSize();
 
+            GUI.backgroundColor = new Color(1f, 0.65f, 0.65f);
+            if (GUILayout.Button(new GUIContent("受击检查",
+                "打开所有 IsHit=1 的受击特效配置，支持编辑、保存及参数回填。"),
+                GUILayout.Height(26f)))
+                OpenHitCheck();
+
             GUI.backgroundColor = savedBgPrev;
         }
 
@@ -322,6 +332,7 @@ public class LootBootVFXtoExcel : EditorWindow
         fieldAttachPoint  = 0;
         fieldRotationRule = 0;
         fieldSoundId      = "";
+        fieldIsHit        = false;
         scrollPos         = Vector2.zero;
         cachedMatchedRow   = null;
         prefabMatchWarning = "";
@@ -466,7 +477,8 @@ public class LootBootVFXtoExcel : EditorWindow
         sb.Append($"\"scaleFactor\":{IntFieldToJson(fieldScaleFactor)},");
         sb.Append($"\"attachPoint\":{fieldAttachPoint},");
         sb.Append($"\"rotationRule\":{fieldRotationRule},");
-        sb.Append($"\"soundId\":{IntFieldToJson(fieldSoundId)}");
+        sb.Append($"\"soundId\":{IntFieldToJson(fieldSoundId)},");
+        sb.Append($"\"isHit\":{(fieldIsHit ? 1 : 0)}");
         sb.Append("}");
 
         string tempJson = Path.GetTempFileName();
@@ -486,7 +498,7 @@ public class LootBootVFXtoExcel : EditorWindow
                 {
                     EditorUtility.DisplayDialog("成功", "配置已成功覆盖写入 Excel。", "确定");
                     RefreshCache();
-                    OpenPreviewTable(overwriteId);
+                    OpenPreviewTable(overwriteId, preserveHitOnlyMode: true);
                 }
                 else if (proc.ExitCode == 9009)
                 {
@@ -557,7 +569,8 @@ public class LootBootVFXtoExcel : EditorWindow
         sb.Append($"\"scaleFactor\":{IntFieldToJson(fieldScaleFactor)},");
         sb.Append($"\"attachPoint\":{fieldAttachPoint},");
         sb.Append($"\"rotationRule\":{fieldRotationRule},");
-        sb.Append($"\"soundId\":{IntFieldToJson(fieldSoundId)}");
+        sb.Append($"\"soundId\":{IntFieldToJson(fieldSoundId)},");
+        sb.Append($"\"isHit\":{(fieldIsHit ? 1 : 0)}");
         sb.Append("}");
 
         // 写入临时 JSON 文件（避免命令行转义问题）
@@ -573,7 +586,7 @@ public class LootBootVFXtoExcel : EditorWindow
                 EditorUtility.DisplayDialog("成功", "配置已成功写入 Excel。", "确定");
                 RefreshCache();
                 if (int.TryParse(fieldId.Trim(), out int savedId))
-                    OpenPreviewTable(savedId);
+                    OpenPreviewTable(savedId, preserveHitOnlyMode: true);
             }
         }
         finally
@@ -645,6 +658,7 @@ public class LootBootVFXtoExcel : EditorWindow
         fieldRangeSize    = row.rangeSize;
         fieldScaleFactor  = row.scaleFactor;
         fieldSoundId      = row.soundId;
+        fieldIsHit        = row.isHit == "1";
 
         if (int.TryParse(row.vfxType, out int vt) && vt >= 0 && vt < VFX_TYPE_OPTIONS.Length)
             fieldVFXType = vt;
@@ -671,6 +685,7 @@ public class LootBootVFXtoExcel : EditorWindow
         public string attachPoint;
         public string rotationRule;
         public string soundId;
+        public string isHit;
     }
 
     /// <summary>JSON 缓存数组的包装器，供 QuickPreview 反序列化使用。</summary>
@@ -774,30 +789,50 @@ public class LootBootVFXtoExcel : EditorWindow
         }
     }
 
+    private void OpenHitCheck()
+    {
+        if (!EnsurePreviewCache())
+            return;
+
+        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData,
+            highlightId: -1, hitOnlyMode: true);
+    }
+
+    private bool EnsurePreviewCache()
+    {
+        if (File.Exists(cachePath))
+            return true;
+
+        bool doRefresh = EditorUtility.DisplayDialog(
+            "缓存不存在",
+            "尚未生成数据缓存，是否立即从 Excel 导出？",
+            "立即生成", "取消");
+        if (!doRefresh)
+            return false;
+
+        string cacheErr = RefreshCache();
+        if (File.Exists(cachePath))
+            return true;
+
+        string detail = string.IsNullOrEmpty(cacheErr)
+            ? "缓存文件未生成，原因未知。"
+            : cacheErr;
+        EditorUtility.DisplayDialog("缓存生成失败", detail, "确定");
+        return false;
+    }
+
     /// <summary>
     /// 打开全表预览窗口。若缓存不存在则弹窗询问是否立即生成。
     /// </summary>
     /// <param name="highlightId">需高亮定位的行 ID；-1 表示不高亮。</param>
-    private void OpenPreviewTable(int highlightId = -1)
+    /// <param name="preserveHitOnlyMode">受击检查窗口已打开时，是否保持其筛选模式。</param>
+    private void OpenPreviewTable(int highlightId = -1, bool preserveHitOnlyMode = false)
     {
-        if (!File.Exists(cachePath))
-        {
-            bool doRefresh = EditorUtility.DisplayDialog(
-                "缓存不存在",
-                "尚未生成数据缓存，是否立即从 Excel 导出？",
-                "立即生成", "取消");
-            if (!doRefresh) return;
-            string cacheErr = RefreshCache();
-            if (!File.Exists(cachePath))
-            {
-                string detail = string.IsNullOrEmpty(cacheErr)
-                    ? "缓存文件未生成，原因未知。"
-                    : cacheErr;
-                EditorUtility.DisplayDialog("缓存生成失败", detail, "确定");
-                return;
-            }
-        }
-        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData, highlightId);
+        if (!EnsurePreviewCache())
+            return;
+
+        bool hitOnlyMode = preserveHitOnlyMode && VFXTablePreviewWindow.IsHitOnlyWindowOpen();
+        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData, highlightId, hitOnlyMode);
     }
 
     /// <summary>

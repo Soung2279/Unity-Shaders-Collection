@@ -583,6 +583,7 @@ public class VFXRangeSizeCheckWindow : EditorWindow
             batch.Append($"\"attachPoint\":{IntFieldToJson(row.attachPoint)},");
             batch.Append($"\"rotationRule\":{IntFieldToJson(row.rotationRule)},");
             batch.Append($"\"soundId\":{IntFieldToJson(row.soundId)},");
+            batch.Append($"\"isHit\":{IntFieldToJson(row.isHit)},");
             batch.Append($"\"remark\":\"{EscapeJson(row.remark)}\"");
             batch.Append("}");
         }
