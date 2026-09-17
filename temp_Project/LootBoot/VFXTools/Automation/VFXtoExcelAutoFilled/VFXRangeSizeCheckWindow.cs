@@ -584,6 +584,8 @@ public class VFXRangeSizeCheckWindow : EditorWindow
             batch.Append($"\"rotationRule\":{IntFieldToJson(row.rotationRule)},");
             batch.Append($"\"soundId\":{IntFieldToJson(row.soundId)},");
             batch.Append($"\"isHit\":{IntFieldToJson(row.isHit)},");
+            batch.Append($"\"isShock\":{IntFieldToJson(row.isShock)},");
+            batch.Append($"\"shockLateTime\":{NonNegativeIntFieldToJson(row.shockLateTime)},");
             batch.Append($"\"remark\":\"{EscapeJson(row.remark)}\"");
             batch.Append("}");
         }
@@ -695,6 +697,9 @@ public class VFXRangeSizeCheckWindow : EditorWindow
         psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
         return psi;
     }
+
+    private static string NonNegativeIntFieldToJson(string s) =>
+        int.TryParse((s ?? "").Trim(), out int value) && value >= 0 ? value.ToString() : "0";
 
     private static string IntFieldToJson(string s) =>
         string.IsNullOrWhiteSpace(s) ? "null" : (int.TryParse(s.Trim(), out int v) ? v.ToString() : "null");

@@ -57,6 +57,37 @@ def int_to_str(value):
     return "" if value is None else str(value)
 
 
+def strict_int(value, field_name):
+    if value is None or value == '':
+        return None
+    try:
+        parsed_float = float(value)
+        parsed = int(parsed_float)
+    except (ValueError, TypeError, OverflowError):
+        raise ValueError(f"{field_name} 必须为整数。")
+    if parsed_float != parsed:
+        raise ValueError(f"{field_name} 必须为整数。")
+    return parsed
+
+
+def normalize_binary(value, field_name):
+    parsed = strict_int(value, field_name)
+    if parsed is None:
+        return 0
+    if parsed not in (0, 1):
+        raise ValueError(f"{field_name} 只能为 0 或 1。")
+    return parsed
+
+
+def normalize_non_negative_int(value, field_name):
+    parsed = strict_int(value, field_name)
+    if parsed is None:
+        return 0
+    if parsed < 0:
+        raise ValueError(f"{field_name} 只能为大于等于 0 的整数。")
+    return parsed
+
+
 def read_row_data(ws, row):
     return {
         "rowIndex": int_to_str(row + 1),
@@ -70,7 +101,9 @@ def read_row_data(ws, row):
         "attachPoint": int_to_str(cell_int(ws.cell_value(row, 7))),
         "rotationRule": int_to_str(cell_int(ws.cell_value(row, 8))),
         "soundId": int_to_str(cell_int(ws.cell_value(row, 9))),
-        "isHit": int_to_str(cell_int(ws.cell_value(row, 10))),
+        "isHit": int_to_str(normalize_binary(ws.cell_value(row, 10), "IsHit")),
+        "isShock": int_to_str(normalize_binary(ws.cell_value(row, 11), "IsShock")),
+        "shockLateTime": int_to_str(normalize_non_negative_int(ws.cell_value(row, 12), "ShockLateTime")),
     }
 
 
@@ -86,7 +119,9 @@ def build_row_values(data):
         to_cell(data['attachPoint']),
         to_cell(data['rotationRule']),
         to_cell(data['soundId']),
-        to_cell(data.get('isHit', 0)),
+        normalize_binary(data.get('isHit', 0), "IsHit"),
+        normalize_binary(data.get('isShock', 0), "IsShock"),
+        normalize_non_negative_int(data.get('shockLateTime', 0), "ShockLateTime"),
     ]
 
 
@@ -462,4 +497,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except ValueError as exc:
+        print(f"错误：{exc}")
+        sys.exit(3)

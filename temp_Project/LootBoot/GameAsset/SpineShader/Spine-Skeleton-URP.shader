@@ -1,6 +1,8 @@
 Shader "Universal Render Pipeline/Spine/Skeleton" {
     Properties {
         [NoScaleOffset] _MainTex("Spine图集", 2D) = "black" {}
+        [HDR]_BaseColor("基础填充色", Color) = (1,1,1,1)
+        _BaseColorPhase("基础填充进度", Range(0, 1)) = 0
         [Toggle(_STRAIGHT_ALPHA_INPUT)] _StraightAlphaInput("// 启用图集Alpha值 //", Int) = 0
         [Toggle(_ZWRITE)] _ZWrite("// 启用深度写入 //", Float) = 0.0
         _Cutoff("阴影Alpha阈值", Range(0,1)) = 0.1
@@ -157,4 +159,5 @@ Shader "Universal Render Pipeline/Spine/Skeleton" {
     }
 
     FallBack "Universal Render Pipeline/Unlit"
+    CustomEditor "ShaderGUI_SpineSkeletonURP"
 }

@@ -1,5 +1,6 @@
 ﻿using Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial;
 using Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon;
+using Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,11 +8,12 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck
 {
     public class ArtAssetBatchCheckWindow : EditorWindow
     {
-        private static readonly string[] TabNames = { "粒子/材质", "Spine角色武器" };
+        private static readonly string[] TabNames = { "粒子/材质", "Spine角色武器", "序列帧动画" };
 
         private int _selectedTab;
         private ParticlePrefabCollectorWindow _particleWindow;
         private SpineWeaponPreviewWindow _spineWindow;
+        private SpriteAnimPreviewWindow _spriteAnimWindow;
 
         [MenuItem("TATools/VFXTools/美术资源批量检查")]
         public static void Open()
@@ -39,6 +41,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 ParticlePrefabCollectorWindow.CancelParticlePreviewLifecycle();
+                SpriteAnimPreviewWindow.CancelSpriteAnimPreviewLifecycle();
             }
             DestroyChildWindows();
         }
@@ -69,6 +72,10 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck
                         _spineWindow.position = childRect;
                         _spineWindow.DrawToolGUI();
                         break;
+                    case 2:
+                        _spriteAnimWindow.position = childRect;
+                        _spriteAnimWindow.DrawToolGUI();
+                        break;
                 }
             }
         }
@@ -86,6 +93,12 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck
                 _spineWindow = CreateInstance<SpineWeaponPreviewWindow>();
                 _spineWindow.hideFlags = HideFlags.HideAndDontSave;
             }
+
+            if (_spriteAnimWindow == null)
+            {
+                _spriteAnimWindow = CreateInstance<SpriteAnimPreviewWindow>();
+                _spriteAnimWindow.hideFlags = HideFlags.HideAndDontSave;
+            }
         }
 
         private void DestroyChildWindows()
@@ -100,6 +113,12 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck
             {
                 DestroyImmediate(_spineWindow);
                 _spineWindow = null;
+            }
+
+            if (_spriteAnimWindow != null)
+            {
+                DestroyImmediate(_spriteAnimWindow);
+                _spriteAnimWindow = null;
             }
         }
     }

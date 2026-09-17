@@ -79,7 +79,12 @@ half4 frag(VertexOutput i) : SV_Target{
     baseColor = texColor.rgb * i.color.rgb;
 #endif
 
-    // 填充效果
+    // 常驻的第二层填充色。先于程序受击 Fill 应用，确保受击闪白仍可覆盖它。
+    if (_BaseColorPhase > 0.001) {
+        baseColor = lerp(baseColor, (_BaseColor.rgb * finalAlpha), _BaseColorPhase);
+    }
+
+    // 程序控制的填充效果（例如受击闪白）
 #if defined(_FILL_ON)
     if (_FillPhase > 0.001) {
         baseColor = lerp(baseColor, (_FillColor.rgb * finalAlpha), _FillPhase);
@@ -121,6 +126,8 @@ half4 frag(VertexOutput i) : SV_Target{
 #endif
 
 
-    return half4(baseColor, saturate(finalAlpha));
+    // _BaseColor.a 保留为最终透明度控制，兼容 RendererAlphaPropertyBlockController。
+    // RGB 已作为独立 Fill 参与上方混合，不再执行乘色。
+    return half4(baseColor * _BaseColor.a, saturate(finalAlpha * _BaseColor.a));
 }
 #endif

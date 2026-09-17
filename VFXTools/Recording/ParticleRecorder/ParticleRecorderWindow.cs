@@ -6,6 +6,14 @@ using UnityEngine;
 
 namespace Game.Editor.VFXTools.Recording.ParticleRecorder
 {
+// ── 预制体输出类型 ─────────────────────────────────────────────────────────────
+/// <summary>录制完成后生成的预制体类型。</summary>
+public enum ParticleRecorderOutputType
+{
+    [UnityEngine.InspectorName("粒子系统")]        ParticleSystem    = 0,
+    [UnityEngine.InspectorName("SpriteAnimation")] SpriteAnimation   = 1,
+}
+
 // ── Play Mode 状态监听（跨 Domain Reload 存活）────────────────────────────────
 [InitializeOnLoad]
 public static class ParticleRecorderPlayModeWatcher
@@ -33,6 +41,7 @@ public static class ParticleRecorderPlayModeWatcher
         string matOutPath       = EditorPrefs.GetString(ParticleRecorderRuntime.KeyMatOutPath,         "");
         string tempSourcePrefab = EditorPrefs.GetString(ParticleRecorderRuntime.KeyTempSourcePrefab,   "");
         float  duration         = EditorPrefs.GetFloat(ParticleRecorderRuntime.KeyDuration, 2f);
+        int    outputType       = EditorPrefs.GetInt  (ParticleRecorderRuntime.KeyPrefabOutputType, 0);
         int    totalFrames      = Mathf.CeilToInt(
             duration *
             EditorPrefs.GetInt  (ParticleRecorderRuntime.KeyFrameRate, 25));
@@ -54,14 +63,16 @@ public static class ParticleRecorderPlayModeWatcher
         // ── 合成图集 ──────────────────────────────────────────────────────
         string framesDir   = Path.Combine(exportPath, prefabName);
         string atlasPath   = Path.Combine(exportPath, $"{prefabName}_atlas.png");
-        string atlasResult = AtlasGenerator.Generate(framesDir, atlasPath, frameWidth, frameHeight);
+        string atlasResult = AtlasGenerator.Generate(framesDir, atlasPath, frameWidth, frameHeight,
+            EditorPrefs.GetBool(ParticleRecorderRuntime.KeyKeepPngSequence, false));
 
         // ── 生成预制体（需设置样板预制体）────────────────────────────────
         string prefabResult = null;
         if (atlasResult != null && !string.IsNullOrEmpty(templatePath))
         {
             AssetDatabase.Refresh();
-            prefabResult = PrefabGenerator.Generate(
+            prefabResult = PrefabOutputGenerator.Generate(
+                (ParticleRecorderOutputType)outputType,
                 templatePath, atlasResult, prefabOutPath, matOutPath, prefabName, cols, rows, duration);
         }
 
@@ -110,6 +121,7 @@ public class ParticleRecorderWindow : EditorWindow
     private const string TempScenePath = "Assets/_ParticleRecorderTemp.unity";
     private const string TempSourcePrefabPath = "Assets/_ParticleRecorderSourceTemp.prefab";
     private const string DefaultTemplatePrefabPath = "Assets/Editor/VFXTools/Recording/ParticleRecorder/ARec Sample.prefab";
+    private const string DefaultSpriteTemplatePrefabPath = "Assets/Editor/VFXTools/Recording/ParticleRecorder/ARec SpriteSample.prefab";
     private const string DefaultSeqRelativePath = "RecordedParticles/Frames";
     private const string DefaultPrefabRelativePath = "RecordedParticles/Prefabs";
     private const string DefaultMatRelativePath = "RecordedParticles/Materials";
@@ -123,6 +135,8 @@ public class ParticleRecorderWindow : EditorWindow
     private const string PrefPrefabOutPath  = "PR_Pref_PrefabOutPath";
     private const string PrefMatOutPath     = "PR_Pref_MatOutPath";
     private const string PrefFastRecord     = "PR_Pref_FastRecord";
+    private const string PrefKeepPngSequence = "PR_Pref_KeepPngSequence";
+    private const string PrefOutputType      = "PR_Pref_OutputType";
 
     private enum FrameResolution
     {
@@ -136,6 +150,7 @@ public class ParticleRecorderWindow : EditorWindow
     // ── 界面字段 ─────────────────────────────────────────────────────────
     private GameObject   prefabToRecord;      // 需要录制的特效预制体
     private GameObject   prefabTemplate;      // 空特效样板预制体（用于后续生成）
+    private GameObject   spriteTemplate;      // 内置 SpriteAnimation 模板（用于序列动画预制体生成）
     private int          frameRate   = 25;    // 导出帧率
     private float        duration    = 2f;    // 录制时长（秒）
     private FrameResolution resolution = FrameResolution._512;  // 单帧分辨率
@@ -144,6 +159,8 @@ public class ParticleRecorderWindow : EditorWindow
     private string     prefabPath  = "";    // 预制体输出路径
     private string     matPath     = "";    // 材质输出路径
     private bool       fastRecord  = true;  // 启用快速录制（编辑模式下录制）
+    private bool       keepPngSequence;      // 合并图集后保留PNG序列
+    private ParticleRecorderOutputType outputType = ParticleRecorderOutputType.ParticleSystem; // 输出预制体类型
 
     // ── 滚动视图 / 预览 ───────────────────────────────────────────────
     private Vector2    scroll;
@@ -215,7 +232,10 @@ public class ParticleRecorderWindow : EditorWindow
         prefabPath = EditorPrefs.GetString(PrefPrefabOutPath, GetDefaultPrefabPath());
         matPath    = EditorPrefs.GetString(PrefMatOutPath, GetDefaultMatPath());
         fastRecord = EditorPrefs.GetBool  (PrefFastRecord,  true);
+        keepPngSequence = EditorPrefs.GetBool(PrefKeepPngSequence, false);
+        outputType = (ParticleRecorderOutputType)EditorPrefs.GetInt(PrefOutputType, (int)ParticleRecorderOutputType.ParticleSystem);
         prefabTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultTemplatePrefabPath);
+        spriteTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultSpriteTemplatePrefabPath);
         SceneView.duringSceneGui += OnSceneGUI;
     }
 
@@ -243,6 +263,8 @@ public class ParticleRecorderWindow : EditorWindow
         EditorPrefs.SetString(PrefPrefabOutPath, prefabPath);
         EditorPrefs.SetString(PrefMatOutPath,     matPath);
         EditorPrefs.SetBool  (PrefFastRecord,     fastRecord);
+        EditorPrefs.SetBool  (PrefKeepPngSequence, keepPngSequence);
+        EditorPrefs.SetInt   (PrefOutputType,     (int)outputType);
     }
 
     // ── 绘制 ────────────────────────────────────────────────────────────────
@@ -261,10 +283,29 @@ public class ParticleRecorderWindow : EditorWindow
             new GUIContent("需要转换的特效", "需要录制的粒子系统预制体或场景对象，拖入或点击右侧按钮选择"),
             prefabToRecord, typeof(GameObject), true);
 
-        prefabTemplate = (GameObject)EditorGUILayout.ObjectField(
-            new GUIContent("样板预制体", "不填只生成图集；填写后会额外生成带序列帧材质的特效预制体"),
-            prefabTemplate, typeof(GameObject), false);
-        EditorGUILayout.HelpBox("样板预制体为空时只生成图集；需要自动生成特效预制体时请保留或指定样板预制体。", MessageType.Info);
+        outputType = (ParticleRecorderOutputType)EditorGUILayout.EnumPopup(
+            new GUIContent("预制体类型", "粒子系统：生成带 TextureSheetAnimation 的粒子预制体\nSpriteAnimation：生成由 SpriteAnimation 脚本驱动的序列动画预制体"),
+            outputType);
+
+        if (outputType == ParticleRecorderOutputType.ParticleSystem)
+        {
+            prefabTemplate = (GameObject)EditorGUILayout.ObjectField(
+                new GUIContent("样板预制体", "不填只生成图集；填写后会额外生成带序列帧材质的特效预制体"),
+                prefabTemplate, typeof(GameObject), false);
+            EditorGUILayout.HelpBox("样板预制体为空时只生成图集；需要自动生成特效预制体时请保留或指定样板预制体。", MessageType.Info);
+        }
+        else
+        {
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.ObjectField(
+                new GUIContent("样板预制体", "SpriteAnimation 模式使用内置模板，不可修改"),
+                spriteTemplate, typeof(GameObject), false);
+            EditorGUI.EndDisabledGroup();
+            if (spriteTemplate == null)
+                EditorGUILayout.HelpBox($"未找到内置模板：{DefaultSpriteTemplatePrefabPath}", MessageType.Error);
+            else
+                EditorGUILayout.HelpBox("将使用内置模板 ARec SpriteSample 生成由 SpriteAnimation 脚本驱动的序列动画预制体。", MessageType.Info);
+        }
 
         // ── 录制参数 ─────────────────────────────────────────────────────────
         EditorGUILayout.Space(6);
@@ -324,6 +365,9 @@ public class ParticleRecorderWindow : EditorWindow
         fastRecord = EditorGUILayout.ToggleLeft(
             new GUIContent("启用快速录制（推荐）", "勾选后在编辑模式下直接模拟粒子并渲染，无需进入 Play Mode"),
             fastRecord);
+        keepPngSequence = EditorGUILayout.ToggleLeft(
+            new GUIContent("保持PNG序列", "图集合并完成后保留用于合并的PNG序列，文件名按帧序号排列"),
+            keepPngSequence);
         if (!fastRecord)
             EditorGUILayout.HelpBox("兼容模式会切换临时场景并进入 Play Mode，录制完成后再恢复原场景。", MessageType.Warning);
         if (!string.IsNullOrEmpty(blockReason))
@@ -421,8 +465,12 @@ public class ParticleRecorderWindow : EditorWindow
         prefabPath = EditorPrefs.GetString(PrefPrefabOutPath, GetDefaultPrefabPath());
         matPath    = EditorPrefs.GetString(PrefMatOutPath, GetDefaultMatPath());
         fastRecord = EditorPrefs.GetBool  (PrefFastRecord,  true);
+        keepPngSequence = EditorPrefs.GetBool(PrefKeepPngSequence, false);
+        outputType = (ParticleRecorderOutputType)EditorPrefs.GetInt(PrefOutputType, (int)ParticleRecorderOutputType.ParticleSystem);
         if (prefabTemplate == null)
             prefabTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultTemplatePrefabPath);
+        if (spriteTemplate == null)
+            spriteTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultSpriteTemplatePrefabPath);
     }
 
     private void CreatePreviewInstance(GameObject source)
@@ -474,9 +522,12 @@ public class ParticleRecorderWindow : EditorWindow
         string pathError = GetPathsOutsideAssetsError(dataPath);
         if (!string.IsNullOrEmpty(pathError)) return pathError;
 
+        if (IsSpriteOutput && GetEffectiveTemplate() == null)
+            return $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}";
+
         var missing = new System.Text.StringBuilder();
         CheckRequiredPath("序列帧输出路径", seqPath, missing);
-        if (prefabTemplate != null)
+        if (GetEffectiveTemplate() != null)
         {
             CheckRequiredPath("预制体输出路径", prefabPath, missing);
             CheckRequiredPath("材质输出路径", matPath, missing);
@@ -487,6 +538,21 @@ public class ParticleRecorderWindow : EditorWindow
     private static bool ContainsParticleSystem(GameObject go)
     {
         return go != null && go.GetComponentInChildren<ParticleSystem>(true) != null;
+    }
+
+    private bool IsSpriteOutput => outputType == ParticleRecorderOutputType.SpriteAnimation;
+
+    /// <summary>当前模式实际使用的样板预制体。</summary>
+    private GameObject GetEffectiveTemplate()
+    {
+        return IsSpriteOutput ? spriteTemplate : prefabTemplate;
+    }
+
+    /// <summary>当前模式实际使用的样板预制体资产路径。</summary>
+    private string GetEffectiveTemplatePath()
+    {
+        var template = GetEffectiveTemplate();
+        return template != null ? AssetDatabase.GetAssetPath(template) : "";
     }
 
     private static string GetDefaultSeqPath()
@@ -551,9 +617,12 @@ public class ParticleRecorderWindow : EditorWindow
         if (pendingContextConfirmation) return "请先在右键转换确认区确认或取消当前预览。";
         if (prefabToRecord == null) return "请选择需要转换的特效预制体或场景对象。";
         if (!ContainsParticleSystem(prefabToRecord)) return "选择的对象不包含 ParticleSystem，无法转换。";
+        if (IsSpriteOutput && GetEffectiveTemplate() == null)
+            return $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}";
+
         var missing = new System.Text.StringBuilder();
         CheckRequiredPath("序列帧输出路径", seqPath, missing);
-        if (prefabTemplate != null)
+        if (GetEffectiveTemplate() != null)
         {
             CheckRequiredPath("预制体输出路径", prefabPath, missing);
             CheckRequiredPath("材质输出路径", matPath, missing);
@@ -636,11 +705,11 @@ public class ParticleRecorderWindow : EditorWindow
         };
 
         bool step1Done = prefabToRecord != null;
-        bool step2Done = prefabTemplate != null;
+        bool step2Done = GetEffectiveTemplate() != null;
         bool step3Done = frameRate >= 1 && duration >= 0.1f;
         bool step4Done = pathsValid
             && !string.IsNullOrWhiteSpace(seqPath)
-            && (prefabTemplate == null
+            && (GetEffectiveTemplate() == null
                 || (!string.IsNullOrWhiteSpace(prefabPath) && !string.IsNullOrWhiteSpace(matPath)));
 
         // 步骤 4 的颜色：有路径填写但不合法 → 红；合法 → 绿；未填写 → 灰
@@ -748,8 +817,14 @@ public class ParticleRecorderWindow : EditorWindow
     private void StartRecording()
     {
         if (prefabToRecord == null) return;
-        if (prefabTemplate != null && !PrefabGenerator.ValidateTemplate(
-                prefabTemplate, AssetDatabase.GetAssetPath(prefabTemplate)))
+        var template = GetEffectiveTemplate();
+        if (IsSpriteOutput && template == null)
+        {
+            EditorUtility.DisplayDialog("缺少模板",
+                $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}", "确定");
+            return;
+        }
+        if (template != null && !PrefabOutputGenerator.Validate(outputType, template, GetEffectiveTemplatePath()))
             return;
         if (!ContainsParticleSystem(prefabToRecord))
         {
@@ -767,8 +842,8 @@ public class ParticleRecorderWindow : EditorWindow
         EditorPrefs.SetString(ParticleRecorderRuntime.KeyLastPrefabResult, "");
         EditorPrefs.SetString(ParticleRecorderRuntime.KeyLastAtlasResult, "");
         EditorPrefs.SetString(ParticleRecorderRuntime.KeyLastOutputDir, seqPath);
-        EditorPrefs.SetString(ParticleRecorderRuntime.KeyTemplatePrefabPath,
-            prefabTemplate != null ? AssetDatabase.GetAssetPath(prefabTemplate) : "");
+        EditorPrefs.SetString(ParticleRecorderRuntime.KeyTemplatePrefabPath, GetEffectiveTemplatePath());
+        EditorPrefs.SetInt   (ParticleRecorderRuntime.KeyPrefabOutputType,  (int)outputType);
         EditorPrefs.SetString(ParticleRecorderRuntime.KeyPrefabName,    prefabToRecord.name);
         EditorPrefs.SetString(ParticleRecorderRuntime.KeyExportPath,    seqPath);
         EditorPrefs.SetString(ParticleRecorderRuntime.KeyPrefabOutPath, prefabPath);
@@ -781,6 +856,7 @@ public class ParticleRecorderWindow : EditorWindow
         EditorPrefs.SetFloat (ParticleRecorderRuntime.KeyDuration,      duration);
         EditorPrefs.SetInt   (ParticleRecorderRuntime.KeyWidth,         (int)resolution);
         EditorPrefs.SetInt   (ParticleRecorderRuntime.KeyHeight,        (int)resolution);
+        EditorPrefs.SetBool  (ParticleRecorderRuntime.KeyKeepPngSequence, keepPngSequence);
 
         // 清除预览对象及 Selection，防止 NewScene 销毁旧场景时触发
         // GameObjectInspector.OnEnable 对已销毁 GO 抛 SerializedObjectNotCreatableException
@@ -833,8 +909,14 @@ public class ParticleRecorderWindow : EditorWindow
     private void StartFastRecording()
     {
         if (prefabToRecord == null) return;
-        if (prefabTemplate != null && !PrefabGenerator.ValidateTemplate(
-                prefabTemplate, AssetDatabase.GetAssetPath(prefabTemplate)))
+        var template = GetEffectiveTemplate();
+        if (IsSpriteOutput && template == null)
+        {
+            EditorUtility.DisplayDialog("缺少模板",
+                $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}", "确定");
+            return;
+        }
+        if (template != null && !PrefabOutputGenerator.Validate(outputType, template, GetEffectiveTemplatePath()))
             return;
         if (!ContainsParticleSystem(prefabToRecord))
         {
@@ -1016,16 +1098,16 @@ public class ParticleRecorderWindow : EditorWindow
         int    cols        = Mathf.CeilToInt(Mathf.Sqrt(totalFrames));
         int    rows        = Mathf.CeilToInt((float)totalFrames / cols);
         string atlasPath   = Path.Combine(seqPath, $"{prefabName}_atlas.png");
-        string atlasResult = AtlasGenerator.Generate(realFolder, atlasPath, res, res);
+        string atlasResult = AtlasGenerator.Generate(realFolder, atlasPath, res, res, keepPngSequence);
 
         // 生成预制体
         string prefabResult      = null;
-        string templateAssetPath = prefabTemplate != null ? AssetDatabase.GetAssetPath(prefabTemplate) : "";
+        string templateAssetPath = GetEffectiveTemplatePath();
         if (atlasResult != null && !string.IsNullOrEmpty(templateAssetPath))
         {
             AssetDatabase.Refresh();
-            prefabResult = PrefabGenerator.Generate(
-                templateAssetPath, atlasResult, prefabPath, matPath, prefabName, cols, rows, duration);
+            prefabResult = PrefabOutputGenerator.Generate(
+                outputType, templateAssetPath, atlasResult, prefabPath, matPath, prefabName, cols, rows, duration);
         }
 
         // 更新结果消息
@@ -1076,7 +1158,7 @@ public static class AtlasGenerator
     /// <param name="frameWidth">单帧宽度（px）</param>
     /// <param name="frameHeight">单帧高度（px）</param>
     /// <returns>实际写入的路径；若无帧或出错则返回 null</returns>
-    public static string Generate(string framesDir, string outputPath, int frameWidth, int frameHeight)
+    public static string Generate(string framesDir, string outputPath, int frameWidth, int frameHeight, bool keepPngSequence)
     {
         if (!Directory.Exists(framesDir))
         {
@@ -1130,15 +1212,22 @@ public static class AtlasGenerator
 
         Debug.Log($"[AtlasGenerator] 图集已保存：{outputPath}  ({atlasW}×{atlasH}, {cols}列×{rows}行, {n} 帧)");
 
-        foreach (string f in files)
+        if (!keepPngSequence)
         {
-            try { File.Delete(f); }
-            catch (Exception e) { Debug.LogWarning($"[AtlasGenerator] 删除序列帧失败：{f}\n{e.Message}"); }
+            foreach (string f in files)
+            {
+                try { File.Delete(f); }
+                catch (Exception e) { Debug.LogWarning($"[AtlasGenerator] 删除序列帧失败：{f}\n{e.Message}"); }
+            }
+            if (Directory.GetFiles(framesDir).Length == 0 && Directory.GetDirectories(framesDir).Length == 0)
+            {
+                try { Directory.Delete(framesDir); }
+                catch (Exception e) { Debug.LogWarning($"[AtlasGenerator] 删除目录失败：{framesDir}\n{e.Message}"); }
+            }
         }
-        if (Directory.GetFiles(framesDir).Length == 0 && Directory.GetDirectories(framesDir).Length == 0)
+        else
         {
-            try { Directory.Delete(framesDir); }
-            catch (Exception e) { Debug.LogWarning($"[AtlasGenerator] 删除目录失败：{framesDir}\n{e.Message}"); }
+            Debug.Log($"[AtlasGenerator] 已保留 {n} 张序列帧PNG：{framesDir}");
         }
 
         return outputPath;
@@ -1363,6 +1452,220 @@ public static class PrefabGenerator
         string message = $"序列帧模板校验失败，已终止转换。\n\n模板：{templatePath}\n原因：{reason}";
         Debug.LogError($"[PrefabGenerator] {message}");
         EditorUtility.DisplayDialog("序列帧模板错误", message, "确定");
+    }
+}
+
+// ── SpriteAnimation 预制体生成 ────────────────────────────────────────────────────────
+/// <summary>
+/// 根据 SpriteAnimation 样板预制体和图集，生成由 SpriteAnimation 脚本驱动的序列动画预制体。
+/// 模板结构：空父物体（挂 SpriteAnimation）- 子轴点物体 - 特效面片。
+/// </summary>
+public static class SpriteAnimationPrefabGenerator
+{
+    public static bool ValidateTemplate(GameObject templateRoot, string templatePath)
+    {
+        return TryGetTargets(templateRoot, templatePath, out _, out _);
+    }
+
+    public static string Generate(string templatePrefabAssetPath, string atlasFilePath,
+        string prefabOutDir, string matOutDir, string prefabName, int cols, int rows, float duration)
+    {
+        if (string.IsNullOrEmpty(templatePrefabAssetPath))
+        {
+            Debug.LogWarning("[SpriteAnimationPrefabGenerator] 未设置样板预制体，跳过预制体生成。");
+            return null;
+        }
+
+        var templatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(templatePrefabAssetPath);
+        if (templatePrefab == null)
+        {
+            Debug.LogWarning($"[SpriteAnimationPrefabGenerator] 无法加载样板预制体：{templatePrefabAssetPath}");
+            return null;
+        }
+
+        if (!TryGetTargets(templatePrefab, templatePrefabAssetPath, out _, out var templateRenderer))
+            return null;
+
+        string dataPath = Application.dataPath.Replace('\\', '/');
+        string outDir   = prefabOutDir.Replace('\\', '/').TrimEnd('/');
+        if (!outDir.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.LogWarning($"[SpriteAnimationPrefabGenerator] 预制体输出路径不在 Assets 内：{prefabOutDir}");
+            return null;
+        }
+
+        string assetOutDir = "Assets" + outDir.Substring(dataPath.Length);
+        if (!Directory.Exists(outDir))
+            Directory.CreateDirectory(outDir);
+
+        string matDir = string.IsNullOrEmpty(matOutDir)
+            ? outDir
+            : matOutDir.Replace('\\', '/').TrimEnd('/');
+        if (!matDir.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.LogWarning($"[SpriteAnimationPrefabGenerator] 材质输出路径不在 Assets 内：{matOutDir}，将回退到预制体输出目录。");
+            matDir = outDir;
+        }
+        string assetMatDir = "Assets" + matDir.Substring(dataPath.Length);
+        if (!Directory.Exists(matDir))
+            Directory.CreateDirectory(matDir);
+
+        string atlasSourceNorm = Path.GetFullPath(atlasFilePath).Replace('\\', '/');
+        string atlasAssetPath;
+        if (atlasSourceNorm.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase))
+        {
+            atlasAssetPath = "Assets" + atlasSourceNorm.Substring(dataPath.Length);
+        }
+        else
+        {
+            string atlasDestAbs = Path.GetFullPath(Path.Combine(outDir, $"{prefabName}_atlas.png")).Replace('\\', '/');
+            if (!string.Equals(atlasSourceNorm, atlasDestAbs, StringComparison.OrdinalIgnoreCase))
+                File.Copy(atlasFilePath, atlasDestAbs, overwrite: true);
+            atlasAssetPath = $"{assetOutDir}/{prefabName}_atlas.png";
+        }
+        AssetDatabase.ImportAsset(atlasAssetPath, ImportAssetOptions.ForceUpdate);
+
+        if (AssetImporter.GetAtPath(atlasAssetPath) is TextureImporter ti)
+        {
+            ti.textureType         = TextureImporterType.Default;
+            ti.alphaIsTransparency = true;
+            ti.mipmapEnabled       = false;
+            ti.SaveAndReimport();
+        }
+
+        var atlasTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(atlasAssetPath);
+        if (atlasTexture == null)
+        {
+            Debug.LogError($"[SpriteAnimationPrefabGenerator] 图集纹理导入失败：{atlasAssetPath}");
+            return null;
+        }
+
+        // 复制模板子面片上的材质，并写入图集贴图
+        string matAssetPath = $"{assetMatDir}/{prefabName}_spriteMat.mat";
+        if (AssetDatabase.LoadAssetAtPath<Material>(matAssetPath) != null)
+            AssetDatabase.DeleteAsset(matAssetPath);
+
+        var srcMat = templateRenderer != null ? templateRenderer.sharedMaterial : null;
+        if (srcMat != null)
+        {
+            string srcMatPath = AssetDatabase.GetAssetPath(srcMat);
+            if (!string.IsNullOrEmpty(srcMatPath))
+                AssetDatabase.CopyAsset(srcMatPath, matAssetPath);
+            else
+                AssetDatabase.CreateAsset(new Material(srcMat), matAssetPath);
+        }
+        else
+        {
+            AssetDatabase.CreateAsset(
+                new Material(Shader.Find("Universal Render Pipeline/Unlit")
+                          ?? Shader.Find("Unlit/Texture")), matAssetPath);
+        }
+
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(matAssetPath);
+        if (mat == null)
+        {
+            Debug.LogError($"[SpriteAnimationPrefabGenerator] 材质创建失败：{matAssetPath}");
+            return null;
+        }
+        mat.mainTexture = atlasTexture;
+        if (mat.HasProperty("_BaseMap"))
+            mat.SetTexture("_BaseMap", atlasTexture);
+        EditorUtility.SetDirty(mat);
+        AssetDatabase.SaveAssets();
+
+        // 实例化模板并应用
+        var go = (GameObject)PrefabUtility.InstantiatePrefab(templatePrefab);
+        PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+
+        if (!TryGetTargets(go, templatePrefabAssetPath, out var animation, out var targetRenderer))
+        {
+            UnityEngine.Object.DestroyImmediate(go);
+            return null;
+        }
+
+        targetRenderer.sharedMaterial = mat;
+
+        var so = new SerializedObject(animation);
+        SerializedProperty textureProp  = so.FindProperty("texture");
+        SerializedProperty rendererProp = so.FindProperty("meshRenderer");
+        SerializedProperty durationProp = so.FindProperty("duration");
+        SerializedProperty rowsProp     = so.FindProperty("rows");
+        SerializedProperty columnsProp  = so.FindProperty("columns");
+
+        if (textureProp != null) textureProp.objectReferenceValue = atlasTexture;
+        if (rendererProp != null && rendererProp.objectReferenceValue == null)
+            rendererProp.objectReferenceValue = targetRenderer;
+        if (durationProp != null) durationProp.floatValue = Mathf.Max(0.0001f, duration);
+        if (rowsProp != null)     rowsProp.intValue       = Mathf.Max(1, rows);
+        if (columnsProp != null)  columnsProp.intValue    = Mathf.Max(1, cols);
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        string prefabAssetPath = $"{assetOutDir}/{prefabName}_Sprite.prefab";
+        PrefabUtility.SaveAsPrefabAsset(go, prefabAssetPath);
+        UnityEngine.Object.DestroyImmediate(go);
+
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[SpriteAnimationPrefabGenerator] 预制体已生成：{prefabAssetPath}  (图集 {cols}×{rows}，时长 {duration:F2}s)");
+        return prefabAssetPath;
+    }
+
+    private static bool TryGetTargets(GameObject root, string templatePath,
+        out SpriteAnimation animation, out MeshRenderer renderer)
+    {
+        animation = null;
+        renderer  = null;
+
+        if (root == null)
+        {
+            ShowTemplateError(templatePath, "模板对象为空。");
+            return false;
+        }
+
+        animation = root.GetComponentInChildren<SpriteAnimation>(true);
+        if (animation == null)
+        {
+            ShowTemplateError(templatePath, "模板中未找到 SpriteAnimation 组件。");
+            return false;
+        }
+
+        renderer = animation.Renderer != null ? animation.Renderer : root.GetComponentInChildren<MeshRenderer>(true);
+        if (renderer == null)
+        {
+            ShowTemplateError(templatePath, "模板中未找到可用的子面片 MeshRenderer。");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ShowTemplateError(string templatePath, string reason)
+    {
+        string message = $"SpriteAnimation 模板校验失败，已终止转换。\n\n模板：{templatePath}\n原因：{reason}";
+        Debug.LogError($"[SpriteAnimationPrefabGenerator] {message}");
+        EditorUtility.DisplayDialog("SpriteAnimation 模板错误", message, "确定");
+    }
+}
+
+// ── 预制体生成分派 ──────────────────────────────────────────────────────────────────
+/// <summary>按录制输出类型分派到对应的预制体生成器。</summary>
+public static class PrefabOutputGenerator
+{
+    public static bool Validate(ParticleRecorderOutputType type, GameObject template, string templatePath)
+    {
+        return type == ParticleRecorderOutputType.SpriteAnimation
+            ? SpriteAnimationPrefabGenerator.ValidateTemplate(template, templatePath)
+            : PrefabGenerator.ValidateTemplate(template, templatePath);
+    }
+
+    public static string Generate(ParticleRecorderOutputType type, string templatePrefabAssetPath,
+        string atlasFilePath, string prefabOutDir, string matOutDir, string prefabName,
+        int cols, int rows, float duration)
+    {
+        return type == ParticleRecorderOutputType.SpriteAnimation
+            ? SpriteAnimationPrefabGenerator.Generate(
+                templatePrefabAssetPath, atlasFilePath, prefabOutDir, matOutDir, prefabName, cols, rows, duration)
+            : PrefabGenerator.Generate(
+                templatePrefabAssetPath, atlasFilePath, prefabOutDir, matOutDir, prefabName, cols, rows, duration);
     }
 }
 }

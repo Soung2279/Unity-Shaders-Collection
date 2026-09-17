@@ -13,6 +13,7 @@ namespace GameFramework.Editor
     public class MapDecorationPrefabBrushWindow : EditorWindow
     {
         private const string DefaultPaletteRoot = "Assets/Art/Tiles/Palette";
+        private const string DefaultSpriteRoot = "Assets/Art/Sprite/Map";
         private const string DefaultPrefabRoot = "Assets/Art/Tiles/PrefabBrushPrefabs";
         private const string DefaultBrushRoot = "Assets/Art/Tiles/PrefabBrushes";
 
@@ -20,6 +21,7 @@ namespace GameFramework.Editor
         private readonly Dictionary<string, bool> _selectionCache = new Dictionary<string, bool>();
 
         private string _paletteRoot = DefaultPaletteRoot;
+        private string _spriteRoot = DefaultSpriteRoot;
         private string _prefabRoot = DefaultPrefabRoot;
         private string _brushRoot = DefaultBrushRoot;
         private string _includeKeywords = "tree,stone,rock,zhalan,barrier,zhuangshi,flower,cao";
@@ -33,6 +35,7 @@ namespace GameFramework.Editor
         private bool _createPrefabBrushAssets = true;
         private Vector3 _brushAnchor = new Vector3(0.5f, 0.5f, 0.5f);
         private Vector2 _scrollPos;
+        private SourceMode _sourceMode;
 
         [MenuItem("Game Framework/Map/装饰物 Prefab Brush 生成器", false, 91)]
         public static void OpenWindow()
@@ -45,7 +48,7 @@ namespace GameFramework.Editor
         private void OnEnable()
         {
             if (_themes.Count == 0)
-                ScanPalettes();
+                ScanSource();
         }
 
         private void OnGUI()
@@ -65,15 +68,24 @@ namespace GameFramework.Editor
 
         private void DrawPathSettings()
         {
-            EditorGUILayout.LabelField("资源路径", EditorStyles.boldLabel);
-            _paletteRoot = EditorGUILayout.TextField("Palette Root", _paletteRoot);
+            EditorGUILayout.LabelField("资源来源", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            _sourceMode = (SourceMode)GUILayout.Toolbar((int)_sourceMode, new[] { "Tile Palette", "Sprite 文件夹" });
+            if (EditorGUI.EndChangeCheck())
+                ScanSource();
+
+            if (_sourceMode == SourceMode.TilePalette)
+                _paletteRoot = EditorGUILayout.TextField("Palette Root", _paletteRoot);
+            else
+                _spriteRoot = EditorGUILayout.TextField("Sprite Root", _spriteRoot);
+
             _prefabRoot = EditorGUILayout.TextField("Prefab输出目录", _prefabRoot);
             _brushRoot = EditorGUILayout.TextField("PrefabBrush输出目录", _brushRoot);
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("重新扫描Palette", GUILayout.Width(140)))
-                ScanPalettes();
+            if (GUILayout.Button("重新扫描", GUILayout.Width(140)))
+                ScanSource();
             EditorGUILayout.EndHorizontal();
         }
 
@@ -100,7 +112,7 @@ namespace GameFramework.Editor
             EditorGUILayout.LabelField("主题", EditorStyles.boldLabel);
             if (_themes.Count == 0)
             {
-                EditorGUILayout.HelpBox("未扫描到Palette。", MessageType.Warning);
+                EditorGUILayout.HelpBox("未扫描到可用资源。", MessageType.Warning);
                 return;
             }
 
@@ -130,12 +142,12 @@ namespace GameFramework.Editor
             if (theme == null)
                 return;
 
-            EditorGUILayout.LabelField($"{theme.Name} Tile列表", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"{theme.Name} 资源列表", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("选", GUILayout.Width(24));
-            GUILayout.Label("Tile", GUILayout.Width(190));
+            GUILayout.Label("来源", GUILayout.Width(190));
             GUILayout.Label("Sprite", GUILayout.Width(190));
-            GUILayout.Label("Palette坐标", GUILayout.Width(100));
+            GUILayout.Label(_sourceMode == SourceMode.TilePalette ? "Palette坐标" : "类型", GUILayout.Width(100));
             GUILayout.Label("路径");
             EditorGUILayout.EndHorizontal();
 
@@ -150,11 +162,11 @@ namespace GameFramework.Editor
 
                 using (new EditorGUI.DisabledScope(true))
                 {
-                    EditorGUILayout.ObjectField(item.TileBase, typeof(TileBase), false, GUILayout.Width(190));
+                    EditorGUILayout.ObjectField(item.TileBase != null ? (UnityEngine.Object)item.TileBase : item.Sprite, item.TileBase != null ? typeof(TileBase) : typeof(Sprite), false, GUILayout.Width(190));
                     EditorGUILayout.ObjectField(item.Sprite, typeof(Sprite), false, GUILayout.Width(190));
                 }
 
-                GUILayout.Label(item.FirstPosition.ToString(), GUILayout.Width(100));
+                GUILayout.Label(_sourceMode == SourceMode.TilePalette ? item.FirstPosition.ToString() : "Sprite", GUILayout.Width(100));
                 GUILayout.Label(item.TilePath, EditorStyles.miniLabel);
                 EditorGUILayout.EndHorizontal();
             }
@@ -200,6 +212,14 @@ namespace GameFramework.Editor
 
                 yield return item;
             }
+        }
+
+        private void ScanSource()
+        {
+            if (_sourceMode == SourceMode.TilePalette)
+                ScanPalettes();
+            else
+                ScanSprites();
         }
 
         private void ScanPalettes()
@@ -272,6 +292,56 @@ namespace GameFramework.Editor
 
             _themes.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
             _themeIndex = Mathf.Clamp(_themeIndex, 0, Mathf.Max(0, _themes.Count - 1));
+        }
+
+        private void ScanSprites()
+        {
+            SaveSelectionCache();
+            _themes.Clear();
+
+            if (!AssetDatabase.IsValidFolder(_spriteRoot))
+                return;
+
+            var root = _spriteRoot.TrimEnd('/');
+            var themeMap = new Dictionary<string, ThemeData>();
+            var spriteGuids = AssetDatabase.FindAssets("t:Sprite", new[] { root });
+            foreach (var guid in spriteGuids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null)
+                    continue;
+
+                var themeName = GetSpriteThemeName(root, path);
+                if (!themeMap.TryGetValue(themeName, out var theme))
+                {
+                    theme = new ThemeData { Name = themeName };
+                    themeMap.Add(themeName, theme);
+                }
+
+                theme.Items.Add(new TileItem
+                {
+                    Name = sprite.name,
+                    TilePath = path,
+                    Sprite = sprite,
+                    Selected = GetCachedSelection(path)
+                });
+            }
+
+            foreach (var theme in themeMap.Values)
+            {
+                theme.Items.Sort((a, b) => string.CompareOrdinal(a.TilePath, b.TilePath));
+                _themes.Add(theme);
+            }
+            _themes.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
+            _themeIndex = Mathf.Clamp(_themeIndex, 0, Mathf.Max(0, _themes.Count - 1));
+        }
+
+        private static string GetSpriteThemeName(string root, string assetPath)
+        {
+            var relative = assetPath.Substring(root.Length).TrimStart('/');
+            var slash = relative.IndexOf('/');
+            return slash > 0 ? relative.Substring(0, slash) : Path.GetFileName(root);
         }
 
         private static Sprite GetSpriteBySerializedTile(TileBase tileBase)
@@ -359,7 +429,7 @@ namespace GameFramework.Editor
             var validThemes = themes.Where(t => t != null && t.SelectedCount > 0).ToList();
             if (validThemes.Count == 0)
             {
-                EditorUtility.DisplayDialog("装饰物PrefabBrush生成器", "没有勾选任何Tile。", "确定");
+                EditorUtility.DisplayDialog("装饰物PrefabBrush生成器", "没有勾选任何资源。", "确定");
                 return;
             }
 
@@ -471,6 +541,12 @@ namespace GameFramework.Editor
                 : item.Name;
 
             return SanitizeFileName(baseName) + ".prefab";
+        }
+
+        private enum SourceMode
+        {
+            TilePalette,
+            SpriteFolder
         }
 
         private static string SanitizeFileName(string fileName)

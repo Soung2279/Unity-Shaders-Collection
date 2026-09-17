@@ -11,6 +11,8 @@
 CBUFFER_START(UnityPerMaterial)
 float4 _MainTex_ST;
 half _Cutoff;
+half4 _BaseColor;
+half _BaseColorPhase;
 half4 _Color;
 half4 _Black;
 half4 _FillColor;

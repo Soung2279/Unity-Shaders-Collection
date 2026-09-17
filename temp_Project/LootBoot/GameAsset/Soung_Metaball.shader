@@ -128,8 +128,8 @@ Shader "Soung/Effect/Metaballs"
             // Metaball: field = sum(1/|P-Ci|^2), iso-surface at field >= threshold
             // MAX_BLOBS: compile-time constant, runtime loop uses break to limit iterations
             // -------------------------------------------------------
-            #define MAX_BLOBS 16
-            #define TWO_PI    6.28318530718
+            #define MAX_BLOBS       16
+            #define METABALL_TWO_PI 6.28318530718
 
             half4 frag(Varyings input) : SV_Target
             {
@@ -145,7 +145,7 @@ Shader "Soung/Effect/Metaballs"
                 // 使用 [unroll] + step() 替代 [loop]+break，避免部分 Android GLES 3.0 驱动
                 // 对 fragment shader 中 uniform 控制的动态循环产生兼容性问题
                 float field   = 0.0;
-                float radStep = TWO_PI / blobCount;   // 提到循环外，避免每次迭代重复除法
+                float radStep = METABALL_TWO_PI / blobCount;   // 提到循环外，避免每次迭代重复除法
                 [unroll]
                 for (int k = 0; k < MAX_BLOBS; k++)
                 {

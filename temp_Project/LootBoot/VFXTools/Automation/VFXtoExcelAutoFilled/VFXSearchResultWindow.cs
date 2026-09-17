@@ -26,7 +26,7 @@ public class VFXSearchResultWindow : EditorWindow
     private int selectedIndex = -1;
 
     private static readonly string[] VFX_TYPE_LABELS =
-        { "Spine特效", "粒子特效", "复合特效" };
+        { "Spine特效", "粒子特效", "复合特效", "序列帧特效" };
 
     internal static void Open(
         List<LootBootVFXtoExcel.VFXRowData> results,

@@ -25,22 +25,24 @@ public class LootBootVFXtoExcel : EditorWindow
     private VFXRowData cachedMatchedRow = null;
     private string prefabMatchWarning = "";
 
-    // ── 11 项配置字段 ─────────────────────────────────────────
+    // ── 13 项配置字段 ─────────────────────────────────────────
     private string fieldId = "";
     private string fieldRemark = "";
     private string fieldName = "";
     private string fieldResource = "";
-    private int fieldVFXType;          // 下拉 0-2
+    private int fieldVFXType;          // 下拉 0-3
     private string fieldRangeSize = "";
     private string fieldScaleFactor = "";
     private int fieldAttachPoint;      // 下拉 0-1
     private int fieldRotationRule;     // 下拉 0-2
     private string fieldSoundId = "";
     private bool fieldIsHit;
+    private bool fieldIsShock;
+    private int fieldShockLateTime;
 
     // ── 下拉选项 ──────────────────────────────────────────────
     private static readonly string[] VFX_TYPE_OPTIONS =
-        { "0 - Spine特效", "1 - 粒子特效", "2 - 复合特效" };
+        { "0 - Spine特效", "1 - 粒子特效", "2 - 复合特效", "3 - 序列帧特效" };
 
     private static readonly string[] ATTACH_POINT_OPTIONS =
         { "0 - 物体原点", "1 - 物体中心点", "2 - 物体头部" };
@@ -193,7 +195,7 @@ public class LootBootVFXtoExcel : EditorWindow
                 new GUIContent("名称", "特效配置的唯一名称，不允许与已有记录重名。拖入预制体时自动填入预制体名称。"),
                 fieldName);
             fieldVFXType = EditorGUILayout.Popup(
-                new GUIContent("特效类型", "0 - Spine骨骼动画特效\n1 - 粒子系统特效\n2 - 复合特效（含 SpriteRenderer 子节点）\n拖入预制体时自动检测。"),
+                new GUIContent("特效类型", "0 - Spine骨骼动画特效\n1 - 粒子系统特效\n2 - 复合特效（含 SpriteRenderer 子节点）\n3 - 序列帧特效（挂载 SpriteAnimation）\n拖入预制体时自动检测。"),
                 fieldVFXType, VFX_TYPE_OPTIONS);
 
         }
@@ -244,6 +246,12 @@ public class LootBootVFXtoExcel : EditorWindow
             fieldIsHit = EditorGUILayout.Toggle(
                 new GUIContent("是否为受击特效", "关闭写入 0（非受击特效）；开启写入 1（受击特效）。"),
                 fieldIsHit);
+            fieldIsShock = EditorGUILayout.Toggle(
+                new GUIContent("是否触发震屏", "关闭写入 0；开启写入 1，使该特效播放时触发相机抖动旋转。"),
+                fieldIsShock);
+            fieldShockLateTime = Mathf.Max(0, EditorGUILayout.IntField(
+                new GUIContent("震屏延时（×0.01秒）", "相机抖动旋转的延迟时间，表格值 × 0.01 = 实际秒数。\n例如填写 20，实际延迟 0.2 秒。只接受大于等于 0 的整数。"),
+                fieldShockLateTime));
         }
 
         EditorGUILayout.Space(6f);
@@ -307,6 +315,12 @@ public class LootBootVFXtoExcel : EditorWindow
                 GUILayout.Height(26f)))
                 OpenHitCheck();
 
+            GUI.backgroundColor = new Color(1f, 0.82f, 0.35f);
+            if (GUILayout.Button(new GUIContent("震屏检查",
+                "打开所有 IsShock=1 的震屏特效配置，支持编辑、保存及参数回填。"),
+                GUILayout.Height(26f)))
+                OpenShockCheck();
+
             GUI.backgroundColor = savedBgPrev;
         }
 
@@ -333,6 +347,8 @@ public class LootBootVFXtoExcel : EditorWindow
         fieldRotationRule = 0;
         fieldSoundId      = "";
         fieldIsHit        = false;
+        fieldIsShock      = false;
+        fieldShockLateTime = 0;
         scrollPos         = Vector2.zero;
         cachedMatchedRow   = null;
         prefabMatchWarning = "";
@@ -365,7 +381,7 @@ public class LootBootVFXtoExcel : EditorWindow
             fieldRangeSize = Mathf.RoundToInt(col.radius * 100f).ToString();
         // 若根物体无此组件则保持原值不变
 
-        // ── 3. 特效类型（优先级：Spine > 粒子 > 复合）─────────────
+        // ── 3. 特效类型（优先级：序列帧 > Spine > 复合 > 粒子）─────
         fieldVFXType = DetectVFXType(prefab);
 
         // ── 4. 名称与 ID（仅新增模式）────────────────────────────
@@ -383,15 +399,23 @@ public class LootBootVFXtoExcel : EditorWindow
 
     /// <summary>
     /// 通过组件分析判断特效类型。
-    /// 0 = Spine特效，1 = 粒子特效，2 = 复合特效。
-    /// 判断优先级：Spine组件存在 → 0；
-    /// 根物体有 SpriteRenderer → 2（复合）；
-    /// 其余（全为粒子系统） → 1。
+    /// 0 = Spine特效，1 = 粒子特效，2 = 复合特效，3 = 序列帧特效。
+    /// 判断优先级：SpriteAnimation组件存在 → 3；Spine组件存在 → 0；
+    /// 子物体有 SpriteRenderer → 2（复合）；其余（全为粒子系统） → 1。
     /// </summary>
     internal static int DetectVFXType(GameObject prefab)
     {
-        // 检测 Spine：通过组件类型名判断，避免硬引用 Spine 程序集
         Component[] allComponents = prefab.GetComponentsInChildren<Component>(true);
+
+        // 序列帧特效：通过组件类型名判断，避免主工具程序集硬引用运行时代码。
+        foreach (Component c in allComponents)
+        {
+            if (c == null) continue;
+            if (c.GetType().Name == "SpriteAnimation")
+                return 3;
+        }
+
+        // 检测 Spine：通过组件类型名判断，避免硬引用 Spine 程序集
         foreach (Component c in allComponents)
         {
             if (c == null) continue;
@@ -478,7 +502,9 @@ public class LootBootVFXtoExcel : EditorWindow
         sb.Append($"\"attachPoint\":{fieldAttachPoint},");
         sb.Append($"\"rotationRule\":{fieldRotationRule},");
         sb.Append($"\"soundId\":{IntFieldToJson(fieldSoundId)},");
-        sb.Append($"\"isHit\":{(fieldIsHit ? 1 : 0)}");
+        sb.Append($"\"isHit\":{(fieldIsHit ? 1 : 0)},");
+        sb.Append($"\"isShock\":{(fieldIsShock ? 1 : 0)},");
+        sb.Append($"\"shockLateTime\":{fieldShockLateTime}");
         sb.Append("}");
 
         string tempJson = Path.GetTempFileName();
@@ -498,7 +524,7 @@ public class LootBootVFXtoExcel : EditorWindow
                 {
                     EditorUtility.DisplayDialog("成功", "配置已成功覆盖写入 Excel。", "确定");
                     RefreshCache();
-                    OpenPreviewTable(overwriteId, preserveHitOnlyMode: true);
+                    OpenPreviewTable(overwriteId, preserveFilteredMode: true);
                 }
                 else if (proc.ExitCode == 9009)
                 {
@@ -570,7 +596,9 @@ public class LootBootVFXtoExcel : EditorWindow
         sb.Append($"\"attachPoint\":{fieldAttachPoint},");
         sb.Append($"\"rotationRule\":{fieldRotationRule},");
         sb.Append($"\"soundId\":{IntFieldToJson(fieldSoundId)},");
-        sb.Append($"\"isHit\":{(fieldIsHit ? 1 : 0)}");
+        sb.Append($"\"isHit\":{(fieldIsHit ? 1 : 0)},");
+        sb.Append($"\"isShock\":{(fieldIsShock ? 1 : 0)},");
+        sb.Append($"\"shockLateTime\":{fieldShockLateTime}");
         sb.Append("}");
 
         // 写入临时 JSON 文件（避免命令行转义问题）
@@ -586,7 +614,7 @@ public class LootBootVFXtoExcel : EditorWindow
                 EditorUtility.DisplayDialog("成功", "配置已成功写入 Excel。", "确定");
                 RefreshCache();
                 if (int.TryParse(fieldId.Trim(), out int savedId))
-                    OpenPreviewTable(savedId, preserveHitOnlyMode: true);
+                    OpenPreviewTable(savedId, preserveFilteredMode: true);
             }
         }
         finally
@@ -659,6 +687,10 @@ public class LootBootVFXtoExcel : EditorWindow
         fieldScaleFactor  = row.scaleFactor;
         fieldSoundId      = row.soundId;
         fieldIsHit        = row.isHit == "1";
+        fieldIsShock      = row.isShock == "1";
+        fieldShockLateTime = int.TryParse(row.shockLateTime, out int shockLateTime)
+            ? Mathf.Max(0, shockLateTime)
+            : 0;
 
         if (int.TryParse(row.vfxType, out int vt) && vt >= 0 && vt < VFX_TYPE_OPTIONS.Length)
             fieldVFXType = vt;
@@ -686,6 +718,8 @@ public class LootBootVFXtoExcel : EditorWindow
         public string rotationRule;
         public string soundId;
         public string isHit;
+        public string isShock;
+        public string shockLateTime;
     }
 
     /// <summary>JSON 缓存数组的包装器，供 QuickPreview 反序列化使用。</summary>
@@ -798,6 +832,15 @@ public class LootBootVFXtoExcel : EditorWindow
             highlightId: -1, hitOnlyMode: true);
     }
 
+    private void OpenShockCheck()
+    {
+        if (!EnsurePreviewCache())
+            return;
+
+        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData,
+            highlightId: -1, shockOnlyMode: true);
+    }
+
     private bool EnsurePreviewCache()
     {
         if (File.Exists(cachePath))
@@ -825,14 +868,16 @@ public class LootBootVFXtoExcel : EditorWindow
     /// 打开全表预览窗口。若缓存不存在则弹窗询问是否立即生成。
     /// </summary>
     /// <param name="highlightId">需高亮定位的行 ID；-1 表示不高亮。</param>
-    /// <param name="preserveHitOnlyMode">受击检查窗口已打开时，是否保持其筛选模式。</param>
-    private void OpenPreviewTable(int highlightId = -1, bool preserveHitOnlyMode = false)
+    /// <param name="preserveFilteredMode">检查窗口已打开时，是否保持其受击/震屏筛选模式。</param>
+    private void OpenPreviewTable(int highlightId = -1, bool preserveFilteredMode = false)
     {
         if (!EnsurePreviewCache())
             return;
 
-        bool hitOnlyMode = preserveHitOnlyMode && VFXTablePreviewWindow.IsHitOnlyWindowOpen();
-        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData, highlightId, hitOnlyMode);
+        bool hitOnlyMode = preserveFilteredMode && VFXTablePreviewWindow.IsHitOnlyWindowOpen();
+        bool shockOnlyMode = preserveFilteredMode && VFXTablePreviewWindow.IsShockOnlyWindowOpen();
+        VFXTablePreviewWindow.Open(cachePath, excelPath, scriptPath, FillFromRowData,
+            highlightId, hitOnlyMode, shockOnlyMode);
     }
 
     /// <summary>

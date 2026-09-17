@@ -23,8 +23,10 @@ MonoBehaviour:
   - Assets/GameAsset/Sprite/Icon/Battle_obj
   - Assets/GameAsset/Sprite/Icon/Battle_weapon
   - Assets/GameAsset/Sprite/Icon/BgFrame
+  - Assets/GameAsset/Sprite/Icon/Elite
   - Assets/GameAsset/Sprite/Icon/FuLi
   - Assets/GameAsset/Sprite/Icon/Item
+  - Assets/GameAsset/Sprite/Icon/MiJing
   - Assets/GameAsset/Sprite/Icon/Monster
   - Assets/GameAsset/Sprite/Icon/PlayerHead
   - Assets/GameAsset/Sprite/UI/7Day

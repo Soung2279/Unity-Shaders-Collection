@@ -182,7 +182,7 @@ Shader "Soung/Effect/SingleTex"
                 float lerpResult5 = lerp(tex2DNode1.r, tex2DNode1.a, _SwitchP);
                 float baseAlpha = lerpResult5 * baseColorA * vertexColorA;
 
-                if (baseAlpha <= 0.001)
+                if (baseAlpha <= 0.005)
                 {
                     discard;
                 }

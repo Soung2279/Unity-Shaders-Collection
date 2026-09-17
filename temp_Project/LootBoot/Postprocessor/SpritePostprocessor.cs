@@ -16,6 +16,8 @@ namespace GameFramework.Editor
     {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            EditorSpriteSaveInfo.QueueActorAtlasEnsure(importedAssets, movedAssets);
+
             foreach (var s in importedAssets)
             {
                 EditorSpriteSaveInfo.OnImportSprite(s);
@@ -41,6 +43,10 @@ namespace GameFramework.Editor
     public static class EditorSpriteSaveInfo
     {
         private const string ConfigAssetPath = "Assets/Editor/Postprocessor/SpriteAtlasConfig.asset";
+        private const string ActorSpriteRoot = "Assets/GameAsset/Sprite/Actor";
+        private static readonly HashSet<string> _pendingActorAtlasFolders = new HashSet<string>(StringComparer.Ordinal);
+        private static bool _actorAtlasEnsureQueued;
+        private static bool _isCreatingActorAtlases;
 
         private static readonly List<string> _dirtyAtlasList = new List<string>();
         private static readonly Dictionary<string, List<string>> _allASprites = new Dictionary<string, List<string>>();
@@ -49,6 +55,149 @@ namespace GameFramework.Editor
         private static bool m_dirty = false;
 
         private static SpriteAtlasConfig _config;
+
+        /// <summary>
+        /// 收集 Actor 图片所在的直接父目录，并在导入批次完成后补齐缺失图集。
+        /// </summary>
+        public static void QueueActorAtlasEnsure(string[] importedAssets, string[] movedAssets)
+        {
+            if (_isCreatingActorAtlases)
+                return;
+
+            CollectActorAtlasFolders(importedAssets);
+            CollectActorAtlasFolders(movedAssets);
+            if (_pendingActorAtlasFolders.Count == 0 || _actorAtlasEnsureQueued)
+                return;
+
+            _actorAtlasEnsureQueued = true;
+            EditorApplication.delayCall += EnsurePendingActorAtlases;
+        }
+
+        private static void CollectActorAtlasFolders(string[] assetPaths)
+        {
+            if (assetPaths == null)
+                return;
+
+            foreach (var assetPath in assetPaths)
+            {
+                if (!IsActorImagePath(assetPath))
+                    continue;
+
+                var folderPath = NormalizeAssetPath(Path.GetDirectoryName(assetPath));
+                if (!string.IsNullOrEmpty(folderPath) && AssetDatabase.IsValidFolder(folderPath))
+                    _pendingActorAtlasFolders.Add(folderPath);
+            }
+        }
+
+        private static bool IsActorImagePath(string assetPath)
+        {
+            var normalized = NormalizeAssetPath(assetPath);
+            if (string.IsNullOrEmpty(normalized) ||
+                !normalized.StartsWith(ActorSpriteRoot + "/", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var extension = Path.GetExtension(normalized);
+            return extension.Equals(".png", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".tga", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".psd", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".tif", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".tiff", StringComparison.OrdinalIgnoreCase) ||
+                   extension.Equals(".bmp", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeAssetPath(string path)
+        {
+            return path?.Trim().Replace("\\", "/").TrimEnd('/');
+        }
+
+        private static void EnsurePendingActorAtlases()
+        {
+            _actorAtlasEnsureQueued = false;
+            if (_isCreatingActorAtlases || _pendingActorAtlasFolders.Count == 0)
+                return;
+
+            var folders = new List<string>(_pendingActorAtlasFolders);
+            _pendingActorAtlasFolders.Clear();
+            folders.Sort(StringComparer.Ordinal);
+
+            _isCreatingActorAtlases = true;
+            try
+            {
+                bool created = false;
+                foreach (var folderPath in folders)
+                {
+                    created |= EnsureActorAtlas(folderPath);
+                }
+
+                if (created)
+                {
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
+            }
+            finally
+            {
+                _isCreatingActorAtlases = false;
+            }
+        }
+
+        /// <summary>
+        /// 为 Actor 图片目录创建同名图集；已存在或没有直接 Sprite 时不做任何修改。
+        /// </summary>
+        private static bool EnsureActorAtlas(string folderPath)
+        {
+            folderPath = NormalizeAssetPath(folderPath);
+            if (string.IsNullOrEmpty(folderPath) ||
+                !folderPath.StartsWith(ActorSpriteRoot + "/", StringComparison.OrdinalIgnoreCase) ||
+                !AssetDatabase.IsValidFolder(folderPath))
+                return false;
+
+            var spriteGuids = AssetDatabase.FindAssets("t:Sprite", new[] { folderPath });
+            bool hasDirectSprite = false;
+            foreach (var guid in spriteGuids)
+            {
+                var spritePath = NormalizeAssetPath(AssetDatabase.GUIDToAssetPath(guid));
+                if (string.Equals(NormalizeAssetPath(Path.GetDirectoryName(spritePath)), folderPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    hasDirectSprite = true;
+                    break;
+                }
+            }
+
+            if (!hasDirectSprite)
+                return false;
+
+            var folderName = Path.GetFileName(folderPath);
+            if (string.IsNullOrEmpty(folderName))
+                return false;
+
+            var atlasPath = $"{folderPath}/{folderName}.spriteatlasv2";
+            if (AtlasExists(atlasPath))
+                return false;
+
+            var folder = AssetDatabase.LoadAssetAtPath<Object>(folderPath);
+            if (folder == null)
+                return false;
+
+            try
+            {
+                var atlas = new SpriteAtlasAsset();
+                atlas.Add(new[] { folder });
+                SpriteAtlasAsset.Save(atlas, atlasPath);
+                AssetDatabase.ImportAsset(atlasPath, ImportAssetOptions.ForceUpdate);
+                ApplyAtlasImporterSettings(atlasPath, GetConfig());
+                NormalizeAtlasTextFiles(atlasPath);
+                Debug.Log($"已自动创建 Actor 图集: {atlasPath}");
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"自动创建 Actor 图集失败: {atlasPath}\n{exception}");
+                return false;
+            }
+        }
 
         /// <summary>
         /// 由配置窗口调用，注入当前配置

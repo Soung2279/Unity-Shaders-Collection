@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="CollectContainer" style="flex-grow: 1; min-height: 0; padding-left: 12px; padding-right: 12px; padding-top: 10px; padding-bottom: 10px;">
+        <ui:Label text="着色器变体收集" style="-unity-font-style: bold; font-size: 17px; margin-bottom: 10px;" />
+        <ui:TextField picking-mode="Ignore" label="文件保存路径" name="CollectOutput" style="height: 22px;" />
+        <ui:VisualElement name="PackageContainer" style="height: 24px;" />
+        <ui:Label text="Current Shader Count" display-tooltip-when-elided="true" name="CurrentShaderCount" style="height: 20px; padding-left: 4px;" />
+        <ui:Label text="Current Variant Count" display-tooltip-when-elided="true" name="CurrentVariantCount" style="height: 20px; padding-left: 4px;" />
+        <ui:SliderInt picking-mode="Ignore" label="Capacity" value="9999" high-value="1000" name="ProcessCapacity" low-value="10" show-input-field="true" />
+        <ui:HelpBox text="写入过滤规则：忽略 Shader 名称以 Hidden/ 开头的全部变体，以及 GraphicsSettings → Always Included Shaders 中已有的Shader；“刷新变体记录”会从当前SVC反向重建同名JSON，不修改SVC；每次收集后会生成同名 .history.json。" message-type="Info" style="margin-top: 6px; margin-bottom: 4px;" />
+        <ui:Button text="开始搜集" display-tooltip-when-elided="true" name="CollectButton" style="height: 36px; background-color: rgb(40, 90, 65); margin-top: 8px; -unity-font-style: bold;" />
+        <ui:VisualElement name="HistoryContainer" style="flex-grow: 1; min-height: 0; margin-top: 14px; border-top-width: 1px; border-top-color: rgb(80, 80, 80); padding-top: 10px;">
+            <ui:VisualElement name="HistoryToolbar" style="flex-direction: row; flex-wrap: wrap; align-items: center; min-height: 30px;">
+                <ui:Label text="最近一次收集变化" style="-unity-font-style: bold; font-size: 14px; flex-grow: 1; flex-shrink: 0; min-width: 160px; margin-right: 8px;" />
+                <ui:VisualElement name="HistoryActions" style="flex-direction: row; flex-shrink: 0; min-height: 26px;">
+                    <ui:Button text="刷新变体记录" tooltip="从当前SVC重新生成同名JSON记录，不执行收集，也不修改SVC。" name="RefreshHistoryButton" style="width: 110px; min-width: 110px; height: 24px; flex-shrink: 0;" />
+                    <ui:Button text="还原到上一次收集" name="RestoreHistoryButton" style="width: 140px; min-width: 140px; height: 24px; flex-shrink: 0;" />
+                    <ui:Button text="定位历史文件" name="PingHistoryButton" style="width: 100px; min-width: 100px; height: 24px; flex-shrink: 0;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="HistorySummary" text="暂无历史记录" style="white-space: normal; margin-top: 8px; margin-bottom: 10px; padding-left: 10px; padding-top: 8px; padding-bottom: 8px; background-color: rgba(128, 128, 128, 0.12);" />
+            <ui:ScrollView name="HistoryDetails" style="flex-grow: 1; flex-shrink: 1; min-height: 0;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

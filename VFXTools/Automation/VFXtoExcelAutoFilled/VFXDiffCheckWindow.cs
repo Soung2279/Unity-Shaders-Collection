@@ -56,12 +56,13 @@ public class VFXDiffCheckWindow : EditorWindow
     private static readonly string[] COL_NAMES =
         { "ID", "名称", "类型", "资源路径（缺失 / 已补充）", "备注", "拖入新预制体" };
 
-    private static readonly string[] VFX_TYPE_LABELS = { "Spine", "粒子", "复合" };
+    private static readonly string[] VFX_TYPE_LABELS = { "Spine", "粒子", "复合", "序列帧" };
 
     private static readonly Color[] VFX_TYPE_COLORS = {
         new Color(0.75f, 0.50f, 1.00f),
         new Color(0.30f, 0.90f, 1.00f),
         new Color(1.00f, 0.80f, 0.25f),
+        new Color(0.35f, 1.00f, 0.60f),
     };
 
     // ── 静态入口 ──────────────────────────────────────────────
@@ -489,6 +490,8 @@ public class VFXDiffCheckWindow : EditorWindow
                 batch.Append($"\"rotationRule\":{IntFieldToJson(row.rotationRule)},");
                 batch.Append($"\"soundId\":{IntFieldToJson(row.soundId)},");
                 batch.Append($"\"isHit\":{IntFieldToJson(row.isHit)},");
+                batch.Append($"\"isShock\":{IntFieldToJson(row.isShock)},");
+                batch.Append($"\"shockLateTime\":{NonNegativeIntFieldToJson(row.shockLateTime)},");
                 batch.Append($"\"remark\":\"{EscapeJson(row.remark)}\"");
                 batch.Append("}");
 
@@ -707,6 +710,9 @@ public class VFXDiffCheckWindow : EditorWindow
         psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
         return psi;
     }
+
+    private static string NonNegativeIntFieldToJson(string s) =>
+        int.TryParse((s ?? "").Trim(), out int value) && value >= 0 ? value.ToString() : "0";
 
     private static string IntFieldToJson(string s) =>
         string.IsNullOrWhiteSpace(s) ? "null" : (int.TryParse(s.Trim(), out int v) ? v.ToString() : "null");

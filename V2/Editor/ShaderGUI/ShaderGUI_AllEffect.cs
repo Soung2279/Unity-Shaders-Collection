@@ -264,6 +264,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
     #region [Main贴图按钮命名]
     //- 主帖图部分 -
+    //Alpha Clip阈值
+    MaterialProperty AlphaClipThreshold = null;
     //贴图
     MaterialProperty MainTex = null;
     //贴图通道
@@ -278,6 +280,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
     MaterialProperty MainTexSaturation = null;
     //HSV开关
     MaterialProperty UseHSV = null;
+    //主贴图UV模式 | Local or Polar or PolarDistortion
+    MaterialProperty MainTexUVMode = null;
     //贴图极坐标采样模式设置
     MaterialProperty MainTexPolarSets = null;
     //极坐标模式下的扭曲强度
@@ -321,8 +325,10 @@ public class ShaderGUI_AllEffect : ShaderGUI
     //- 颜色叠加部分 -
     //颜色叠加图
     MaterialProperty GamTex = null;
-    //贴图通道
+    //贴图通道（用于Alpha）
     MaterialProperty GamTexP = null;
+    //颜色叠加影响最终Alpha
+    MaterialProperty GamAlphaMode = null;
     //贴图旋转
     MaterialProperty GamTexRotator = null;
     //贴图去色
@@ -459,6 +465,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
     public void FindProperties(MaterialProperty[] props)
     {
         #region [Main贴图按钮参数引用]
+        //基础透明剔除属性
+        AlphaClipThreshold = FindProperty("_AlphaClipThreshold", props);
         //主贴图属性
         MainTex = FindProperty("_MainTex", props);
         MainTexP = FindProperty("_MainTexP", props);
@@ -467,6 +475,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
         MainTexHue = FindProperty("_MainTexHue", props);
         MainTexSaturation = FindProperty("_MainTexSaturation", props);
         UseHSV = FindProperty("_UseHSV", props);
+        MainTexUVMode = FindProperty("_MainTexUVMode", props);
         MainTexPolarSets = FindProperty("_MainTexPolarSets", props);
         MainTexUspeed = FindProperty("_MainTexUspeed", props);
         MainTexPolarDistortionPower = FindProperty("_MainTexPolarDistortionPower", props);
@@ -495,6 +504,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
         //颜色叠加属性
         GamTex = FindProperty("_GamTex", props);
         GamTexP = FindProperty("_GamTexP", props);
+        GamAlphaMode = FindProperty("_GamAlphaMode", props);
         GamTexRotator = FindProperty("_GamTexRotator", props);
         GamTexDesaturate = FindProperty("_GamTexDesaturate", props);
         GamTexUspeed = FindProperty("_GamTexUspeed", props);
@@ -1100,8 +1110,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("Additive", shortButtonStyle))
                 {
                     SetMat("_BlendMode", 10);
-                    material.EnableKeyword("_ISALPHA_ON");
-                    string warn_blendmode = $"Soung Shader INFO: Src Alpha Dst 10\n>>>材质处于不透明模式";
+                    string warn_blendmode = $"Soung Shader INFO: Blend AlphaBlend\n>>>材质已切换为Alpha混合模式";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_blendmode}</size></b></color>");
                 }
             }
@@ -1110,14 +1119,17 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 if (GUILayout.Button("AlphaBlend", shortButtonStyle))
                 {
                     SetMat("_BlendMode", 1);
-                    material.DisableKeyword("_ISALPHA_ON");
-                    string warn_blendmode = $"Soung Shader INFO: Src Alpha Dst 1\n>>>材质处于半透明模式";
+                    string warn_blendmode = $"Soung Shader INFO: Blend Additive\n>>>材质已切换为叠加模式";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_blendmode}</size></b></color>");
                 }
             }
 
             EditorGUILayout.EndHorizontal();
             //混合模式功能区结束
+
+
+            //透明像素始终剔除，0仅剔除完全透明像素
+            m_MaterialEditor.ShaderProperty(AlphaClipThreshold, new GUIContent("透明剔除阈值", "0仅剔除完全透明像素；提高阈值可进一步减少半透明像素写入"));
 
 
             //渲染队列功能区
@@ -1257,48 +1269,9 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 //重铺模式功能区结束
 
 
-                //UV采样模式功能区
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel("贴图UV采样模式");
-                if (material.GetFloat("_MainTexUVMode") == 0)
-                {
-                    if (GUILayout.Button("材质默认", shortButtonStyle))
-                    {
-                        SetMat("_MainTexUVMode", 1);
-                        material.EnableKeyword("_MAINTEXUVMODE_POLAR");
-                        material.DisableKeyword("_MAINTEXUVMODE_LOCAL");
-                        material.DisableKeyword("_MAINTEXUVMODE_POLARDISTORTION");
-                        string warn_mainpolar = $"Soung Shader INFO: UV sample POLAR\n>>>UV采样设置为极坐标模式";
-                        Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
-                    }
-
-                }
-                else if (material.GetFloat("_MainTexUVMode") == 1)
-                {
-                    if (GUILayout.Button("极坐标Polar", shortButtonStyle))
-                    {
-                        SetMat("_MainTexUVMode", 2);
-                        material.EnableKeyword("_MAINTEXUVMODE_POLARDISTORTION");
-                        material.DisableKeyword("_MAINTEXUVMODE_LOCAL");
-                        material.DisableKeyword("_MAINTEXUVMODE_POLAR");
-                        string warn_mainpolar = $"Soung Shader INFO: UV sample POLAR DISTORTION\n>>>UV采样设置为极坐标扭曲模式";
-                        Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
-                    }
-                }
-                else if (material.GetFloat("_MainTexUVMode") == 2)
-                {
-                    if (GUILayout.Button("极坐标扭曲", shortButtonStyle))
-                    {
-                        SetMat("_MainTexUVMode", 0);
-                        material.EnableKeyword("_MAINTEXUVMODE_LOCAL");
-                        material.DisableKeyword("_MAINTEXUVMODE_POLAR");
-                        material.DisableKeyword("_MAINTEXUVMODE_POLARDISTORTION");
-                        string warn_mainpolar = $"Soung Shader INFO: UV sample LOCAL\n>>>UV采样设置为默认模式";
-                        Debug.Log($"<color=#66ccff><b><size=10>{warn_mainpolar}</size></b></color>");
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
-                //UV采样模式功能区结束
+                //与流光一致，使用KeywordEnum下拉菜单并由Unity同步关键字
+                m_MaterialEditor.ShaderProperty(MainTexUVMode, "主贴图UV控制模式");
+                EditorGUILayout.HelpBox("变更UV采样模式：本地、极坐标、极坐标扭曲", MessageType.None, false);
 
 
                 //使用UV采样模式 - 极坐标Polar 时，调整相关参数
@@ -1347,7 +1320,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 {
                     SetMat("_NoiseSwitch", 1);
                     material.EnableKeyword("_NOISE_ON");
-                    string warn_noise = $"Soung Shader INFO: NoiseTex Disable\n>>>扭曲禁用中";
+                    string warn_noise = $"Soung Shader INFO: NoiseTex Enable\n>>>扭曲已启用";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_noise}</size></b></color>");
                 }
             }
@@ -1357,7 +1330,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 {
                     SetMat("_NoiseSwitch", 0);
                     material.DisableKeyword("_NOISE_ON");
-                    string warn_noise = $"Soung Shader INFO: NoiseTex Enable\n>>>扭曲启用中";
+                    string warn_noise = $"Soung Shader INFO: NoiseTex Disable\n>>>扭曲已禁用";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_noise}</size></b></color>");
                 }
             }
@@ -1371,13 +1344,17 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 m_MaterialEditor.TexturePropertySingleLine(new GUIContent("扭曲贴图"), NoiseTex);
                 if (NoiseTex.textureValue != null)
                 {
-                    m_MaterialEditor.TextureScaleOffsetProperty(NoiseTex);
                     m_MaterialEditor.ShaderProperty(NoiseTexP, "切换通道");
                     m_MaterialEditor.ShaderProperty(NoisePower, "扭曲强度");
                     EditorGUILayout.HelpBox("若调整此值无扭曲，请尝试切换通道", MessageType.None, false);
 
                     m_MaterialEditor.ShaderProperty(NoiseTexUVMode, "扭曲UV模式");
                     EditorGUILayout.HelpBox("可选择本地UV、极坐标或屏幕坐标进行流动", MessageType.None, false);
+
+                    if (material.GetFloat("_NoiseTexUVMode") != 2)
+                    {
+                        m_MaterialEditor.TextureScaleOffsetProperty(NoiseTex);
+                    }
 
                     if (material.GetFloat("_NoiseTexUVMode") == 1)
                     {
@@ -1427,7 +1404,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 {
                     SetMat("_GamTexSwitch", 1);
                     material.EnableKeyword("_GAMTEX_ON");
-                    string warn_gam = $"Soung Shader INFO: GamTex Disable\n>>>颜色叠加禁用中";
+                    string warn_gam = $"Soung Shader INFO: GamTex Enable\n>>>颜色叠加已启用";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_gam}</size></b></color>");
                 }
             }
@@ -1437,7 +1414,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 {
                     SetMat("_GamTexSwitch", 0);
                     material.DisableKeyword("_GAMTEX_ON");
-                    string warn_gam = $"Soung Shader INFO: GamTex Enable\n>>>颜色叠加启用中";
+                    string warn_gam = $"Soung Shader INFO: GamTex Disable\n>>>颜色叠加已禁用";
                     Debug.Log($"<color=#66ccff><b><size=10>{warn_gam}</size></b></color>");
                 }
             }
@@ -1452,7 +1429,13 @@ public class ShaderGUI_AllEffect : ShaderGUI
                 {
                     m_MaterialEditor.TextureScaleOffsetProperty(GamTex);
 
-                    m_MaterialEditor.ShaderProperty(GamTexP, "切换通道");
+                    m_MaterialEditor.ShaderProperty(GamAlphaMode, "颜色叠加影响透明度");
+                    if (GamAlphaMode.floatValue > 0.5f)
+                    {
+                        EditorGUI.indentLevel++;
+                        m_MaterialEditor.ShaderProperty(GamTexP, "透明度采样通道");
+                        EditorGUI.indentLevel--;
+                    }
                     m_MaterialEditor.ShaderProperty(GamTexRotator, "贴图旋转");
                     m_MaterialEditor.ShaderProperty(GamTexDesaturate, "贴图去色");
                     EditorGUILayout.HelpBox("降低贴图饱和度将其作为黑白遮罩使用, 值越大饱和度约低", MessageType.None, false);
@@ -1507,14 +1490,11 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     EditorGUILayout.EndHorizontal();
                     //功能区结束
 
-                    //不使用跟随流动时，展示相关参数
-                    if ((material.GetFloat("_GamTexFollowMainTex") == 0) && (material.GetFloat("_GamTexClamp") == 0))
-                    {
-                        EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
-                        m_MaterialEditor.ShaderProperty(GamTexUspeed, "横向流动速度");
-                        m_MaterialEditor.ShaderProperty(GamTexVspeed, "纵向流动速度");
-                        EditorGUILayout.EndVertical();
-                    }
+                    //颜色叠加自身速度始终参与采样
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
+                    m_MaterialEditor.ShaderProperty(GamTexUspeed, "横向流动速度");
+                    m_MaterialEditor.ShaderProperty(GamTexVspeed, "纵向流动速度");
+                    EditorGUILayout.EndVertical();
                 }
             }
         }
@@ -1816,12 +1796,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
                 if (LiuguangTex.textureValue != null)
                 {
-
-                    m_MaterialEditor.TextureScaleOffsetProperty(LiuguangTex);
-
                     m_MaterialEditor.ShaderProperty(LiuguangTexP, "切换通道");
                     EditorGUILayout.HelpBox("流光无效时, 尝试切换通道", MessageType.None, false);
-                    m_MaterialEditor.ShaderProperty(LiuguangTexRotator, "贴图旋转");
 
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.PrefixLabel("是否禁用纹理自身颜色");
@@ -1846,15 +1822,15 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     }
                     EditorGUILayout.EndHorizontal();
 
-
                     //选择流光贴图的UV采样模式
                     m_MaterialEditor.ShaderProperty(LiuguangTexUVmode, "流光UV控制模式");
                     EditorGUILayout.HelpBox("变更UV采样模式,本地,极坐标,基于屏幕", MessageType.None, false);
 
-
                     //流光本地模式
                     if (material.GetFloat("_LiuguangTexUVmode") == 0)
                     {
+                        m_MaterialEditor.TextureScaleOffsetProperty(LiuguangTex);
+                        m_MaterialEditor.ShaderProperty(LiuguangTexRotator, "贴图旋转");
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox, shortButtonStyle);
                         m_MaterialEditor.ShaderProperty(LiuguangUSpeed, "横向流动速度");
                         m_MaterialEditor.ShaderProperty(LiuguangVSpeed, "纵向流动速度");
@@ -1864,6 +1840,7 @@ public class ShaderGUI_AllEffect : ShaderGUI
                     //流光极坐标模式
                     if (material.GetFloat("_LiuguangTexUVmode") == 1)
                     {
+                        m_MaterialEditor.TextureScaleOffsetProperty(LiuguangTex);
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                         m_MaterialEditor.ShaderProperty(LiuguangPolarScale, "流光Polar中心与缩放");
                         EditorGUILayout.HelpBox("xy控制中心点, zw控制缩放与重复", MessageType.None, false);
@@ -1929,10 +1906,8 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
                 if (DissolveTex.textureValue != null)
                 {
-                    m_MaterialEditor.TextureScaleOffsetProperty(DissolveTex);
                     m_MaterialEditor.ShaderProperty(DissolveTexP, "切换通道");
                     EditorGUILayout.HelpBox("溶解无效时, 尝试切换通道", MessageType.None, false);
-                    m_MaterialEditor.ShaderProperty(DissolveTexRotator, "贴图旋转");
                     m_MaterialEditor.ShaderProperty(DissolveSmooth, "整体平滑度");
                     EditorGUILayout.HelpBox("控制溶解软硬程度, 值越大越平滑", MessageType.None, false);
                     m_MaterialEditor.ShaderProperty(DissolvePower, "溶解进度");
@@ -1998,6 +1973,12 @@ public class ShaderGUI_AllEffect : ShaderGUI
 
                     m_MaterialEditor.ShaderProperty(DissolveTexUVMode, "溶解UV模式");
                     EditorGUILayout.HelpBox("可选择本地UV、极坐标或屏幕坐标进行流动", MessageType.None, false);
+                    if (material.GetFloat("_DissolveTexUVMode") != 2)
+                    {
+                        m_MaterialEditor.TextureScaleOffsetProperty(DissolveTex);
+                        m_MaterialEditor.ShaderProperty(DissolveTexRotator, "贴图旋转");
+                    }
+
                     if (material.GetFloat("_DissolveTexUVMode") == 1)
                     {
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
