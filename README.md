@@ -250,11 +250,11 @@ https://github.com/Soung2279/SoungFXShaders.git
 
 新增 SingleTexOutlineNoise shader。基于SingTex制作，实现描边程序化扰动效果（适用于血条燃烧效果）
 
-### 2025.11.19 | 更新说明 | Standard V2.0.2
+### 2025.11.19 | 更新说明 | Standard V2.0.1.100
 
 #### 新增
 
-新增 定制化的Spine 相关shader。
+~~新增 定制化的Spine 相关shader。~~
 
 ### 2025.11.10 | 更新说明 | Standard V2.0.1
 
