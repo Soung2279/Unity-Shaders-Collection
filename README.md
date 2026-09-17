@@ -17,11 +17,11 @@ A201-Shaders Collection  ///  Personal Usage
 简介
 ===========================
 
-本仓库是为``Unity``的 ``URP`` 环境下使用的 **着色器合集**。其中，大部分着色器(下称shader)与粒子**特效**制作相关。  *(此处的粒子特效特指Unity内置的Shuriken粒子系统及其团结引擎的升级版Infinity粒子系统，不适用于Unity VEG)*
+本仓库是收集``Unity``引擎的 ``URP`` 环境下使用的 **着色器合集**。其中，大部分着色器 (下称shader) 与粒子**特效**制作相关。  *(此处的粒子特效特指Unity内置的Shuriken粒子系统及其团结引擎的升级版Infinity粒子系统，不适用于Unity VEG)*
 
-本仓库的shader基本基于Unity插件 ``ASE`` 生成，部分特殊shader进行了性能调优和可读化调整。这对于切换渲染管线或是移植到其它引擎有利。
+本仓库的shader少量基于Unity插件 ``ASE`` 生成，部分特殊shader进行了性能调优和可读化调整。这对于切换渲染管线或是移植到其它引擎有利。
 
-若您有一定技术美术知识，您可自行查阅shader中的片段代码，并将其迁移到其它引擎或是适配不同的渲染管线。
+若您有一定技术美术知识，您可自行查阅shader中的片段代码，按需所取将其迁移到其它引擎或是适配不同的渲染管线。
 
 查阅此仓库，您可以快捷的获取Unity特效制作相关的shader，同时可参考一些特殊效果的实现案例。
 
@@ -39,7 +39,7 @@ A201-Shaders Collection  ///  Personal Usage
 
 虽然以往 [V1](https://github.com/Soung2279/Unity-Shaders-Collection/releases/tag/StandardV1.8.7) 收集的shader数量很多，但是大部分功能都重合了，并且由于代码风格不一，不便于功能迁移。所以，V2.0及以后的版本，会秉持简约的理念，尽可能收录一些通用的，快速上手的shader。
 
-此仓库发展到现在，已经有了一个经历4个项目迭代，历时3年的通用特效shader，同时仍然有各种特殊的shader不断收录。我想，这才是创建这个仓库的最终意义。
+此仓库发展到现在，已经有了一个经历**6**个项目迭代，历时4年的通用特效shader，同时仍然有各种特殊的shader不断收录。我想，这才是创建这个仓库的最终意义。
 
  ##### *特效艺术家应该回归到对美术效果本身的钻研，降低对shader等技术向内容的学习成本。*
 
@@ -56,6 +56,9 @@ A201-Shaders Collection  ///  Personal Usage
 ```
 /V2
  -/Editor
+   -/ShaderGUI
+     -/ShaderGUI_AllEffect.cs
+     -/...
  -/Render
  -/Scripts
  -/Shaders
@@ -65,22 +68,24 @@ A201-Shaders Collection  ///  Personal Usage
 
 其中，``/Shaders`` 里存放的是整合的shader内容。本仓库的核心内容位于此目录。
 
-``/Editor`` 里存放的是shader相关材质面板GUI的脚本文件。此内容可以优化shader的材质面板显示，提高可读性。
+``/Editor`` ``/ShaderGUI`` 里存放的是shader相关材质面板GUI的脚本文件。此文件可以优化shader的材质面板显示，提高可读性。
 
-``/Render`` 里存放的是一些特殊效果的Render Feature。此内容提供了一些特殊的效果需求，例如URP下的热扭曲、深度高度雾等。
+如果遇到脚本报错导致shaderGUI失效或不显示，请先检查当前工程中的其它Error信息，它们会阻断shaderGUI的显示。
 
-``/Scripts`` 里存放的是与特殊效果的Render Feature相关的脚本。此内容提供了一些必要搭配使用的脚本。
+``/Render`` 里存放的是一些特殊效果的Render Feature。这些文件提供了一些特殊的效果需求，例如URP下的热扭曲、深度高度雾等。
+
+``/Scripts`` 里存放的是与特殊效果的Render Feature相关的脚本。这些文件提供了一些必要搭配使用的脚本。
 
 
 所有的shader目录路径(Shader Path)均 **统一** 为 **Soung/** 路径下，并按着色器的使用类型进行了分类。
 - 目前存在的分类有如下：
-/Effect：用于粒子特效制作的相关shader
+/Effect：用于特效制作的相关shader
 /Post：用于全屏后处理特效相关的shader
 /Geometry：用于3d模型渲染相关的shader
 /UI：用于UI动效相关的shader
 /...
 
-因游戏行业发展迅速，技术日新月异，本仓库的shader仅在以下环境适用：
+因游戏行业发展迅速，技术日新月异，本仓库收录的shader建议在以下环境使用：
 
 - [x] // **推荐** //
 [![Unity](https://img.shields.io/badge/Unity%20-2022%2B-black?style=flat-square&logo=unity)](https://unity.com/cn)
@@ -214,6 +219,22 @@ https://github.com/Soung2279/SoungFXShaders.git
 ****
 
 ## 更新日志
+
+### 2026.9.17 | 更新说明 | Standard V2.0.4
+
+#### 修复
+
+修复 FullFx 的若干Bug。
+
+修复部分shader Pass name和LightMode指定为Universal2D导致在URP 3D工程无法开箱即用的问题
+
+#### 优化
+
+为BreathHalo、FullFX、Fire-Pro、SmoothFlipBook进行AlphaClip优化
+
+#### 新增
+
+新增 Diamond, 2d钻石质感材质；TextCutOffFX, 文字斩断效果
 
 ### 2026.7.30 | 更新说明 | Standard V2.0.3
 

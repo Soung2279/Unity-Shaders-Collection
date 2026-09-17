@@ -1,4 +1,4 @@
-//修改于2026.4.10
+//修改于2026.9.17
 Shader "Soung/Effect/BreathHalo"
 {
     Properties
@@ -37,7 +37,7 @@ Shader "Soung/Effect/BreathHalo"
         Pass
         {
             Name "Forward"
-            Tags { "LightMode" = "SRPDefaultUnlit" }
+            Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
             #pragma target 3.5
@@ -108,10 +108,15 @@ Shader "Soung/Effect/BreathHalo"
                 // 映射到 [_MinAlpha, _MaxAlpha] 区间
                 breathAlpha = lerp(_MinAlpha, _MaxAlpha, breathAlpha);
 
-                float finalAlpha = breathAlpha * texAlpha * _BaseColor.a * IN.color.a;
+                float finalAlpha = saturate(breathAlpha * texAlpha * _BaseColor.a * IN.color.a);
                 float3 finalColor = texSample.rgb * _BaseColor.rgb * IN.color.rgb;
 
-                return float4(finalColor, saturate(finalAlpha));
+                if (finalAlpha <= 0.01)
+                {
+                    discard;
+                }
+
+                return float4(finalColor, finalAlpha);
             }
             ENDHLSL
         }

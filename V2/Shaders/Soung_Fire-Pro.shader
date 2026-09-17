@@ -304,7 +304,12 @@ float2 voronoihash( float2 p )
 				#endif
 				
 				float3 Color = ( lerpResult11 * input.ase_color ).rgb;
-				float Alpha = ( input.ase_color.a * ( step( temp_output_44_0 , temp_output_41_0 ) * staticSwitch89 ) );
+				float Alpha = saturate( input.ase_color.a * ( step( temp_output_44_0 , temp_output_41_0 ) * staticSwitch89 ) );
+
+				if ( Alpha <= 0.01 )
+				{
+					discard;
+				}
 
 				return half4( Color, Alpha );
 			}

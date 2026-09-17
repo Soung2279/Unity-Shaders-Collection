@@ -1,4 +1,8 @@
 // 2026.04.16 Unity URP 融球(Metaball)粒子特效 Shader
+// 用法：挂载在 Quad/Plane Mesh 上，程序化模拟2D融球边缘视觉效果
+// - 支持 SRP Batcher（所有属性声明在 UnityPerMaterial CBUFFER 中）
+// - 支持 GPU Instancing（#pragma multi_compile_instancing）
+// - 纯程序化，无需贴图，基于 1/d^2 Metaball 势场算法
 Shader "Soung/Effect/Metaballs"
 {
     Properties
@@ -32,7 +36,7 @@ Shader "Soung/Effect/Metaballs"
     {
         Tags
         {
-            "RenderPipeline" = "UniversalRenderPipeline"
+            "RenderPipeline" = "UniversalPipeline"
             "Queue" = "Transparent"
             "RenderType" = "Transparent"
             "IgnoreProjector" = "True"
@@ -41,7 +45,8 @@ Shader "Soung/Effect/Metaballs"
 
         Pass
         {
-            Tags { "LightMode" = "SRPDefaultUnlit" }
+            Name "Forward"
+            Tags { "LightMode" = "UniversalForward" }
 
             Cull [_CullingMode]
             ZWrite OFF
@@ -123,8 +128,8 @@ Shader "Soung/Effect/Metaballs"
             // Metaball: field = sum(1/|P-Ci|^2), iso-surface at field >= threshold
             // MAX_BLOBS: compile-time constant, runtime loop uses break to limit iterations
             // -------------------------------------------------------
-            #define MAX_BLOBS 16
-            #define TWO_PI    6.28318530718
+            #define MAX_BLOBS       16
+            #define METABALL_TWO_PI 6.28318530718
 
             half4 frag(Varyings input) : SV_Target
             {
@@ -137,12 +142,15 @@ Shader "Soung/Effect/Metaballs"
                 float blobCount = _BlobCount;
 
                 // 累积融球势场
+                // 使用 [unroll] + step() 替代 [loop]+break，避免部分 Android GLES 3.0 驱动
+                // 对 fragment shader 中 uniform 控制的动态循环产生兼容性问题
                 float field   = 0.0;
-                float radStep = TWO_PI / blobCount;   // 提到循环外，避免每次迭代重复除法
-                [loop]
+                float radStep = METABALL_TWO_PI / blobCount;   // 提到循环外，避免每次迭代重复除法
+                [unroll]
                 for (int k = 0; k < MAX_BLOBS; k++)
                 {
-                    if ((float)k >= blobCount) break;
+                    // k < blobCount 时 active=1，否则 active=0，乘法代替 break 分支
+                    float active = step((float)k, blobCount - 1.0);
 
                     // 控制点均匀分布在圆上，每个点做独立的半径振荡
                     float angle      = (float)k * radStep;
@@ -151,9 +159,9 @@ Shader "Soung/Effect/Metaballs"
                     sincos(angle, sinA, cosA);
                     float2 ctrlPoint = r * float2(sinA, cosA);
 
-                    // 1/d^2 势场贡献
+                    // 1/d^2 势场贡献，inactive 的控制点贡献归零
                     float2 d = uv - ctrlPoint;
-                    field += 1.0 / max(1e-5, dot(d, d));
+                    field += active / max(1e-5, dot(d, d));
                 }
 
                 float fw        = fwidth(field);

@@ -46,8 +46,8 @@ Shader "Soung/Effect/SingleTexOutlineNoise"
 
         Pass
         {
-            Name "Universal2D"
-            Tags { "LightMode" = "Universal2D" }
+            Name "Forward"
+            Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
             #pragma target 3.5

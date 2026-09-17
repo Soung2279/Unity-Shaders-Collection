@@ -11,6 +11,7 @@ Shader "Soung/Effect/SmoothFlipbook"
         _Cols ("横向数量", Float) = 4
         _Rows ("纵向数量", Float) = 4
         _FPS ("帧率", Float) = 12
+        [IntRange]_StartFrame ("起始帧（从0计数）", Range(0, 255)) = 0
         // 混合窗口：0=硬切，0.3=仅最后30%时间平滑过渡，1=全程混合
         _Blend ("混合窗口时间", Range(0,1)) = 0.3
         // 勾选时兼容从左上角起排列的序列帧贴图（大多数情况应勾选）
@@ -32,11 +33,12 @@ Shader "Soung/Effect/SmoothFlipbook"
 
         Pass
         {
-            Tags { "LightMode" = "SRPDefaultUnlit" }
+            Tags { "LightMode" = "Forward" }
 
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes
@@ -44,6 +46,7 @@ Shader "Soung/Effect/SmoothFlipbook"
                 float4 positionOS : POSITION;
                 float2 uv         : TEXCOORD0;
                 half4  color      : COLOR;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct Varyings
@@ -68,6 +71,7 @@ Shader "Soung/Effect/SmoothFlipbook"
                 float  _Cols;
                 float  _Rows;
                 float  _FPS;
+                float  _StartFrame;
                 float  _Blend;
                 float  _FlipY;
                 float  _RotatorVal;
@@ -79,8 +83,8 @@ Shader "Soung/Effect/SmoothFlipbook"
             {
                 float invCols = 1.0 / _Cols;
                 float invRows = 1.0 / _Rows;
-                float col = (float)(frameIndex % (uint)_Cols);
                 float row = floor((float)frameIndex / _Cols);
+                float col = (float)frameIndex - row * _Cols;
 
                 float2 result;
                 result.x = (uv.x + col) * invCols;
@@ -94,8 +98,11 @@ Shader "Soung/Effect/SmoothFlipbook"
             Varyings vert(Attributes v)
             {
                 Varyings o;
+                // Set the instance ID before reading the per-instance object transform.
+                UNITY_SETUP_INSTANCE_ID(v);
                 o.positionHCS = TransformObjectToHClip(v.positionOS.xyz);
-                o.uv = v.uv;
+                // 在单帧 UV 空间应用材质 Tiling / Offset，再进行旋转和 atlas 帧定位。
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.color = v.color;
                 return o;
             }
@@ -118,30 +125,51 @@ Shader "Soung/Effect/SmoothFlipbook"
                 uint totalFrames = (uint)(_Cols * _Rows);
 
                 float t = _Time.y * _FPS;
-                float framePos = fmod(t, (float)totalFrames);
+                // 起始帧从 0 计数；超出图集总帧数时自动循环到有效范围。
+                float startFrame = fmod(max(0.0, floor(_StartFrame + 0.5)), (float)totalFrames);
+                float framePos = fmod(t + startFrame, (float)totalFrames);
 
                 uint frameA = (uint)framePos;
-                uint frameB = (frameA + 1u) % totalFrames;
                 float f = frac(framePos); // 当前帧内进度 [0, 1)
 
                 float2 uvA = GetFrameUV(baseUV, frameA);
-                float2 uvB = GetFrameUV(baseUV, frameB);
-
                 half4 colA = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uvA);
+
+                [branch]
+                if (_Blend <= 0.001)
+                {
+                    half3 finalRGB = colA.rgb * baseColorRGB * i.color.rgb;
+                    float blendAlpha = lerp(colA.r, colA.a, _SwitchP);
+                    float finalAlpha = saturate(blendAlpha * baseColorA * i.color.a);
+
+                    if (finalAlpha <= 0.01)
+                    {
+                        discard;
+                    }
+
+                    return half4(finalRGB, finalAlpha);
+                }
+
+                uint frameB = (frameA + 1u) % totalFrames;
+                float2 uvB = GetFrameUV(baseUV, frameB);
                 half4 colB = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uvB);
 
                 // 混合仅发生在每帧末尾的 _Blend 窗口内，大部分时间为清晰单帧
                 float blendStart = 1.0 - _Blend;
-                float blendWeight = (_Blend > 0.001)
-                    ? smoothstep(0.0, 1.0, saturate((f - blendStart) / _Blend))
-                    : 0.0;
+                float blendWeight = smoothstep(0.0, 1.0, saturate((f - blendStart) / _Blend));
 
                 half4 col = lerp(colA, colB, blendWeight);
-                half3 finalRGB = col.rgb * baseColorRGB;
+                half3 finalRGB = col.rgb * baseColorRGB * i.color.rgb;
                 // 通道切换：R=0 使用 R 通道作为 alpha（灰度序列帧），A=1 使用 A 通道
                 float blendAlpha = lerp(col.r, col.a, _SwitchP);
-                float finalAlpha = blendAlpha * baseColorA;
-                return half4(finalRGB, finalAlpha) * i.color;
+                float finalAlpha = saturate(blendAlpha * baseColorA * i.color.a);
+
+                if (finalAlpha <= 0.01)
+                {
+                    discard;
+                }
+
+                return half4(finalRGB, finalAlpha);
             }
             ENDHLSL
         }
