@@ -130,6 +130,8 @@ public class ParticleRecorderWindow : EditorWindow
     private const string PrefFrameRate      = "PR_Pref_FrameRate";
     private const string PrefDuration       = "PR_Pref_Duration";
     private const string PrefOrthoSize      = "PR_Pref_OrthoSize";
+    private const string PrefPivotOffsetX   = "PR_Pref_PivotOffsetX";
+    private const string PrefPivotOffsetY   = "PR_Pref_PivotOffsetY";
     private const string PrefResolution     = "PR_Pref_Resolution";
     private const string PrefSeqExportPath  = "PR_Pref_SeqExportPath";
     private const string PrefPrefabOutPath  = "PR_Pref_PrefabOutPath";
@@ -137,6 +139,7 @@ public class ParticleRecorderWindow : EditorWindow
     private const string PrefFastRecord     = "PR_Pref_FastRecord";
     private const string PrefKeepPngSequence = "PR_Pref_KeepPngSequence";
     private const string PrefOutputType      = "PR_Pref_OutputType";
+    private const string PrefSpriteTemplatePath = "PR_Pref_SpriteTemplatePath";
 
     private enum FrameResolution
     {
@@ -155,6 +158,7 @@ public class ParticleRecorderWindow : EditorWindow
     private float        duration    = 2f;    // 录制时长（秒）
     private FrameResolution resolution = FrameResolution._512;  // 单帧分辨率
     private float        orthoSize   = 3f;    // 正交摄像机半高（世界单位）
+    private Vector2      pivotOffset;          // 将源特效平移后烘焙进图集的轴心偏移
     private string     seqPath     = "";    // 序列帧输出路径
     private string     prefabPath  = "";    // 预制体输出路径
     private string     matPath     = "";    // 材质输出路径
@@ -165,6 +169,11 @@ public class ParticleRecorderWindow : EditorWindow
     // ── 滚动视图 / 预览 ───────────────────────────────────────────────
     private Vector2    scroll;
     private GameObject previewInstance;    // 预览实例（在当前场景中）
+    private bool       hasPreviewedCurrentSource;
+    private string     previewStatusMessage;
+    private MessageType previewStatusType = MessageType.None;
+    private string     prefabPathMatchMessage;
+    private MessageType prefabPathMatchMessageType = MessageType.None;
     private bool       pendingContextConfirmation;
     private string     pendingContextSourceLabel;
 
@@ -227,6 +236,9 @@ public class ParticleRecorderWindow : EditorWindow
         frameRate  = EditorPrefs.GetInt   (PrefFrameRate,  25);
         duration   = EditorPrefs.GetFloat (PrefDuration,   2f);
         orthoSize  = EditorPrefs.GetFloat (PrefOrthoSize,  3f);
+        pivotOffset = new Vector2(
+            EditorPrefs.GetFloat(PrefPivotOffsetX, 0f),
+            EditorPrefs.GetFloat(PrefPivotOffsetY, 0f));
         resolution = (FrameResolution)EditorPrefs.GetInt(PrefResolution, (int)FrameResolution._512);
         seqPath    = EditorPrefs.GetString(PrefSeqExportPath, GetDefaultSeqPath());
         prefabPath = EditorPrefs.GetString(PrefPrefabOutPath, GetDefaultPrefabPath());
@@ -235,7 +247,8 @@ public class ParticleRecorderWindow : EditorWindow
         keepPngSequence = EditorPrefs.GetBool(PrefKeepPngSequence, false);
         outputType = (ParticleRecorderOutputType)EditorPrefs.GetInt(PrefOutputType, (int)ParticleRecorderOutputType.ParticleSystem);
         prefabTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultTemplatePrefabPath);
-        spriteTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultSpriteTemplatePrefabPath);
+        string savedSpriteTemplatePath = EditorPrefs.GetString(PrefSpriteTemplatePath, DefaultSpriteTemplatePrefabPath);
+        spriteTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(savedSpriteTemplatePath);
         SceneView.duringSceneGui += OnSceneGUI;
     }
 
@@ -258,6 +271,8 @@ public class ParticleRecorderWindow : EditorWindow
         EditorPrefs.SetInt   (PrefFrameRate,     frameRate);
         EditorPrefs.SetFloat (PrefDuration,      duration);
         EditorPrefs.SetFloat (PrefOrthoSize,     orthoSize);
+        EditorPrefs.SetFloat (PrefPivotOffsetX,  pivotOffset.x);
+        EditorPrefs.SetFloat (PrefPivotOffsetY,  pivotOffset.y);
         EditorPrefs.SetInt   (PrefResolution,    (int)resolution);
         EditorPrefs.SetString(PrefSeqExportPath, seqPath);
         EditorPrefs.SetString(PrefPrefabOutPath, prefabPath);
@@ -265,6 +280,8 @@ public class ParticleRecorderWindow : EditorWindow
         EditorPrefs.SetBool  (PrefFastRecord,     fastRecord);
         EditorPrefs.SetBool  (PrefKeepPngSequence, keepPngSequence);
         EditorPrefs.SetInt   (PrefOutputType,     (int)outputType);
+        EditorPrefs.SetString(PrefSpriteTemplatePath,
+            spriteTemplate != null ? AssetDatabase.GetAssetPath(spriteTemplate) : "");
     }
 
     // ── 绘制 ────────────────────────────────────────────────────────────────
@@ -279,9 +296,12 @@ public class ParticleRecorderWindow : EditorWindow
 
         // ── 预制体（可拖入或点选）───────────────────────────────────────────
         DrawSectionHeader("预制体");
-        prefabToRecord = (GameObject)EditorGUILayout.ObjectField(
+        EditorGUI.BeginChangeCheck();
+        var selectedSource = (GameObject)EditorGUILayout.ObjectField(
             new GUIContent("需要转换的特效", "需要录制的粒子系统预制体或场景对象，拖入或点击右侧按钮选择"),
             prefabToRecord, typeof(GameObject), true);
+        if (EditorGUI.EndChangeCheck())
+            SetRecordingSource(selectedSource, true);
 
         outputType = (ParticleRecorderOutputType)EditorGUILayout.EnumPopup(
             new GUIContent("预制体类型", "粒子系统：生成带 TextureSheetAnimation 的粒子预制体\nSpriteAnimation：生成由 SpriteAnimation 脚本驱动的序列动画预制体"),
@@ -296,23 +316,35 @@ public class ParticleRecorderWindow : EditorWindow
         }
         else
         {
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.ObjectField(
-                new GUIContent("样板预制体", "SpriteAnimation 模式使用内置模板，不可修改"),
+            spriteTemplate = (GameObject)EditorGUILayout.ObjectField(
+                new GUIContent("样板预制体", "用于生成 SpriteAnimation 序列动画预制体；默认使用 ARec SpriteSample，也可手动指定兼容模板"),
                 spriteTemplate, typeof(GameObject), false);
-            EditorGUI.EndDisabledGroup();
             if (spriteTemplate == null)
-                EditorGUILayout.HelpBox($"未找到内置模板：{DefaultSpriteTemplatePrefabPath}", MessageType.Error);
+                EditorGUILayout.HelpBox("未指定 SpriteAnimation 模板，请手动选择兼容模板后再录制。", MessageType.Error);
             else
-                EditorGUILayout.HelpBox("将使用内置模板 ARec SpriteSample 生成由 SpriteAnimation 脚本驱动的序列动画预制体。", MessageType.Info);
+                EditorGUILayout.HelpBox("将使用当前指定模板生成由 SpriteAnimation 脚本驱动的序列动画预制体。", MessageType.Info);
         }
 
         // ── 录制参数 ─────────────────────────────────────────────────────────
         EditorGUILayout.Space(6);
         DrawSectionHeader("录制参数");
 
-        frameRate = Mathf.Max(1,    EditorGUILayout.IntField  (new GUIContent("导出帧率（fps）"),   frameRate));
-        duration  = Mathf.Max(0.1f, EditorGUILayout.FloatField(new GUIContent("录制时长（秒）"),    duration));
+        frameRate = Mathf.Max(1, EditorGUILayout.IntField(new GUIContent("导出帧率（fps）"), frameRate));
+        EditorGUI.BeginChangeCheck();
+        duration = Mathf.Max(0.1f, EditorGUILayout.FloatField(new GUIContent("录制时长（秒）"), duration));
+        if (EditorGUI.EndChangeCheck())
+        {
+            if (previewInstance != null)
+            {
+                RefreshAdaptivePreviewRange();
+            }
+            else if (hasPreviewedCurrentSource)
+            {
+                hasPreviewedCurrentSource = false;
+                previewStatusMessage = "录制时长已变化，请重新预览以更新自适应录制范围。";
+                previewStatusType = MessageType.Warning;
+            }
+        }
 
         DrawExportEstimate();
 
@@ -324,6 +356,12 @@ public class ParticleRecorderWindow : EditorWindow
             new GUIContent("单帧分辨率", "序列帧宽高，均为正方形 POT 尺寸"), resolution);
         orthoSize = Mathf.Max(0.1f, EditorGUILayout.FloatField(
                         new GUIContent("录制范围(摄像机大小)", "调整以适配粒子效果的空间范围"), orthoSize));
+        EditorGUI.BeginChangeCheck();
+        Vector2 editedPivotOffset = EditorGUILayout.Vector2Field(
+            new GUIContent("轴心偏移", "移动源特效相对录制框的位置，偏移会直接烘焙进PNG/图集；也可在Scene视图拖动黄色手柄"),
+            pivotOffset);
+        if (EditorGUI.EndChangeCheck())
+            ApplyPivotOffset(editedPivotOffset, true);
 
         bool hasPreviewing = previewInstance != null;
         EditorGUI.BeginDisabledGroup(prefabToRecord == null || Application.isPlaying);
@@ -342,6 +380,9 @@ public class ParticleRecorderWindow : EditorWindow
         }
         EditorGUI.EndDisabledGroup();
 
+        if (!string.IsNullOrEmpty(previewStatusMessage))
+            EditorGUILayout.HelpBox(previewStatusMessage, previewStatusType);
+
         if (pendingContextConfirmation && previewInstance != null)
             DrawContextPreviewConfirmation();
 
@@ -351,6 +392,8 @@ public class ParticleRecorderWindow : EditorWindow
 
         DrawPathField("序列帧输出路径", ref seqPath, GetDefaultSeqPath());
         DrawPathField("预制体输出路径", ref prefabPath, GetDefaultPrefabPath());
+        if (!string.IsNullOrEmpty(prefabPathMatchMessage))
+            EditorGUILayout.HelpBox(prefabPathMatchMessage, prefabPathMatchMessageType);
         DrawPathField("材质输出路径",   ref matPath, GetDefaultMatPath());
 
         // ── 操作按钮 ─────────────────────────────────────────────────────────
@@ -427,6 +470,18 @@ public class ParticleRecorderWindow : EditorWindow
             $"录制范围 {s * 2:F2} × {s * 2:F2} 世界单位",
             new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = new Color(0.2f, 1f, 0.5f) } });
 
+        EditorGUI.BeginChangeCheck();
+        Vector3 handlePosition = Handles.PositionHandle(
+            new Vector3(pivotOffset.x, pivotOffset.y, 0f), Quaternion.identity);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(this, "调整录制轴心");
+            ApplyPivotOffset(new Vector2(handlePosition.x, handlePosition.y), false);
+        }
+        Handles.Label(new Vector3(pivotOffset.x, pivotOffset.y, 0f) + new Vector3(0.05f, -0.08f, 0f),
+            $"轴心偏移 ({pivotOffset.x:F2}, {pivotOffset.y:F2})",
+            new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = new Color(1f, 0.8f, 0.15f) } });
+
         sv.Repaint();
     }
 
@@ -435,20 +490,76 @@ public class ParticleRecorderWindow : EditorWindow
         DestroyPreviewInstance();
         pendingContextConfirmation = false;
         pendingContextSourceLabel = null;
+        if (hasPreviewedCurrentSource)
+        {
+            previewStatusMessage = "当前特效已完成预览并退出预览状态，可以开始录制。";
+            previewStatusType = MessageType.Info;
+        }
     }
 
     private void DestroyPreviewInstance()
     {
         if (previewInstance != null)
         {
+            var selectedGameObject = Selection.activeGameObject;
+            if (selectedGameObject != null
+                && (selectedGameObject == previewInstance || selectedGameObject.transform.IsChildOf(previewInstance.transform)))
+                Selection.activeObject = null;
             DestroyImmediate(previewInstance);
             previewInstance = null;
         }
     }
 
+    private void SetRecordingSource(GameObject source, bool autoMatchPrefabPath)
+    {
+        if (prefabToRecord == source)
+        {
+            if (autoMatchPrefabPath)
+                TryMatchPrefabOutputPath(source);
+            return;
+        }
+
+        DestroyPreviewInstance();
+        prefabToRecord = source;
+        pivotOffset = Vector2.zero;
+        hasPreviewedCurrentSource = false;
+        previewStatusMessage = source == null ? null : "尚未预览当前特效。请先预览一次并退出预览状态。";
+        previewStatusType = MessageType.Info;
+        pendingContextConfirmation = false;
+        pendingContextSourceLabel = null;
+
+        if (autoMatchPrefabPath)
+            TryMatchPrefabOutputPath(source);
+    }
+
+    private void TryMatchPrefabOutputPath(GameObject source)
+    {
+        prefabPathMatchMessage = null;
+        prefabPathMatchMessageType = MessageType.None;
+        if (source == null) return;
+
+        GameObject sourceAsset = PrefabUtility.IsPartOfPrefabAsset(source)
+            ? source
+            : PrefabUtility.GetCorrespondingObjectFromSource(source);
+        string sourceAssetPath = sourceAsset != null ? AssetDatabase.GetAssetPath(sourceAsset) : "";
+        if (string.IsNullOrEmpty(sourceAssetPath))
+        {
+            prefabPathMatchMessage = "当前对象没有 Prefab 源资产，未修改预制体输出路径。";
+            prefabPathMatchMessageType = MessageType.Info;
+            return;
+        }
+
+        string assetDirectory = Path.GetDirectoryName(sourceAssetPath)?.Replace('\\', '/');
+        if (string.IsNullOrEmpty(assetDirectory)) return;
+
+        prefabPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetDirectory));
+        prefabPathMatchMessage = $"已按源特效匹配 Prefab 输出目录：{assetDirectory}\n序列帧/图集与材质目录仍使用手动设置。";
+        prefabPathMatchMessageType = MessageType.Info;
+    }
+
     private void ConfigureContextConversion(GameObject source)
     {
-        prefabToRecord = source;
+        SetRecordingSource(source, true);
         CreatePreviewInstance(source);
         pendingContextSourceLabel = source.name;
         pendingContextConfirmation = true;
@@ -460,6 +571,9 @@ public class ParticleRecorderWindow : EditorWindow
         frameRate  = EditorPrefs.GetInt   (PrefFrameRate,  25);
         duration   = EditorPrefs.GetFloat (PrefDuration,   2f);
         orthoSize  = EditorPrefs.GetFloat (PrefOrthoSize,  3f);
+        pivotOffset = new Vector2(
+            EditorPrefs.GetFloat(PrefPivotOffsetX, 0f),
+            EditorPrefs.GetFloat(PrefPivotOffsetY, 0f));
         resolution = (FrameResolution)EditorPrefs.GetInt(PrefResolution, (int)FrameResolution._512);
         seqPath    = EditorPrefs.GetString(PrefSeqExportPath, GetDefaultSeqPath());
         prefabPath = EditorPrefs.GetString(PrefPrefabOutPath, GetDefaultPrefabPath());
@@ -470,40 +584,269 @@ public class ParticleRecorderWindow : EditorWindow
         if (prefabTemplate == null)
             prefabTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultTemplatePrefabPath);
         if (spriteTemplate == null)
-            spriteTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(DefaultSpriteTemplatePrefabPath);
+        {
+            string savedSpriteTemplatePath = EditorPrefs.GetString(PrefSpriteTemplatePath, DefaultSpriteTemplatePrefabPath);
+            spriteTemplate = AssetDatabase.LoadAssetAtPath<GameObject>(savedSpriteTemplatePath);
+        }
     }
 
     private void CreatePreviewInstance(GameObject source)
     {
         DestroyPreviewInstance();
-        if (source == null) return;
+        if (source == null)
+        {
+            hasPreviewedCurrentSource = false;
+            return;
+        }
+
         previewInstance = PrefabUtility.IsPartOfPrefabAsset(source)
             ? (GameObject)PrefabUtility.InstantiatePrefab(source)
             : Instantiate(source);
+        if (previewInstance == null)
+        {
+            hasPreviewedCurrentSource = false;
+            previewStatusMessage = "预览创建失败，无法开始录制。";
+            previewStatusType = MessageType.Error;
+            return;
+        }
+
         previewInstance.name = "[Preview] " + source.name;
         previewInstance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        hasPreviewedCurrentSource = true;
+        RefreshAdaptivePreviewRange();
+        ApplyPivotOffset(pivotOffset, false);
         Selection.activeGameObject = previewInstance;
         SceneView.lastActiveSceneView?.FrameSelected();
+    }
+
+    private void ApplyPivotOffset(Vector2 value, bool repaintScene)
+    {
+        pivotOffset = value;
+        if (previewInstance != null)
+            previewInstance.transform.position = new Vector3(pivotOffset.x, pivotOffset.y, 0f);
+        if (repaintScene)
+            SceneView.RepaintAll();
+        Repaint();
+    }
+
+    private void RefreshAdaptivePreviewRange()
+    {
+        if (previewInstance == null) return;
+
+        Vector3 previewPosition = previewInstance.transform.position;
+        previewInstance.transform.position = Vector3.zero;
+        bool calculated = TryCalculateAdaptiveOrthoSize(previewInstance, duration, out float adaptiveSize);
+        previewInstance.transform.position = previewPosition;
+
+        if (calculated)
+        {
+            orthoSize = adaptiveSize;
+            previewStatusMessage = $"已按实际渲染像素完成视觉范围适配：{orthoSize * 2f:F2} × {orthoSize * 2f:F2} 世界单位。可用轴心偏移调整画面位置，录制前必须先清除预览。";
+            previewStatusType = MessageType.Info;
+        }
+        else
+        {
+            previewStatusMessage = "已完成预览，但未检测到有效的实际渲染像素；保留当前录制范围，请手动确认。录制前必须先清除预览。";
+            previewStatusType = MessageType.Warning;
+            Debug.LogWarning($"[ParticleRecorder] 无法为 {prefabToRecord?.name} 计算自适应录制范围，已保留当前值 {orthoSize:F2}。");
+        }
+
+        SceneView.RepaintAll();
+    }
+
+    private static bool TryCalculateAdaptiveOrthoSize(GameObject root, float sampleDuration, out float result)
+    {
+        const int captureSize = 192;
+        const float visibilityThreshold = 0.02f;
+        const int previewLayer = 31;
+        result = 0f;
+
+        var particleSystems = root.GetComponentsInChildren<ParticleSystem>(true);
+        var rootParticleSystems = new System.Collections.Generic.List<ParticleSystem>();
+        foreach (var particleSystem in particleSystems)
+        {
+            bool hasParticleParent = false;
+            for (Transform parent = particleSystem.transform.parent; parent != null; parent = parent.parent)
+            {
+                if (parent.GetComponent<ParticleSystem>() != null)
+                {
+                    hasParticleParent = true;
+                    break;
+                }
+            }
+            if (!hasParticleParent)
+                rootParticleSystems.Add(particleSystem);
+        }
+
+        var transforms = root.GetComponentsInChildren<Transform>(true);
+        var originalLayers = new int[transforms.Length];
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            originalLayers[i] = transforms[i].gameObject.layer;
+            transforms[i].gameObject.layer = previewLayer;
+        }
+
+        GameObject cameraObject = null;
+        RenderTexture target = null;
+        Texture2D readback = null;
+        try
+        {
+            cameraObject = new GameObject("_ParticleRecorderVisualBoundsCamera") { hideFlags = HideFlags.HideAndDontSave };
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.nearClipPlane = 0.01f;
+            camera.farClipPlane = 1000f;
+            camera.cullingMask = 1 << previewLayer;
+            camera.enabled = false;
+            camera.allowHDR = false;
+            camera.allowMSAA = false;
+            cameraObject.transform.SetPositionAndRotation(new Vector3(0f, 0f, -10f), Quaternion.identity);
+
+            var urpCamDataType = Type.GetType(
+                "UnityEngine.Rendering.Universal.UniversalAdditionalCameraData, Unity.RenderPipelines.Universal.Runtime");
+            if (urpCamDataType != null && cameraObject.GetComponent(urpCamDataType) == null)
+                cameraObject.AddComponent(urpCamDataType);
+
+            target = RenderTexture.GetTemporary(captureSize, captureSize, 24, RenderTextureFormat.ARGB32);
+            readback = new Texture2D(captureSize, captureSize, TextureFormat.RGBA32, false);
+            camera.targetTexture = target;
+
+            // 从较紧的范围开始；视觉像素触边或完全不可见时逐级扩大探测范围。
+            float probeSize = 1f;
+            for (int attempt = 0; attempt < 7; attempt++)
+            {
+                camera.orthographicSize = probeSize;
+                bool foundPixels = false;
+                bool touchesEdge = false;
+                int minX = captureSize;
+                int minY = captureSize;
+                int maxX = -1;
+                int maxY = -1;
+                float totalVisualEnergy = 0f;
+                var radialVisualEnergy = new float[Mathf.CeilToInt(captureSize * 0.72f) + 1];
+                int sampleCount = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(0.1f, sampleDuration) * 15f), 2, 60);
+
+                foreach (var particleSystem in particleSystems)
+                    particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+                for (int sample = 0; sample <= sampleCount; sample++)
+                {
+                    float time = sampleDuration * sample / sampleCount;
+                    foreach (var rootParticleSystem in rootParticleSystems)
+                        rootParticleSystem.Simulate(time, true, true, true);
+
+                    camera.backgroundColor = Color.black;
+                    camera.Render();
+                    Color32[] blackPixels = ReadPixels(target, readback);
+
+                    camera.backgroundColor = Color.white;
+                    camera.Render();
+                    Color32[] whitePixels = ReadPixels(target, readback);
+
+                    for (int pixelIndex = 0; pixelIndex < blackPixels.Length; pixelIndex++)
+                    {
+                        Color32 black = blackPixels[pixelIndex];
+                        Color32 white = whitePixels[pixelIndex];
+                        float blackSignal = Mathf.Max(black.r, Mathf.Max(black.g, black.b)) / 255f;
+                        float whiteSignal = 1f - Mathf.Min(white.r, Mathf.Min(white.g, white.b)) / 255f;
+                        float signal = Mathf.Max(blackSignal, whiteSignal);
+                        if (signal < visibilityThreshold) continue;
+
+                        int x = pixelIndex % captureSize;
+                        int y = pixelIndex / captureSize;
+                        foundPixels = true;
+                        minX = Mathf.Min(minX, x);
+                        minY = Mathf.Min(minY, y);
+                        maxX = Mathf.Max(maxX, x);
+                        maxY = Mathf.Max(maxY, y);
+
+                        float center = (captureSize - 1) * 0.5f;
+                        int radialIndex = Mathf.Clamp(
+                            Mathf.CeilToInt(Mathf.Max(Mathf.Abs(x - center), Mathf.Abs(y - center))),
+                            0, radialVisualEnergy.Length - 1);
+                        radialVisualEnergy[radialIndex] += signal;
+                        totalVisualEnergy += signal;
+                    }
+                }
+
+                if (foundPixels)
+                {
+                    const int edgePaddingPixels = 3;
+                    touchesEdge = minX <= edgePaddingPixels || minY <= edgePaddingPixels
+                        || maxX >= captureSize - 1 - edgePaddingPixels
+                        || maxY >= captureSize - 1 - edgePaddingPixels;
+                    if (!touchesEdge)
+                    {
+                        // 按整个预览时段累计的视觉能量取 99% 半径，忽略只在极少帧出现的稀疏外围像素。
+                        float targetEnergy = totalVisualEnergy * 0.99f;
+                        float accumulatedEnergy = 0f;
+                        int visualRadiusPixels = 0;
+                        for (int radius = 0; radius < radialVisualEnergy.Length; radius++)
+                        {
+                            accumulatedEnergy += radialVisualEnergy[radius];
+                            if (accumulatedEnergy < targetEnergy) continue;
+                            visualRadiusPixels = radius;
+                            break;
+                        }
+
+                        float worldRadius = (visualRadiusPixels + 0.5f) * (probeSize * 2f / captureSize);
+                        result = Mathf.Max(0.1f, worldRadius * 1.08f);
+                        return true;
+                    }
+                }
+
+                probeSize *= 2f;
+            }
+
+            return false;
+        }
+        finally
+        {
+            foreach (var particleSystem in particleSystems)
+            {
+                particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                particleSystem.Play(true);
+            }
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i] != null)
+                    transforms[i].gameObject.layer = originalLayers[i];
+            }
+            RenderTexture.active = null;
+            if (target != null)
+                RenderTexture.ReleaseTemporary(target);
+            if (readback != null)
+                DestroyImmediate(readback);
+            if (cameraObject != null)
+                DestroyImmediate(cameraObject);
+        }
+    }
+
+    private static Color32[] ReadPixels(RenderTexture source, Texture2D destination)
+    {
+        RenderTexture.active = source;
+        destination.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0, false);
+        destination.Apply(false, false);
+        return destination.GetPixels32();
     }
 
     private void DrawContextPreviewConfirmation()
     {
         EditorGUILayout.Space(6);
         DrawSectionHeader("右键转换确认");
-        EditorGUILayout.HelpBox($"请在 Scene 视图确认录制范围。当前对象：{pendingContextSourceLabel}\n可调整「录制范围(摄像机大小)」，确认后会读取当前窗口配置开始转换。", MessageType.Info);
+        EditorGUILayout.HelpBox($"请在 Scene 视图确认自适应后的录制范围。当前对象：{pendingContextSourceLabel}\n确认后会退出预览；退出预览后再点击窗口底部的「开始录制」。", MessageType.Info);
         string confirmBlockReason = GetContextConfirmBlockReason();
         if (!string.IsNullOrEmpty(confirmBlockReason))
             EditorGUILayout.HelpBox(confirmBlockReason, MessageType.Warning);
         EditorGUILayout.BeginHorizontal();
         EditorGUI.BeginDisabledGroup(!string.IsNullOrEmpty(confirmBlockReason));
-        if (GUILayout.Button("确认并开始转换", GUILayout.Height(28)))
+        if (GUILayout.Button("确认预览并退出", GUILayout.Height(28)))
         {
             SavePrefs();
-            pendingContextConfirmation = false;
-            if (fastRecord)
-                StartFastRecording();
-            else
-                StartRecording();
+            ClearPreview();
+            previewStatusMessage = "当前特效已完成预览并退出预览状态，可以开始录制。";
+            previewStatusType = MessageType.Info;
         }
         EditorGUI.EndDisabledGroup();
         if (GUILayout.Button("取消", GUILayout.Height(28)))
@@ -517,13 +860,15 @@ public class ParticleRecorderWindow : EditorWindow
         if (busy) return "当前正在 Play Mode 或录制中，无法开始新的录制。";
         if (prefabToRecord == null) return "请选择需要转换的特效预制体或场景对象。";
         if (!ContainsParticleSystem(prefabToRecord)) return "选择的对象不包含 ParticleSystem，无法转换。";
+        if (!hasPreviewedCurrentSource || previewInstance == null)
+            return "必须先成功预览当前特效，才可确认退出预览。";
 
         string dataPath = Application.dataPath.Replace('\\', '/');
         string pathError = GetPathsOutsideAssetsError(dataPath);
         if (!string.IsNullOrEmpty(pathError)) return pathError;
 
         if (IsSpriteOutput && GetEffectiveTemplate() == null)
-            return $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}";
+            return "未指定 SpriteAnimation 模板，请在样板预制体字段中选择兼容模板。";
 
         var missing = new System.Text.StringBuilder();
         CheckRequiredPath("序列帧输出路径", seqPath, missing);
@@ -617,8 +962,10 @@ public class ParticleRecorderWindow : EditorWindow
         if (pendingContextConfirmation) return "请先在右键转换确认区确认或取消当前预览。";
         if (prefabToRecord == null) return "请选择需要转换的特效预制体或场景对象。";
         if (!ContainsParticleSystem(prefabToRecord)) return "选择的对象不包含 ParticleSystem，无法转换。";
+        if (!hasPreviewedCurrentSource) return "步骤 3 未完成：必须先预览一次当前特效。";
+        if (previewInstance != null) return "步骤 3 未完成：必须退出预览状态后才可录制。";
         if (IsSpriteOutput && GetEffectiveTemplate() == null)
-            return $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}";
+            return "未指定 SpriteAnimation 模板，请在样板预制体字段中选择兼容模板。";
 
         var missing = new System.Text.StringBuilder();
         CheckRequiredPath("序列帧输出路径", seqPath, missing);
@@ -704,36 +1051,40 @@ public class ParticleRecorderWindow : EditorWindow
             padding  = new RectOffset(4, 4, 6, 6)
         };
 
-        bool step1Done = prefabToRecord != null;
+        bool step1Done = prefabToRecord != null && ContainsParticleSystem(prefabToRecord);
         bool step2Done = GetEffectiveTemplate() != null;
-        bool step3Done = frameRate >= 1 && duration >= 0.1f;
-        bool step4Done = pathsValid
+        bool step3Done = hasPreviewedCurrentSource && previewInstance == null;
+        bool step4Done = frameRate >= 1 && duration >= 0.1f && orthoSize >= 0.1f;
+        bool step5Done = pathsValid
             && !string.IsNullOrWhiteSpace(seqPath)
             && (GetEffectiveTemplate() == null
                 || (!string.IsNullOrWhiteSpace(prefabPath) && !string.IsNullOrWhiteSpace(matPath)));
 
-        // 步骤 4 的颜色：有路径填写但不合法 → 红；合法 → 绿；未填写 → 灰
+        // 路径步骤：有路径填写但不合法 → 红；合法 → 绿；未填写 → 灰
         bool anyPath  = !string.IsNullOrWhiteSpace(seqPath)
                      || !string.IsNullOrWhiteSpace(prefabPath)
                      || !string.IsNullOrWhiteSpace(matPath);
-        string c4 = anyPath && !pathsValid ? "#E57373"
-                  : step4Done             ? "#66BB6A"
+        string c5 = anyPath && !pathsValid ? "#E57373"
+                  : step5Done             ? "#66BB6A"
                   :                         "#888888";
 
         string c1 = step1Done ? "#66BB6A" : "#888888";
         string c2 = step2Done ? "#66BB6A" : "#AAAAAA";
-        string c3 = step3Done ? "#66BB6A" : "#888888";
+        string c3 = step3Done ? "#66BB6A" : (previewInstance != null ? "#FFB74D" : "#888888");
+        string c4 = step4Done ? "#66BB6A" : "#888888";
 
         string m1 = step1Done ? "●" : "○";
         string m2 = step2Done ? "●" : "○";
-        string m3 = step3Done ? "●" : "○";
-        string m4 = anyPath && !pathsValid ? "✗" : (step4Done ? "●" : "○");
+        string m3 = step3Done ? "●" : (previewInstance != null ? "◐" : "○");
+        string m4 = step4Done ? "●" : "○";
+        string m5 = anyPath && !pathsValid ? "✗" : (step5Done ? "●" : "○");
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"<color={c1}>{m1} 步骤 1：选择「录制特效预制体」</color>");
-        sb.AppendLine($"<color={c2}>{m2} 步骤 2：设置「样板预制体」以自动生成序列帧预制体；不填则只生成图集</color>");
-        sb.AppendLine($"<color={c3}>{m3} 步骤 3：设置导出帧率（当前 {frameRate} fps）和录制时长（当前 {duration:F1} 秒）</color>");
-        sb.Append    ($"<color={c4}>{m4} 步骤 4：将各「输出路径」设置到项目 Assets 目录内</color>");
+        sb.AppendLine($"<color={c1}>{m1} 步骤 1：选择需要转换的特效</color>");
+        sb.AppendLine($"<color={c2}>{m2} 步骤 2：选择输出预制体类型并确认对应模板</color>");
+        sb.AppendLine($"<color={c3}>{m3} 步骤 3：必须先预览一次，并退出预览状态后才可录制</color>");
+        sb.AppendLine($"<color={c4}>{m4} 步骤 4：设置帧率、时长、分辨率及录制范围（当前 {frameRate} fps / {duration:F1} 秒）</color>");
+        sb.Append    ($"<color={c5}>{m5} 步骤 5：确认输出路径（Prefab 自动匹配源目录；PNG/图集与材质手动指定）</color>");
 
         if (anyPath && !pathsValid)
         {
@@ -747,7 +1098,7 @@ public class ParticleRecorderWindow : EditorWindow
                 sb.Append($"\n<color=#E57373>{errs.ToString().TrimEnd()}</color>");
         }
 
-        if (step1Done && step3Done && step4Done)
+        if (step1Done && step2Done && step3Done && step4Done && step5Done)
             sb.Append("\n\n<color=#66BB6A>✓ 准备就绪，点击「开始录制」即可！</color>");
 
         GUILayout.Label(sb.ToString(), style);
@@ -813,15 +1164,30 @@ public class ParticleRecorderWindow : EditorWindow
         }
     }
 
+    private bool EnsurePreviewReadyForRecording()
+    {
+        if (!hasPreviewedCurrentSource)
+        {
+            EditorUtility.DisplayDialog("需要先预览", "必须先预览一次当前特效，才可开始录制。", "确定");
+            return false;
+        }
+        if (previewInstance != null)
+        {
+            EditorUtility.DisplayDialog("请先退出预览", "当前仍处于预览状态。请先点击“清除预览”，再开始录制。", "确定");
+            return false;
+        }
+        return true;
+    }
+
     // ── 录制流程 ──────────────────────────────────────────────────────────
     private void StartRecording()
     {
-        if (prefabToRecord == null) return;
+        if (prefabToRecord == null || !EnsurePreviewReadyForRecording()) return;
         var template = GetEffectiveTemplate();
         if (IsSpriteOutput && template == null)
         {
             EditorUtility.DisplayDialog("缺少模板",
-                $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}", "确定");
+                "未指定 SpriteAnimation 模板，请在样板预制体字段中选择兼容模板。", "确定");
             return;
         }
         if (template != null && !PrefabOutputGenerator.Validate(outputType, template, GetEffectiveTemplatePath()))
@@ -882,7 +1248,7 @@ public class ParticleRecorderWindow : EditorWindow
         // 预制体实例（对准世界原点）
         var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(sourcePrefabPath);
         var instance = (GameObject)PrefabUtility.InstantiatePrefab(sourcePrefab, tempScene);
-        instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        instance.transform.SetPositionAndRotation(new Vector3(pivotOffset.x, pivotOffset.y, 0f), Quaternion.identity);
 
         // 录制器运行时组件
         new GameObject("_ParticleRecorderRuntime").AddComponent<ParticleRecorderRuntime>();
@@ -908,12 +1274,12 @@ public class ParticleRecorderWindow : EditorWindow
     // ── 快速录制（编辑模式）──────────────────────────────────────────────────
     private void StartFastRecording()
     {
-        if (prefabToRecord == null) return;
+        if (prefabToRecord == null || !EnsurePreviewReadyForRecording()) return;
         var template = GetEffectiveTemplate();
         if (IsSpriteOutput && template == null)
         {
             EditorUtility.DisplayDialog("缺少模板",
-                $"未找到内置 SpriteAnimation 模板：{DefaultSpriteTemplatePrefabPath}", "确定");
+                "未指定 SpriteAnimation 模板，请在样板预制体字段中选择兼容模板。", "确定");
             return;
         }
         if (template != null && !PrefabOutputGenerator.Validate(outputType, template, GetEffectiveTemplatePath()))
@@ -961,7 +1327,7 @@ public class ParticleRecorderWindow : EditorWindow
         // 预制体实例（对准世界原点）
         var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(sourcePrefabPath);
         var instance = (GameObject)PrefabUtility.InstantiatePrefab(sourcePrefab, tempScene);
-        instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        instance.transform.SetPositionAndRotation(new Vector3(pivotOffset.x, pivotOffset.y, 0f), Quaternion.identity);
 
         // 预先缓存根级粒子系统（无祖先 PS 节点），后续增量模拟只对根节点调用一次
         var allPS      = instance.GetComponentsInChildren<ParticleSystem>(true);

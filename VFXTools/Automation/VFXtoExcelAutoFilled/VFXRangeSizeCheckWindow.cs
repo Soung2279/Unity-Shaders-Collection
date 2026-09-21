@@ -38,8 +38,15 @@ public class VFXRangeSizeCheckWindow : EditorWindow
 
     private const float ROW_HEIGHT = 22f;
     private const float MIN_COL_WIDTH = 30f;
-    private float[] colWidths = { 50f, 300f, 70f, 75f, 300f, 280f, 70f, 70f };
-    private static readonly string[] COL_NAMES = { "ID", "名称", "表格范围", "Collider", "资源路径", "Collider 信息", "还原", "操作" };
+    private float[] colWidths = { 50f, 300f, 75f, 70f, 75f, 300f, 280f, 70f, 70f };
+    private static readonly string[] COL_NAMES = { "ID", "名称", "特效类型", "表格范围", "Collider", "资源路径", "Collider 信息", "还原", "操作" };
+    private static readonly string[] VFX_TYPE_LABELS = { "Spine", "粒子", "复合", "序列帧" };
+    private static readonly Color[] VFX_TYPE_COLORS = {
+        new Color(0.75f, 0.50f, 1.00f),
+        new Color(0.30f, 0.90f, 1.00f),
+        new Color(1.00f, 0.80f, 0.25f),
+        new Color(0.35f, 1.00f, 0.60f),
+    };
 
     private int resizingCol = -1;
     private float resizeStartX;
@@ -200,11 +207,13 @@ public class VFXRangeSizeCheckWindow : EditorWindow
         x += colWidths[0];
         EditorGUI.SelectableLabel(new Rect(x, rowRect.y, colWidths[1], ROW_HEIGHT), row.name, cellStyle);
         x += colWidths[1];
-        DrawRangeEditCell(new Rect(x, rowRect.y, colWidths[2], ROW_HEIGHT), item, index);
+        DrawVfxTypeCell(new Rect(x, rowRect.y, colWidths[2], ROW_HEIGHT), row.vfxType);
         x += colWidths[2];
-        DrawColoredTextCell(new Rect(x, rowRect.y, colWidths[3], ROW_HEIGHT), item.expectedRangeSize.ToString(), new Color(0.35f, 0.95f, 0.45f));
+        DrawRangeEditCell(new Rect(x, rowRect.y, colWidths[3], ROW_HEIGHT), item, index);
         x += colWidths[3];
-        Rect resourceRect = new Rect(x, rowRect.y, colWidths[4], ROW_HEIGHT);
+        DrawColoredTextCell(new Rect(x, rowRect.y, colWidths[4], ROW_HEIGHT), item.expectedRangeSize.ToString(), new Color(0.35f, 0.95f, 0.45f));
+        x += colWidths[4];
+        Rect resourceRect = new Rect(x, rowRect.y, colWidths[5], ROW_HEIGHT);
         EditorGUI.LabelField(resourceRect, row.resource, cellStyle);
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0
             && Event.current.clickCount >= 2 && resourceRect.Contains(Event.current.mousePosition))
@@ -214,26 +223,51 @@ public class VFXRangeSizeCheckWindow : EditorWindow
             Event.current.Use();
             Repaint();
         }
-        x += colWidths[4];
-        DrawColliderInfoCell(new Rect(x, rowRect.y, colWidths[5], ROW_HEIGHT), item.colliderInfo);
         x += colWidths[5];
+        DrawColliderInfoCell(new Rect(x, rowRect.y, colWidths[6], ROW_HEIGHT), item.colliderInfo);
+        x += colWidths[6];
 
         bool modified = IsPendingModified(item);
         Color savedBg = GUI.backgroundColor;
         bool savedEnabled = GUI.enabled;
         GUI.backgroundColor = modified ? new Color(1f, 0.86f, 0.35f) : new Color(0.55f, 0.55f, 0.55f);
         GUI.enabled = modified;
-        if (GUI.Button(new Rect(x + 2f, rowRect.y + 2f, colWidths[6] - 4f, ROW_HEIGHT - 4f), "还原"))
+        if (GUI.Button(new Rect(x + 2f, rowRect.y + 2f, colWidths[7] - 4f, ROW_HEIGHT - 4f), "还原"))
         {
             RevertPendingRangeSize(item);
             Repaint();
         }
         GUI.enabled = savedEnabled;
         GUI.backgroundColor = savedBg;
-        x += colWidths[6];
+        x += colWidths[7];
 
-        if (GUI.Button(new Rect(x + 2f, rowRect.y + 2f, colWidths[7] - 4f, ROW_HEIGHT - 4f), "定位"))
+        if (GUI.Button(new Rect(x + 2f, rowRect.y + 2f, colWidths[8] - 4f, ROW_HEIGHT - 4f), "定位"))
             PingPrefab(item.assetPath);
+    }
+
+    private void DrawVfxTypeCell(Rect rect, string vfxType)
+    {
+        if (!int.TryParse(vfxType, out int type) || type < 0 || type >= VFX_TYPE_LABELS.Length)
+        {
+            EditorGUI.LabelField(rect, vfxType, cellStyle);
+            return;
+        }
+
+        Texture icon = type == 0
+            ? EditorGUIUtility.IconContent("Animator Icon").image
+            : type == 1
+                ? EditorGUIUtility.IconContent("ParticleSystem Icon").image
+                : type == 2
+                    ? EditorGUIUtility.IconContent("Prefab Icon").image
+                    : EditorGUIUtility.IconContent("AnimationClip Icon").image;
+        if (icon != null)
+            GUI.DrawTexture(new Rect(rect.x + 2f, rect.y + 3f, 16f, 16f), icon, ScaleMode.ScaleToFit, true);
+
+        Color saved = GUI.contentColor;
+        GUI.contentColor = VFX_TYPE_COLORS[type];
+        EditorGUI.LabelField(new Rect(rect.x + 21f, rect.y, rect.width - 21f, rect.height),
+            VFX_TYPE_LABELS[type], cellStyle);
+        GUI.contentColor = saved;
     }
 
     private void DrawColoredTextCell(Rect rect, string text, Color color)
@@ -467,6 +501,7 @@ public class VFXRangeSizeCheckWindow : EditorWindow
         string detail =
             $"ID: {row.id}\n" +
             $"名称: {row.name}\n" +
+            $"特效类型: {GetVfxTypeLabel(row.vfxType)} ({row.vfxType})\n" +
             $"资源路径: {row.resource}\n" +
             $"表格范围大小: {item.currentRangeSize}\n" +
             $"待保存范围大小: {GetPendingRangeSize(item)}\n" +
@@ -474,6 +509,13 @@ public class VFXRangeSizeCheckWindow : EditorWindow
             $"Collider: {item.colliderInfo}\n" +
             $"Prefab: {item.assetPath}\n";
         EditorUtility.DisplayDialog($"范围检查详情 - {row.id}", detail, "确定");
+    }
+
+    private static string GetVfxTypeLabel(string vfxType)
+    {
+        return int.TryParse(vfxType, out int type) && type >= 0 && type < VFX_TYPE_LABELS.Length
+            ? VFX_TYPE_LABELS[type]
+            : "未知";
     }
 
     private void SavePendingChanges()

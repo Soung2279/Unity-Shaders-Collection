@@ -44,6 +44,7 @@ public class VFXTablePreviewWindow : EditorWindow
     private Texture2D iconSpine;
     private Texture2D iconParticle;
     private Texture2D iconPrefab;
+    private Texture2D iconSequence;
 
     private int selectedRowIndex = -1;
     private bool isEditMode;
@@ -288,6 +289,7 @@ public class VFXTablePreviewWindow : EditorWindow
         iconParticle = EditorGUIUtility.IconContent("ParticleSystem Icon").image as Texture2D;
         iconSpine = EditorGUIUtility.IconContent("Animator Icon").image as Texture2D;
         iconPrefab = EditorGUIUtility.IconContent("Prefab Icon").image as Texture2D;
+        iconSequence = EditorGUIUtility.IconContent("AnimationClip Icon").image as Texture2D;
     }
 
     private static GUIStyle MakeRowStyle(Color color)
@@ -1186,7 +1188,10 @@ public class VFXTablePreviewWindow : EditorWindow
             return;
         }
 
-        Texture2D icon = t == 0 ? iconSpine : t == 1 ? iconParticle : iconPrefab;
+        Texture2D icon = t == 0 ? iconSpine
+            : t == 1 ? iconParticle
+            : t == 2 ? iconPrefab
+            : iconSequence;
         string label = VFX_TYPE_LABELS[t];
 
         if (icon != null)
