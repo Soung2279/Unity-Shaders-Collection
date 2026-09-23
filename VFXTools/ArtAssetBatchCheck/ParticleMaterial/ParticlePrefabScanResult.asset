@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: ParticlePrefabScanResult
   m_EditorClassIdentifier: 
   prefabPaths:
-  - Assets/GameAsset/Effect/Custom/eft_arrow_attack.prefab
   - Assets/GameAsset/Effect/Custom/eft_arrow_big_attack.prefab
   - Assets/GameAsset/Effect/Custom/eft_Assassin_Bullet_big.prefab
   - Assets/GameAsset/Effect/Custom/eft_Buff_Posion.prefab
@@ -111,28 +110,52 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Skill/AoShuJiaoTu/eft_fire_03_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/BaoPoGaoShou/eft_blow_common_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/BaoPoGaoShou/eft_blow_common_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/CiKe/eft_skill_CiKe_boom.prefab
   - Assets/GameAsset/Effect/Particle/Skill/DianCiHuoHua/eft_skill_DCHH_chain.prefab
   - Assets/GameAsset/Effect/Particle/Skill/DianCiHuoHua/eft_skill_DCHH_chain_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Skill/DianCiHuoHua/eft_skill_DCHH_hit.prefab
   - Assets/GameAsset/Effect/Particle/Skill/DianCiHuoHua/eft_skill_DCHH_hit_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Skill/DianCiHuoHua/eft_skill_DCHH_SpellBuff.prefab
   - Assets/GameAsset/Effect/Particle/Skill/DianCiHuoHua/eft_skill_DCHH_SpellBuff_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/FuHuoJia/eft_skill_FuHuoJia.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/FuHuoJia/eft_skill_FuHuoJia_fuhuo.prefab
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_03_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_b_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/FuJiDiCi/eft_skill_zd_fujidici_c_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/HeiDong/eft_skill_HeiDong.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan_02_P_sheet.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_skill_zd_huanyuexingdan_big.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/HuanYueXingDan/eft_staff_zd_hyxd_thunderchain.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuiMieXuanFeng/eft_skill_zd_huimiexuanfeng_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuiMieXuanFeng/eft_skill_zd_huimiexuanfeng_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuiMieXuanFeng/eft_skill_zd_huimiexuanfeng_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuoJingLing/eft_skill_zd_huojingling_01_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuoJingLing/eft_skill_zd_huojingling_02_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/HuoJingLing/eft_skill_zd_huojingling_a_P.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameBingBao/eft_InGameSkill_bingbao_Boom.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameBingBao/eft_InGameSkill_bingbao_bullet.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameBingBao/eft_InGameSkill_bingbao_Fog.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameBingBao/eft_InGameSkill_bingbao_IceFall.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameDuBao/eft_InGameSkill_dubao_hitbuff.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameDuBao/eft_staff_SanSheGong_Boom
+    backup.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameDuBao/eft_staff_SanSheGong_Boom_Anim.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameDuBao/eft_staff_SanSheGong_PosionFog.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_Boom.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_Chain.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_ChainHit.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_ChainLineRender.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_hitBuff.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_Thunder.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameLeiJi/eft_InGameSkill_leiji_Thunder_Enhanced.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameZhuoShao/eft_InGameSkill_zhuoshao_Boom.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameZhuoShao/eft_InGameSkill_zhuoshao_Ground.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/InGameZhuoShao/eft_InGameSkill_zhuoshao_hitbuff.prefab
   - Assets/GameAsset/Effect/Particle/Skill/JianSu/eft_skill_JianSu_Buff.prefab
   - Assets/GameAsset/Effect/Particle/Skill/JianSu/eft_skill_JianSu_Halo.prefab
   - Assets/GameAsset/Effect/Particle/Skill/JingLingWang/eft_skill_JLW_fire.prefab
@@ -146,11 +169,24 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Skill/LeiTingWanJun/eft_skill_LTWJ_thunder_Enhanced.prefab
   - Assets/GameAsset/Effect/Particle/Skill/LeiTingWanJun/eft_skill_LTWJ_thunder_Enhanced_small.prefab
   - Assets/GameAsset/Effect/Particle/Skill/LeiTingWanJun/eft_skill_LTWJ_thunder_small.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/LeiYun/eft_skill_LeiYun_Cloud.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/LeiYun/eft_skill_LeiYun_Thunder.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/LeiYun/eft_skill_LeiYun_Thunder_small.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_Enhanced_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_Enhanced_left.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_Enhanced_mid.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_Enhanced_right.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_left.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_mid.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/ShanDian/eft_skill_shandian_FallThunder_right.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/WuXianHuoLi/eft_skill_WuXianHuoLi.prefab
   - Assets/GameAsset/Effect/Particle/Skill/XiXueGui/eft_skill_XXG_bat_hit.prefab
   - Assets/GameAsset/Effect/Particle/Skill/XiXueGui/eft_skill_XXG_bullet_LV1.prefab
   - Assets/GameAsset/Effect/Particle/Skill/XiXueGui/eft_skill_XXG_bullet_LV2.prefab
   - Assets/GameAsset/Effect/Particle/Skill/XiXueGui/eft_skill_XXG_bullet_LV3.prefab
   - Assets/GameAsset/Effect/Particle/Skill/XiXueGui/eft_skill_XXG_hit.prefab
+  - Assets/GameAsset/Effect/Particle/Skill/YinXue/eft_skill_YinXue.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_01_a_fanwei_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_01_a_P.prefab
   - Assets/GameAsset/Effect/Particle/Skill/ZhiGaoZhiGuang/eft_skill_zd_zhigaozhiguang_01_fanwei_P.prefab
@@ -174,6 +210,8 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_fivestar.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_gold.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_HeroGacha.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_SkillGacha_Orange.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_SkillGacha_Purple.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_sliver.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_weapon_A.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UI_Box_weapon_B.prefab
@@ -236,6 +274,8 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/UIFX/UIFX_EquipUnlock_Circle.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UIFX_Gacha_GainHeroes.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UIFX_GachaHero_Show.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UIFX_GachaSkill_Orange_Show.prefab
+  - Assets/GameAsset/Effect/Particle/UIFX/UIFX_GachaSkill_purple_Show.prefab
   - Assets/GameAsset/Effect/Particle/UIFX/UIFX_WeaponConfirePage_Upgrade.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_baofeng_01_boom_P.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/BaoFengDaJian/eft_baofeng_02_boom_P.prefab
@@ -349,10 +389,6 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/JiFengZhiGong/eft_staff_jfzg_hit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/JiFengZhiGong/eft_staff_jfzg_hit_skill.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/JiFengZhiGong/eft_staff_jfzg_thunderchain.prefab
-  - Assets/GameAsset/Effect/Particle/Weapon/LianSheGong/eft_staff_SanSheGong_Boom
-    backup.prefab
-  - Assets/GameAsset/Effect/Particle/Weapon/LianSheGong/eft_staff_SanSheGong_Boom_Anim.prefab
-  - Assets/GameAsset/Effect/Particle/Weapon/LianSheGong/eft_staff_SanSheGong_PosionFog.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_Du.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_DuHit.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/LiuXingLuo/eft_staff_lxl_03_DuHit_Anim.prefab
@@ -596,6 +632,7 @@ MonoBehaviour:
   - Assets/GameAsset/Effect/Particle/Weapon/ZhanDouHuanRen/eft_staff_zdhr_ultra.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ZhanDouHuanRen/eft_staff_zdhr_ultra_A.prefab
   - Assets/GameAsset/Effect/Particle/Weapon/ZhanDouHuanRen/eft_staff_zdhr_ultra_B.prefab
+  - Assets/GameAsset/Effect/Sprite/eft_staff_SanSheGong_Boom_Sprite.prefab
   scanFolders:
   - Assets/GameAsset/Effect
   materialPaths:

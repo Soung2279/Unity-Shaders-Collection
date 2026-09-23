@@ -198,6 +198,14 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             LoadMaterialScanResultToEntries();
         }
 
+        internal static bool IsStandardParticlePrefab(GameObject prefab)
+        {
+            return prefab != null
+                && prefab.GetComponentInChildren<ParticleSystem>(true) != null
+                && prefab.GetComponentInChildren<Coffee.UIExtensions.UIParticle>(true) == null
+                && prefab.GetComponentInChildren<SpriteAnimation>(true) == null;
+        }
+
         private void LoadScanResultToEntries()
         {
             _entries.Clear();
@@ -205,7 +213,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             foreach (var path in _scanResultSo.prefabPaths)
             {
                 var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (!go) continue;
+                if (!IsStandardParticlePrefab(go)) continue;
                 _entries.Add(new Entry
                 {
                     PrefabPath = path,
@@ -409,6 +417,12 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
 
         private void DrawToolbar()
         {
+            EditorGUILayout.HelpBox("本页仅预览普通粒子Prefab；包含 UIParticle 或 SpriteAnimation 的预制体（含未激活子物体）已排除，请前往独立特效页签预览。", MessageType.Info);
+            using (new EditorGUI.DisabledScope(_isPreviewing || EditorApplication.isPlayingOrWillChangePlaymode))
+            {
+                if (GUILayout.Button("前往 UIParticle/SpriteAnimation 特效预览"))
+                    EffectPreview.EffectPreviewWindow.Open();
+            }
             GUILayout.BeginHorizontal(EditorStyles.helpBox);
             DrawSearchField();
 
@@ -631,7 +645,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
 
             _previewTargets = EditorPrefs.GetString(PendingParticlePreviewPathsPrefsKey, string.Empty)
                 .Split(new[] { PendingPathSeparator }, StringSplitOptions.RemoveEmptyEntries)
-                .Where(path => AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+                .Where(path => IsStandardParticlePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(path)))
                 .ToList();
             _previewPage = Mathf.Max(0, EditorPrefs.GetInt(PendingParticlePreviewPagePrefsKey, 0));
             _previewToolMode = ToolMode.ParticlePrefab;
@@ -936,7 +950,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
                 else if (!existingParticlePaths.Contains(path))
                 {
                     var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                    if (go && go.GetComponentInChildren<ParticleSystem>(true))
+                    if (IsStandardParticlePrefab(go))
                     {
                         existingParticlePaths.Add(path);
                         _entries.Add(new Entry
@@ -1085,7 +1099,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             }
 
             var prefabPaths = GetPreviewPagePaths(_previewTargets ?? _previewSelected.ToList());
-            var prefabs = prefabPaths.Select(AssetDatabase.LoadAssetAtPath<GameObject>).Where(go => go).ToList();
+            var prefabs = prefabPaths.Select(AssetDatabase.LoadAssetAtPath<GameObject>).Where(IsStandardParticlePrefab).ToList();
             ParticlePrefabPreviewSceneHelper.OpenPreviewScene();
             ParticlePrefabPreviewSceneHelper.SpawnPrefabs(prefabs);
             Selection.objects = ParticlePrefabPreviewSceneHelper.GetSpawnedPrefabs()
@@ -1250,7 +1264,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
             foreach (var path in prefabPaths)
             {
                 var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (!go || go.GetComponentInChildren<ParticleSystem>(true) == null)
+                if (!IsStandardParticlePrefab(go))
                 {
                     invalidCount++;
                     continue;
@@ -1281,7 +1295,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.ParticleMaterial
 
             EditorUtility.DisplayDialog(
                 "导入完成",
-                $"已同步到特效批量预览器\n新增到列表：{addedCount} 个\n已选中可预览：{selectedCount} 个\n无效或非粒子Prefab：{invalidCount} 个",
+                $"已同步到特效批量预览器\n新增到列表：{addedCount} 个\n已选中可预览：{selectedCount} 个\n无效、非普通粒子或独立驱动Prefab：{invalidCount} 个\nUIParticle / SpriteAnimation 特效请前往独立特效预览页签。",
                 "确定");
         }
     }
