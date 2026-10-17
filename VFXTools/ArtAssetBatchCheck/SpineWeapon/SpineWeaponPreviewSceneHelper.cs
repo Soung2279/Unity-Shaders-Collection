@@ -15,6 +15,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
         private const string PreviewRootName = "__SpineWeaponPreviewRoot";
         private const string DefaultWeaponBone = "weapon_r";
         private static readonly List<PreviewInstance> Instances = new();
+
         private static readonly List<SceneObjectState> SceneObjectStates = new();
         private static Scene _previewScene;
         private static GameObject _previewRoot;
@@ -143,7 +144,6 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
             ApplyWeapon(weapon, config.defaultWeaponQuality);
             PlayAnimation(config.defaultAnimation);
             FramePreview(config);
-            SceneView.RepaintAll();
         }
 
         public static void RebindFromScene(SpineWeaponPreviewData.Database db, SpineWeaponPreviewConfig config)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon;
 using UnityEngine;
 
 namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
@@ -39,6 +40,9 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
         public bool RendererAssigned;
         public int AnimationCount;
         public int FrameCount;
+        public int ActorId;
+        public int DeadEffectId;
+        public List<SpineWeaponPreviewData.ActorPreviewData> ActorConfigurations = new List<SpineWeaponPreviewData.ActorPreviewData>();
         public readonly List<string> AnimationNames = new List<string>();
         public readonly List<SpriteAnimCheckIssue> Issues = new List<SpriteAnimCheckIssue>();
 

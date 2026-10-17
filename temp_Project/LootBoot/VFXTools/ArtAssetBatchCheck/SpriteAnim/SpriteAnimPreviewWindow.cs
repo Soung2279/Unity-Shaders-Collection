@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon;
 using UnityEditor;
 using UnityEngine;
 
@@ -202,11 +203,42 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
                 EditorGUILayout.LabelField("批量预览", EditorStyles.boldLabel);
 
                 EditorGUI.BeginChangeCheck();
+                EditorGUILayout.HelpBox(SpriteAnimPreviewSceneHelper.HasDeadEffectIdConfig
+                    ? "死亡预览读取正式 Tables.bytes 的 Actor.DeadEffectID；值为0时播放模型死亡动画，正数直接作为EffectID生成死亡特效。"
+                    : "未能从正式 Tables.bytes 读取 Actor.DeadEffectID，请检查配置表。", MessageType.Info);
                 _config.previewSpacing = EditorGUILayout.Slider("排列间隔", _config.previewSpacing, 0.5f, 50f);
                 _config.prefabsPerRow = EditorGUILayout.IntSlider("每行数量", _config.prefabsPerRow, 1, 30);
                 _config.showBoundaries = EditorGUILayout.Toggle("显示边框", _config.showBoundaries);
                 _config.showLabels = EditorGUILayout.Toggle("显示标签", _config.showLabels);
                 _config.showPivots = EditorGUILayout.Toggle("显示轴心", _config.showPivots);
+                var nextDeathPreview = EditorGUILayout.Toggle("批量预览死亡表现（按Actor.DeadEffectID）", _config.previewDeathAnimations);
+                if (nextDeathPreview != _config.previewDeathAnimations)
+                {
+                    _config.previewDeathAnimations = nextDeathPreview;
+                    _config.Save();
+                    SpriteAnimPreviewSceneHelper.PreviewDeathAnimations = nextDeathPreview;
+                    if (SpriteAnimPreviewSceneHelper.HasPreview)
+                    {
+                        if (nextDeathPreview) SpriteAnimPreviewSceneHelper.PlayDeathPreviews();
+                        else SpriteAnimPreviewSceneHelper.RemoveDeathPreviews();
+                    }
+                }
+                using (new EditorGUI.DisabledScope(!_config.previewDeathAnimations))
+                {
+                    var nextLoopDeath = EditorGUILayout.Toggle("循环播放死亡表现", _config.loopDeathPreview);
+                    if (nextLoopDeath != _config.loopDeathPreview)
+                    {
+                        _config.loopDeathPreview = nextLoopDeath;
+                        _config.Save();
+                        SpriteAnimPreviewSceneHelper.LoopDeathPreview = nextLoopDeath;
+                        if (_config.previewDeathAnimations && SpriteAnimPreviewSceneHelper.HasPreview)
+                            SpriteAnimPreviewSceneHelper.PlayDeathPreviews();
+                    }
+                }
+                SpriteAnimPreviewSceneHelper.PreviewDeathAnimations = _config.previewDeathAnimations;
+                SpriteAnimPreviewSceneHelper.LoopDeathPreview = _config.loopDeathPreview;
+                if (_config.previewDeathAnimations && _config.loopDeathPreview)
+                    EditorGUILayout.HelpBox("死亡动画与特效循环播放，便于持续观察。", MessageType.Info);
                 _showOnlyIssueEntries = EditorGUILayout.Toggle("仅预览有问题的预制体", _showOnlyIssueEntries);
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -357,7 +389,14 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
                     EditorGUILayout.LabelField("预制体路径", entry.PrefabPath, EditorStyles.miniLabel);
                     EditorGUILayout.LabelField("源目录", string.IsNullOrEmpty(entry.SourceFolder) ? "(空)" : entry.SourceFolder, EditorStyles.miniLabel);
                     EditorGUILayout.LabelField("默认动画", string.IsNullOrEmpty(entry.DefaultAnimation) ? "(空)" : entry.DefaultAnimation, EditorStyles.miniLabel);
-                    EditorGUILayout.LabelField("动画列表", entry.AnimationNames.Count == 0 ? "(无)" : string.Join(", ", entry.AnimationNames), EditorStyles.miniLabel);
+                    EditorGUILayout.HelpBox("死亡表现使用当前 Actor 表配置；同一预制体若被多个 Actor 使用，会为每条 Actor 配置生成单独的死亡预览实例。", MessageType.Info);
+                if (_result != null)
+                {
+                    var actorData = SpineWeaponPreviewData.Load();
+                    var actors = SpineWeaponPreviewData.GetActorsForPrefab(actorData, entry.PrefabPath);
+                    EditorGUILayout.LabelField("Actor死亡配置", actors.Count == 0 ? "无Actor配置" :
+                        string.Join("; ", actors.Select(actor => $"{actor.id}:DeadEffectID={actor.deadEffectId}")), EditorStyles.miniLabel);
+                }
 
                     if (!entry.HasIssue)
                     {

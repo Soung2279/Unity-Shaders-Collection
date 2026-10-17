@@ -112,6 +112,9 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
                     _config.Save();
                     AutoRefreshAnimation("下拉切换动画");
                 }
+
+                EditorGUILayout.HelpBox("此页签只预览角色与武器的 Spine 动画；怪物单位的死亡动画/特效预览请使用「序列帧动画」页签。", MessageType.Info);
+
             }
         }
 
@@ -186,6 +189,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
         private void LoadData(bool forceReload)
         {
             _config = SpineWeaponPreviewConfig.LoadOrCreate();
+            if (forceReload) SpineWeaponPreviewData.ClearCache();
             _database = SpineWeaponPreviewData.Load(forceReload);
             BuildWeaponOptions();
             BuildAnimationOptions();

@@ -18,7 +18,9 @@ MonoBehaviour:
   checkMissingScripts: 1
   showBoundaries: 0
   showLabels: 1
+  previewDeathAnimations: 1
+  loopDeathPreview: 0
   showPivots: 1
   previewSpacing: 3
   prefabsPerRow: 8
-  previewAnimation: idle
+  previewAnimation: ''

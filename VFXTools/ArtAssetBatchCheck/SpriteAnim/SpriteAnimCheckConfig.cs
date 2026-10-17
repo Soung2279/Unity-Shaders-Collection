@@ -19,6 +19,8 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
         [Header("预览")]
         public bool showBoundaries = true;
         public bool showLabels = true;
+        public bool previewDeathAnimations;
+        public bool loopDeathPreview = true;
         [Tooltip("在 SceneView 中绘制每个预览预制体的轴心（ActorSpriteAnimator.pivot）。")]
         public bool showPivots;
         [Range(0.5f, 50f)] public float previewSpacing = 4f;

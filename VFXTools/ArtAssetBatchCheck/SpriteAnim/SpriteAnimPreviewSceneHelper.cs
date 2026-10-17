@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -15,11 +16,16 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
     {
         private const string PreviewRootName = "__SpriteAnimPreviewRoot";
         private const string PreviewSceneName = "SpriteAnimPreview";
+        public static bool PreviewDeathAnimations { get; set; }
+        public static bool LoopDeathPreview { get; set; } = true;
+        private const int FallbackDeathEffectId = 9400;
 
         private static Scene _previewScene;
         private static GameObject _previewRoot;
         private static readonly List<PreviewInstance> Instances = new List<PreviewInstance>();
         private static readonly List<SceneObjectState> SceneObjectStates = new List<SceneObjectState>();
+        private static readonly List<SpriteAnimation> DeathEffectAnimations = new List<SpriteAnimation>();
+        private static readonly List<ParticleSystem> DeathEffectParticles = new List<ParticleSystem>();
         private static bool _sceneGuiRegistered;
         private static GUIStyle _labelStyle;
         private static GUIStyle _pivotLabelStyle;
@@ -42,9 +48,15 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
             public ActorSpriteAnimator Animator;
             public SpriteRenderer Renderer;
             public bool HasIssue;
+            public int ActorId;
+            public int DeadEffectId;
+            public readonly List<SpineWeaponPreviewData.ActorPreviewData> ActorConfigurations = new List<SpineWeaponPreviewData.ActorPreviewData>();
+            public readonly List<GameObject> DeathEffects = new List<GameObject>();
         }
 
         public static bool HasPreview => Instances.Count > 0;
+        public static bool HasDeathPreview => Instances.Any(instance => instance.DeathEffects.Count > 0 || instance.DeadEffectId == 0);
+        public static bool HasDeadEffectIdConfig => SpineWeaponPreviewData.Load().HasDeadEffectIdColumn;
         public static int InstanceCount => Instances.Count;
         public static bool HasIsolatedSceneObjects => SceneObjectStates.Count > 0;
         public static bool ShowBoundaries { get; set; } = true;
@@ -63,6 +75,8 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
             ShowBoundaries = config == null || config.showBoundaries;
             ShowLabels = config == null || config.showLabels;
             ShowPivots = config != null && config.showPivots;
+            PreviewDeathAnimations = config != null && config.previewDeathAnimations;
+            LoopDeathPreview = config == null || config.loopDeathPreview;
 
             if (!OpenPreviewScene())
             {
@@ -76,22 +90,40 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
             var spawned = 0;
             foreach (var entry in entries)
             {
-                if (entry?.Prefab == null)
-                {
-                    continue;
-                }
+                if (entry?.Prefab == null) continue;
 
                 var instance = Spawn(entry, spawned);
-                if (instance == null)
-                {
-                    continue;
-                }
-
+                if (instance == null) continue;
                 Instances.Add(instance);
                 spawned++;
+                if (!PreviewDeathAnimations || entry.ActorConfigurations.Count <= 1) continue;
+
+                for (var actorIndex = 1; actorIndex < entry.ActorConfigurations.Count; actorIndex++)
+                {
+                    var actor = entry.ActorConfigurations[actorIndex];
+                    var actorEntry = new SpriteAnimActorEntry
+                    {
+                        Prefab = entry.Prefab,
+                        Animator = entry.Animator,
+                        PrefabPath = entry.PrefabPath,
+                        PrefabName = $"{entry.PrefabName}_Actor{actor.id}",
+                        DefaultAnimation = entry.DefaultAnimation,
+                        ActorId = actor.id,
+                        DeadEffectId = actor.deadEffectId,
+                        ActorConfigurations = new List<SpineWeaponPreviewData.ActorPreviewData> { actor }
+                    };
+                    var extra = Spawn(actorEntry, spawned);
+                    if (extra == null) continue;
+                    Instances.Add(extra);
+                    spawned++;
+                }
+                instance.ActorConfigurations.Clear();
+                instance.ActorConfigurations.Add(entry.ActorConfigurations[0]);
             }
 
             ApplyAnimation(animationName);
+            ApplyAnimation(animationName);
+            if (PreviewDeathAnimations) PlayDeathPreviews();
             FramePreview();
             SceneView.RepaintAll();
             Debug.Log($"[SpriteAnimCheck][Preview] 批量预览生成完成：请求 {entries.Count} 个，成功 {spawned} 个，动画={GetAnimationLabel(animationName)}");
@@ -126,23 +158,114 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
             SceneView.RepaintAll();
         }
 
+        public static void PlayDeathPreviews()
+        {
+            RemoveDeathPreviews();
+            foreach (var instance in Instances)
+            {
+                var configurations = instance.ActorConfigurations.Count > 0
+                    ? instance.ActorConfigurations
+                    : new List<SpineWeaponPreviewData.ActorPreviewData> { new SpineWeaponPreviewData.ActorPreviewData { id = instance.ActorId, deadEffectId = instance.DeadEffectId } };
+                for (var actorIndex = 0; actorIndex < configurations.Count; actorIndex++)
+                {
+                    var actor = configurations[actorIndex];
+                    var effectId = actor.deadEffectId;
+                    if (effectId == 0)
+                    {
+                        var deathAnimation = instance.Animator?.Animations?.FirstOrDefault(definition => definition != null &&
+                            (string.Equals(definition.name, "dead", System.StringComparison.OrdinalIgnoreCase) || string.Equals(definition.name, "death", System.StringComparison.OrdinalIgnoreCase)));
+                        if (deathAnimation != null)
+                        {
+                            instance.Animator.ClearAllActionState(false);
+                            instance.Animator.Play(deathAnimation.name, 0, 1f, LoopDeathPreview, 0f, null, true);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[SpriteAnimCheck][DeathPreview] ActorId={actor.id} DeadEffectID=0，但预制体没有 dead/death 动画：{instance.PrefabPath}");
+                        }
+
+                        continue;
+                    }
+
+                    if (effectId < 0)
+                    {
+                        Debug.LogWarning($"[SpriteAnimCheck][DeathPreview] ActorId={actor.id} DeadEffectID无效：{effectId}，按默认死亡EffectID={FallbackDeathEffectId}保底");
+                        effectId = FallbackDeathEffectId;
+                    }
+
+                    var previewData = SpineWeaponPreviewData.Load();
+                    var deathEffect = SpineWeaponPreviewData.GetDeathEffect(previewData, effectId);
+                    if (deathEffect == null && effectId != FallbackDeathEffectId)
+                    {
+                        Debug.LogWarning($"[SpriteAnimCheck][DeathPreview] 死亡Effect配置缺失：ActorId={actor.id}; DeadEffectID={effectId}，按默认死亡EffectID={FallbackDeathEffectId}保底");
+                        effectId = FallbackDeathEffectId;
+                        deathEffect = SpineWeaponPreviewData.GetDeathEffect(previewData, effectId);
+                    }
+
+                    var effectPath = deathEffect?.AssetPath;
+                    var effectPrefab = string.IsNullOrEmpty(effectPath) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(effectPath);
+                    if (effectPrefab == null)
+                    {
+                        Debug.LogWarning($"[SpriteAnimCheck][DeathPreview] 死亡Effect缺失：ActorId={actor.id}; DeadEffectID={effectId}; path={effectPath}");
+                        continue;
+                    }
+
+                    var effect = PrefabUtility.InstantiatePrefab(effectPrefab) as GameObject;
+                    if (effect == null) continue;
+                    SceneManager.MoveGameObjectToScene(effect, _previewScene);
+                    var offset = new Vector3((actorIndex - (configurations.Count - 1) * 0.5f) * _cellSize * 0.35f, 0f, actorIndex * -0.01f);
+                    effect.transform.position = instance.Root.transform.position + offset;
+                    effect.transform.SetParent(_previewRoot.transform, true);
+                    effect.name = $"DeathEffect_{actor.id}_{effectId}";
+                    effect.GetComponentsInChildren<MonoBehaviour>(true).Where(b => b != null && !(b is SpriteAnimation)).ToList().ForEach(b => b.enabled = false);
+                    foreach (var animation in effect.GetComponentsInChildren<SpriteAnimation>(true))
+                    {
+                        animation.ExternalUpdate = true;
+                        animation.Loop = LoopDeathPreview;
+                        animation.Play();
+                        DeathEffectAnimations.Add(animation);
+                    }
+                    foreach (var ps in effect.GetComponentsInChildren<ParticleSystem>(true))
+                    {
+                        var main = ps.main;
+                        main.loop = LoopDeathPreview;
+                        ps.Clear(true);
+                        ps.Simulate(0f, true, true);
+                        ps.Play(true);
+                        DeathEffectParticles.Add(ps);
+                    }
+                    instance.DeathEffects.Add(effect);
+                    instance.Root.SetActive(false);
+                }
+            }
+            SceneView.RepaintAll();
+        }
+
+        public static void RemoveDeathPreviews()
+        {
+            foreach (var animation in DeathEffectAnimations) if (animation) animation.ExternalUpdate = false;
+            DeathEffectAnimations.Clear();
+            DeathEffectParticles.Clear();
+            foreach (var instance in Instances)
+            {
+                foreach (var effect in instance.DeathEffects) if (effect != null) Object.DestroyImmediate(effect);
+                instance.DeathEffects.Clear();
+                if (instance.Root != null) instance.Root.SetActive(true);
+            }
+        }
+
         /// <summary>逐帧驱动预览动画（编辑模式由窗口调用，运行时可继续使用）。</summary>
         public static void Tick(float deltaTime)
         {
-            if (deltaTime <= 0f)
-            {
-                return;
-            }
-
+            if (deltaTime <= 0f) return;
+            foreach (var animation in DeathEffectAnimations)
+                if (animation && animation.isActiveAndEnabled) animation.Tick(deltaTime);
+            foreach (var particle in DeathEffectParticles)
+                if (particle && particle.gameObject.activeInHierarchy) particle.Simulate(deltaTime, false, false, false);
             for (var i = 0; i < Instances.Count; i++)
             {
                 var animator = Instances[i].Animator;
-                if (animator == null)
-                {
-                    continue;
-                }
-
-                animator.UpdateAnimation(deltaTime);
+                if (animator != null) animator.UpdateAnimation(deltaTime);
             }
         }
 
@@ -271,7 +394,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
             animator.ClearAllActionState(true);
             animator.RefreshCurrentFrame();
 
-            return new PreviewInstance
+                var instance = new PreviewInstance
             {
                 PrefabName = entry.PrefabName,
                 PrefabPath = entry.PrefabPath,
@@ -279,8 +402,12 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
                 Root = root,
                 Animator = animator,
                 Renderer = animator.Renderer,
-                HasIssue = entry.HasIssue
+                HasIssue = entry.HasIssue,
+                ActorId = entry.ActorId,
+                DeadEffectId = entry.DeadEffectId
             };
+            instance.ActorConfigurations.AddRange(entry.ActorConfigurations);
+            return instance;
         }
 
         /// <summary>预览只需要 SpriteRenderer + ActorSpriteAnimator，其余组件关闭以避免编辑器内副作用。</summary>
@@ -389,6 +516,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
 
         private static void ClearPreviewObjects()
         {
+            RemoveDeathPreviews();
             for (var i = 0; i < Instances.Count; i++)
             {
                 var root = Instances[i].Root;

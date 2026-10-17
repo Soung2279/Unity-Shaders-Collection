@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
         public const string HeroJsonPath = "Assets/GameAsset/Config/Tables/json/Hero.json";
         public const string ActorJsonPath = "Assets/GameAsset/Config/Tables/json/Actor.json";
         public const string EquipJsonPath = "Assets/GameAsset/Config/Tables/json/Equip.json";
+        public const string EffectJsonPath = "Assets/GameAsset/Config/Tables/json/Effect.json";
         public const string LanguageJsonPath = "Assets/GameAsset/Config/Tables/json/Language.json";
 
         private static Database _cachedDatabase;
@@ -25,6 +27,9 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
             public readonly Dictionary<int, HeroPreviewData> HeroById = new();
             public readonly Dictionary<int, WeaponPreviewData> WeaponById = new();
             public readonly Dictionary<int, string> SimplifiedChineseById = new();
+            public readonly Dictionary<int, DeathEffectPreviewData> DeathEffectsById = new();
+            public readonly Dictionary<string, List<ActorPreviewData>> ActorsByPrefabPath = new(StringComparer.OrdinalIgnoreCase);
+            public bool HasDeadEffectIdColumn;
         }
 
         [Serializable]
@@ -47,6 +52,24 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
             public int id;
             public string name;
             public string modelRes;
+            public int deadEffectId;
+
+            public string PrefabPath => string.IsNullOrEmpty(modelRes) ? string.Empty :
+                (modelRes.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase)
+                    ? modelRes.Replace('\\', '/')
+                    : ToGameAssetPath("Prefab/Actor/" + modelRes));
+        }
+
+        [Serializable]
+        public class DeathEffectPreviewData
+        {
+            public int id;
+            public string name;
+            public string res;
+            public int type;
+            public GameObject Prefab;
+
+            public string AssetPath => ToGameAssetPath("Effect/" + res + ".prefab");
         }
 
         [Serializable]
@@ -93,6 +116,17 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
             public int CfgID;
             public string Name;
             public string ModelRes;
+            public int DeadEffectID;
+        }
+
+        [Serializable]
+        private sealed class EffectJson
+        {
+            public int CfgID;
+            public string Name;
+            public string Res;
+            public int Type;
+            public int TypeN;
         }
 
         [Serializable]
@@ -127,8 +161,14 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
             }
 
             var db = new Database();
+            LoadRuntimeTables(db);
+            if (db.Actors.Count == 0)
+            {
+                db.HasDeadEffectIdColumn = File.Exists(ActorJsonPath) && File.ReadAllText(ActorJsonPath).Contains("\"DeadEffectID\"");
+                LoadActors(db);
+                LoadEffects(db);
+            }
             LoadLanguages(db);
-            LoadActors(db);
             LoadHeroes(db);
             LoadWeapons(db);
             _cachedDatabase = db;
@@ -138,6 +178,55 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
         public static void ClearCache()
         {
             _cachedDatabase = null;
+        }
+
+        private static void LoadRuntimeTables(Database db)
+        {
+            var table = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/GameAsset/Config/Tables/Tables.bytes");
+            if (table == null)
+            {
+                Debug.LogWarning("[ArtAssetBatchCheck] 未找到 Tables.bytes，死亡预览将回退读取 JSON 导出。");
+                return;
+            }
+
+            try
+            {
+                TableManager.LoadConfig(table.bytes);
+                foreach (var actor in TableManager._ActorCfgMgr.List)
+                {
+                    if (actor == null || string.IsNullOrEmpty(actor.ModelRes)) continue;
+                    var data = new ActorPreviewData { id = actor.ID, name = actor.Name, modelRes = actor.ModelRes, deadEffectId = actor.DeadEffectID };
+                    db.Actors[data.id] = data;
+                    if (!db.ActorsByPrefabPath.TryGetValue(data.PrefabPath, out var actors))
+                    {
+                        actors = new List<ActorPreviewData>();
+                        db.ActorsByPrefabPath[data.PrefabPath] = actors;
+                    }
+                    actors.Add(data);
+                }
+
+                var deathEffectIds = new HashSet<int>(db.Actors.Values
+                    .Where(actor => actor.deadEffectId > 0)
+                    .Select(actor => actor.deadEffectId));
+                deathEffectIds.Add(9400);
+                foreach (var effect in TableManager._EffectCfgMgr.List)
+                {
+                    if (effect == null || !deathEffectIds.Contains(effect.ID) || string.IsNullOrEmpty(effect.Res)) continue;
+                    db.DeathEffectsById[effect.ID] = new DeathEffectPreviewData
+                    {
+                        id = effect.ID,
+                        name = effect.Name,
+                        res = effect.Res,
+                        type = effect.Type,
+                        Prefab = LoadGameAssetPrefab("Effect/" + effect.Res + ".prefab")
+                    };
+                }
+                db.HasDeadEffectIdColumn = true;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[ArtAssetBatchCheck] Tables.bytes解析Actor/Effect表失败：{exception.Message}");
+            }
         }
 
         private static void LoadLanguages(Database db)
@@ -162,12 +251,20 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
                     continue;
                 }
 
-                db.Actors[actor.CfgID] = new ActorPreviewData
+                var data = new ActorPreviewData
                 {
                     id = actor.CfgID,
                     name = actor.Name,
-                    modelRes = actor.ModelRes
+                    modelRes = actor.ModelRes,
+                    deadEffectId = actor.DeadEffectID
                 };
+                db.Actors[actor.CfgID] = data;
+                if (!db.ActorsByPrefabPath.TryGetValue(data.PrefabPath, out var actors))
+                {
+                    actors = new List<ActorPreviewData>();
+                    db.ActorsByPrefabPath[data.PrefabPath] = actors;
+                }
+                actors.Add(data);
             }
         }
 
@@ -228,6 +325,50 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon
             db.Weapons.Sort((a, b) => a.id.CompareTo(b.id));
         }
 
+        private static void LoadEffects(Database db)
+        {
+            var deathEffectIds = new HashSet<int>(db.Actors.Values
+                .Where(actor => actor.deadEffectId > 0)
+                .Select(actor => actor.deadEffectId));
+            deathEffectIds.Add(9400);
+            foreach (var effect in LoadJsonList<EffectJson>(EffectJsonPath))
+            {
+                if (effect == null || !deathEffectIds.Contains(effect.CfgID) || string.IsNullOrEmpty(effect.Res)) continue;
+                var data = new DeathEffectPreviewData
+                {
+                    id = effect.CfgID,
+                    name = effect.Name,
+                    res = effect.Res,
+                    type = effect.Type != 0 ? effect.Type : effect.TypeN,
+                    Prefab = LoadGameAssetPrefab("Effect/" + effect.Res + ".prefab")
+                };
+                db.DeathEffectsById[data.id] = data;
+            }
+        }
+
+        public static List<ActorPreviewData> GetActorsForPrefab(Database db, string prefabPath)
+        {
+            return db != null && db.ActorsByPrefabPath.TryGetValue(prefabPath, out var actors)
+                ? actors
+                : new List<ActorPreviewData>();
+        }
+
+        public static DeathEffectPreviewData GetDeathEffect(Database db, int effectId)
+        {
+            if (db == null || effectId <= 0) return null;
+            if (db.DeathEffectsById.TryGetValue(effectId, out var effect)) return effect;
+            // JSON 导出版本可能遗漏新表字段；若配置键仍是可用的数字ID，就用同ID的资源Res匹配生成表中的Effect资源名。
+            var effectJson = LoadJsonList<EffectJson>(EffectJsonPath).FirstOrDefault(candidate => candidate.CfgID == effectId);
+            if (effectJson == null || string.IsNullOrEmpty(effectJson.Res)) return null;
+            return new DeathEffectPreviewData
+            {
+                id = effectId,
+                name = effectJson.Name,
+                res = effectJson.Res,
+                type = effectJson.Type != 0 ? effectJson.Type : effectJson.TypeN,
+                Prefab = LoadGameAssetPrefab("Effect/" + effectJson.Res + ".prefab")
+            };
+        }
         private static List<T> LoadJsonList<T>(string path)
         {
             if (!File.Exists(path))

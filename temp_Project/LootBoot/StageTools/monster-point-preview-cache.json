@@ -1,0 +1,3535 @@
+﻿{
+    "items": [
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 101,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "1001:1",
+                    "formationRaw": "111001:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1001,
+                            "groupId": 111001,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2000:6",
+                            "description": "聚集--哥布林战士+6",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 6
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "10201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 102,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "1002:1",
+                    "formationRaw": "311001:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1002,
+                            "groupId": 311001,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2001:8",
+                            "description": "聚集——哥布林战士+8",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "20301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1003
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 103,
+                    "waveIndex": 3,
+                    "pointGroupRaw": "1003:1",
+                    "formationRaw": "112002:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1003,
+                            "groupId": 112002,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2000:25",
+                            "description": "聚集--哥布林战士+25",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 25
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "30401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1004
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 104,
+                    "waveIndex": 4,
+                    "pointGroupRaw": "1004:1",
+                    "formationRaw": "211001:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1004,
+                            "groupId": 211001,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2000:12|2002:6",
+                            "description": "分散-哥布林战士+12,哥布林射手+6",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 12
+                                },
+                                {
+                                    "actorId": 2002,
+                                    "actorName": "哥布林射手",
+                                    "modelResource": "Monster/monster_02.prefab",
+                                    "count": 6
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "30901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1009
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 109,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "1009:1",
+                    "formationRaw": "112004:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1009,
+                            "groupId": 112004,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "1997:1",
+                            "description": "聚集——（新）精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "40601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 106,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "1006:1",
+                    "formationRaw": "112003:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1006,
+                            "groupId": 112003,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "1997:2|2000:12",
+                            "description": "聚集--精英哥布林战士+2；哥布林战士+12",
+                            "monsters": [
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 2
+                                },
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 12
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 1,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "pointId": "50501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                1005
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 105,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "1005:1",
+                    "formationRaw": "211002:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 1005,
+                            "groupId": 211002,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2115:3|2000:14",
+                            "description": "分散--哥布林炸弹狂+2；哥布林战士+3",
+                            "monsters": [
+                                {
+                                    "actorId": 2115,
+                                    "actorName": "哥布林炸弹狂",
+                                    "modelResource": "Monster/monster_15.prefab",
+                                    "count": 3
+                                },
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 14
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:00:59"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 201,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "2001:1",
+                    "formationRaw": "111007:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2001,
+                            "groupId": 111007,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2044:1|2000:6",
+                            "description": "分散——精英哥布林射手-第2关特殊+1；哥布林战士+6",
+                            "monsters": [
+                                {
+                                    "actorId": 2044,
+                                    "actorName": "精英哥布林射手-第2关特殊",
+                                    "modelResource": "Monster/monster_elite_03.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 6
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "10201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 202,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "2002:1",
+                    "formationRaw": "211006:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2002,
+                            "groupId": 211006,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "1997:1",
+                            "description": "分散——（新）精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "20301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2003
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 203,
+                    "waveIndex": 3,
+                    "pointGroupRaw": "2003:1",
+                    "formationRaw": "112008:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2003,
+                            "groupId": 112008,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2000:18|1997:2",
+                            "description": "聚集——哥布林战士+18；（新）精英哥布林战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 18
+                                },
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "20401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2004
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 204,
+                    "waveIndex": 4,
+                    "pointGroupRaw": "2004:1",
+                    "formationRaw": "111009:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2004,
+                            "groupId": 111009,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "1997:2",
+                            "description": "聚集——（新）精英哥布林战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "30601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 206,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "2006:1",
+                    "formationRaw": "211007:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2006,
+                            "groupId": 211007,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2000:20",
+                            "description": "分散——哥布林战士+20",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 20
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "30701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2007
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 207,
+                    "waveIndex": 7,
+                    "pointGroupRaw": "2007:1",
+                    "formationRaw": "111010:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2007,
+                            "groupId": 111010,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2000:15|2044:1",
+                            "description": "聚集——哥布林战士+15；精英哥布林射手-第2关特殊+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 15
+                                },
+                                {
+                                    "actorId": 2044,
+                                    "actorName": "精英哥布林射手-第2关特殊",
+                                    "modelResource": "Monster/monster_elite_03.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "40801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2008
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 208,
+                    "waveIndex": 8,
+                    "pointGroupRaw": "2008:1",
+                    "formationRaw": "211008:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2008,
+                            "groupId": 211008,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2115:3|2004:1",
+                            "description": "分散——哥布林炸弹狂+3；精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2115,
+                                    "actorName": "哥布林炸弹狂",
+                                    "modelResource": "Monster/monster_15.prefab",
+                                    "count": 3
+                                },
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "40901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2009
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 209,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "2009:1",
+                    "formationRaw": "313007:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2009,
+                            "groupId": 313007,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2115:3|2004:1",
+                            "description": "包围——哥布林炸弹狂+3；精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2115,
+                                    "actorName": "哥布林炸弹狂",
+                                    "modelResource": "Monster/monster_15.prefab",
+                                    "count": 3
+                                },
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "50501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2005
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 205,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "2005:1",
+                    "formationRaw": "313006:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2005,
+                            "groupId": 313006,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2003:2",
+                            "description": "包围——哥布林投弹手+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2003,
+                                    "actorName": "哥布林投弹手",
+                                    "modelResource": "Monster/monster_03.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "50902",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2091
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 220,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "2091:1",
+                    "formationRaw": "31307:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2091,
+                            "groupId": 31307,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2000:17",
+                            "description": "聚集——哥布林战士+17",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 17
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 2,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "pointId": "60502",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                2051
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 219,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "2051:1",
+                    "formationRaw": "31306:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 2051,
+                            "groupId": 31306,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2000:25",
+                            "description": "哥布林战士+10",
+                            "monsters": [
+                                {
+                                    "actorId": 2000,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 25
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 14:02:13"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 301,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "3001:1",
+                    "formationRaw": "111014:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3001,
+                            "groupId": 111014,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "聚集——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 301,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "3001:1",
+                    "formationRaw": "111014:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3001,
+                            "groupId": 111014,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "聚集——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "10201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 302,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "3002:1",
+                    "formationRaw": "211013:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3002,
+                            "groupId": 211013,
+                            "formationPrefab": "F002",
+                            "monsterGroupRaw": "2104:5|2008:1",
+                            "description": "分散——骷髅战士+5；精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 5
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "10201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 302,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "3002:1",
+                    "formationRaw": "211013:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3002,
+                            "groupId": 211013,
+                            "formationPrefab": "F002",
+                            "monsterGroupRaw": "2104:5|2008:1",
+                            "description": "分散——骷髅战士+5；精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 5
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "10501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3005
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 305,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "3005:1",
+                    "formationRaw": "111017:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3005,
+                            "groupId": 111017,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2104:12|2105:3",
+                            "description": "聚集--骷髅战士+12；骷髅射手+3",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 12
+                                },
+                                {
+                                    "actorId": 2105,
+                                    "actorName": "骷髅射手",
+                                    "modelResource": "Monster/monster_08.prefab",
+                                    "count": 3
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "20301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3003
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 303,
+                    "waveIndex": 3,
+                    "pointGroupRaw": "3003:1",
+                    "formationRaw": "112015:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3003,
+                            "groupId": 112015,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "10006:1|2008:1",
+                            "description": "聚集——邪恶大树精+1；精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 10006,
+                                    "actorName": "邪恶大树精",
+                                    "modelResource": "Monster/monster_elite_07_2.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "20301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3003
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 303,
+                    "waveIndex": 3,
+                    "pointGroupRaw": "3003:1",
+                    "formationRaw": "112015:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3003,
+                            "groupId": 112015,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "10006:1|2008:1",
+                            "description": "聚集——邪恶大树精+1；精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 10006,
+                                    "actorName": "邪恶大树精",
+                                    "modelResource": "Monster/monster_elite_07_2.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "30701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3007
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 307,
+                    "waveIndex": 7,
+                    "pointGroupRaw": "3007:1",
+                    "formationRaw": "211014:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3007,
+                            "groupId": 211014,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "分散——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "30801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3008
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 308,
+                    "waveIndex": 8,
+                    "pointGroupRaw": "3008:1",
+                    "formationRaw": "211015:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3008,
+                            "groupId": 211015,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2105:6|2008:2",
+                            "description": "分散——骷髅射手+6；精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2105,
+                                    "actorName": "骷髅射手",
+                                    "modelResource": "Monster/monster_08.prefab",
+                                    "count": 6
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "30801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3008
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 308,
+                    "waveIndex": 8,
+                    "pointGroupRaw": "3008:1",
+                    "formationRaw": "211015:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3008,
+                            "groupId": 211015,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2105:6|2008:2",
+                            "description": "分散——骷髅射手+6；精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2105,
+                                    "actorName": "骷髅射手",
+                                    "modelResource": "Monster/monster_08.prefab",
+                                    "count": 6
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "30901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3009
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 309,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "3009:1",
+                    "formationRaw": "112018:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3009,
+                            "groupId": 112018,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2104:25",
+                            "description": "聚集--骷髅战士+25",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 25
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "40601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 306,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "3006:1",
+                    "formationRaw": "313010:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3006,
+                            "groupId": 313010,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2104:18",
+                            "description": "包围--精英骷髅战士+1；骷髅战士+18",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 18
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "41001",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3010
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 310,
+                    "waveIndex": 10,
+                    "pointGroupRaw": "3010:1",
+                    "formationRaw": "111019:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3010,
+                            "groupId": 111019,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "聚集——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "41001",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3010
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 310,
+                    "waveIndex": 10,
+                    "pointGroupRaw": "3010:1",
+                    "formationRaw": "111019:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3010,
+                            "groupId": 111019,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "聚集——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "41011",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3021
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 321,
+                    "waveIndex": 21,
+                    "pointGroupRaw": "3021:1",
+                    "formationRaw": "111020:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3011,
+                            "groupId": 111020,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "10006:1|2008:1",
+                            "description": "聚集——邪恶大树精+1；精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 10006,
+                                    "actorName": "邪恶大树精",
+                                    "modelResource": "Monster/monster_elite_07_2.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "41101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3011
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 311,
+                    "waveIndex": 11,
+                    "pointGroupRaw": "3011:1",
+                    "formationRaw": "211016:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3012,
+                            "groupId": 211016,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2104:12",
+                            "description": "分散——骷髅战士+12",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 12
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "41101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3011
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 311,
+                    "waveIndex": 11,
+                    "pointGroupRaw": "3011:1",
+                    "formationRaw": "211016:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3012,
+                            "groupId": 211016,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2104:12",
+                            "description": "分散——骷髅战士+12",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 12
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "51301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3013
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 313,
+                    "waveIndex": 13,
+                    "pointGroupRaw": "3013:1",
+                    "formationRaw": "111021:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3014,
+                            "groupId": 111021,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2105:8|2008:2",
+                            "description": "聚集——骷髅射手+8；精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2105,
+                                    "actorName": "骷髅射手",
+                                    "modelResource": "Monster/monster_08.prefab",
+                                    "count": 8
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "51301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3013
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 313,
+                    "waveIndex": 13,
+                    "pointGroupRaw": "3013:1",
+                    "formationRaw": "111021:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3014,
+                            "groupId": 111021,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2105:8|2008:2",
+                            "description": "聚集——骷髅射手+8；精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2105,
+                                    "actorName": "骷髅射手",
+                                    "modelResource": "Monster/monster_08.prefab",
+                                    "count": 8
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "51401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3014
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 314,
+                    "waveIndex": 14,
+                    "pointGroupRaw": "3014:1",
+                    "formationRaw": "111022:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3015,
+                            "groupId": 111022,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:4",
+                            "description": "聚集——精英骷髅战士+4",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 4
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "51401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3014
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 314,
+                    "waveIndex": 14,
+                    "pointGroupRaw": "3014:1",
+                    "formationRaw": "111022:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3015,
+                            "groupId": 111022,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:1|10006:1",
+                            "description": "聚集——精英骷髅战士+1；邪恶大树精+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 10006,
+                                    "actorName": "邪恶大树精",
+                                    "modelResource": "Monster/monster_elite_07_2.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "51501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3022
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 320,
+                    "waveIndex": 20,
+                    "pointGroupRaw": "3022:1",
+                    "formationRaw": "121501:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3022,
+                            "groupId": 121501,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "聚集——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "61201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3012
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 312,
+                    "waveIndex": 12,
+                    "pointGroupRaw": "3012:1",
+                    "formationRaw": "313011:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3013,
+                            "groupId": 313011,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2103:4|2104:25",
+                            "description": "包围--蝙蝠+4；骷髅战士+18",
+                            "monsters": [
+                                {
+                                    "actorId": 2103,
+                                    "actorName": "蝙蝠",
+                                    "modelResource": "Monster/monster_06.prefab",
+                                    "count": 4
+                                },
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 25
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "61501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3015
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 315,
+                    "waveIndex": 15,
+                    "pointGroupRaw": "3015:1",
+                    "formationRaw": "313012:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3016,
+                            "groupId": 313012,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2104:15|2008:1|2103:4",
+                            "description": "包围--精英骷髅战士+1；蝙蝠+5；骷髅战士+10",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 15
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2103,
+                                    "actorName": "蝙蝠",
+                                    "modelResource": "Monster/monster_06.prefab",
+                                    "count": 4
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "61601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3016
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 316,
+                    "waveIndex": 16,
+                    "pointGroupRaw": "3016:1",
+                    "formationRaw": "111023:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3017,
+                            "groupId": 111023,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2104:22",
+                            "description": "聚集--骷髅战士+22",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 22
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "61701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3017
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 317,
+                    "waveIndex": 17,
+                    "pointGroupRaw": "3017:1",
+                    "formationRaw": "211017:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3018,
+                            "groupId": 211017,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2103:3|2104:8",
+                            "description": "分散--蝙蝠+6",
+                            "monsters": [
+                                {
+                                    "actorId": 2103,
+                                    "actorName": "蝙蝠",
+                                    "modelResource": "Monster/monster_06.prefab",
+                                    "count": 3
+                                },
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "61801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3018
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 318,
+                    "waveIndex": 18,
+                    "pointGroupRaw": "3018:1",
+                    "formationRaw": "111024:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3019,
+                            "groupId": 111024,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2107:2|2008:2",
+                            "description": "聚集——邪恶树精+2；精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2107,
+                                    "actorName": "邪恶树精",
+                                    "modelResource": "Monster/monster_elite_07.prefab",
+                                    "count": 2
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "pointId": "61801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3018
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 318,
+                    "waveIndex": 18,
+                    "pointGroupRaw": "3018:1",
+                    "formationRaw": "111024:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3019,
+                            "groupId": 111024,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "10006:2",
+                            "description": "聚集——邪恶大树精+2",
+                            "monsters": [
+                                {
+                                    "actorId": 10006,
+                                    "actorName": "邪恶大树精",
+                                    "modelResource": "Monster/monster_elite_07_2.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:44:12"
+        },
+        {
+            "stageId": 3,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "pointId": "71901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                3019
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 319,
+                    "waveIndex": 19,
+                    "pointGroupRaw": "3019:1",
+                    "formationRaw": "313013:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 3020,
+                            "groupId": 313013,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2107:2|2104:15",
+                            "description": "包围--邪恶树精+2；骷髅战士+15",
+                            "monsters": [
+                                {
+                                    "actorId": 2107,
+                                    "actorName": "邪恶树精",
+                                    "modelResource": "Monster/monster_elite_07.prefab",
+                                    "count": 2
+                                },
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 15
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:22:05"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 401,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "4001:1",
+                    "formationRaw": "111025:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4001,
+                            "groupId": 111025,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2012:1",
+                            "description": "聚集——精英骷髅守卫+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2012,
+                                    "actorName": "精英骷髅守卫",
+                                    "modelResource": "Monster/monster_elite_08.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "20201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 402,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "4002:1",
+                    "formationRaw": "211018:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4002,
+                            "groupId": 211018,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2008:1",
+                            "description": "分散——精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "20401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4004
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 404,
+                    "waveIndex": 4,
+                    "pointGroupRaw": "4004:1",
+                    "formationRaw": "313014:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4004,
+                            "groupId": 313014,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2104:12|2008:1",
+                            "description": "包围——骷髅战士+12；精英骷髅战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 12
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "30601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 406,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "4006:1",
+                    "formationRaw": "111027:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4006,
+                            "groupId": 111027,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:1|2010:1",
+                            "description": "聚集——精英骷髅战士+1；精英骷髅法师+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2010,
+                                    "actorName": "精英骷髅法师",
+                                    "modelResource": "Monster/monster_elite_06.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "40701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4007
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 407,
+                    "waveIndex": 7,
+                    "pointGroupRaw": "4007:1",
+                    "formationRaw": "111028:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4007,
+                            "groupId": 111028,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2012:2",
+                            "description": "聚集——精英骷髅守卫+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2012,
+                                    "actorName": "精英骷髅守卫",
+                                    "modelResource": "Monster/monster_elite_08.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "40801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4008
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 408,
+                    "waveIndex": 8,
+                    "pointGroupRaw": "4008:1",
+                    "formationRaw": "211020:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4008,
+                            "groupId": 211020,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "10006:1",
+                            "description": "分散——邪恶大树精+1",
+                            "monsters": [
+                                {
+                                    "actorId": 10006,
+                                    "actorName": "邪恶大树精",
+                                    "modelResource": "Monster/monster_elite_07_2.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "61101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4011
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 411,
+                    "waveIndex": 11,
+                    "pointGroupRaw": "4011:1",
+                    "formationRaw": "112029:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4011,
+                            "groupId": 112029,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2008:2",
+                            "description": "聚集——精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "61201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4012
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 412,
+                    "waveIndex": 12,
+                    "pointGroupRaw": "4012:1",
+                    "formationRaw": "211021:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4012,
+                            "groupId": 211021,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2012:2",
+                            "description": "分散——精英骷髅守卫+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2012,
+                                    "actorName": "精英骷髅守卫",
+                                    "modelResource": "Monster/monster_elite_08.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 4,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "pointId": "71301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                4013
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 413,
+                    "waveIndex": 13,
+                    "pointGroupRaw": "4013:1",
+                    "formationRaw": "313017:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 4013,
+                            "groupId": 313017,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2104:8|2107:1|2008:2",
+                            "description": "包围——骷髅战士+8；邪恶树精+1；精英骷髅战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2104,
+                                    "actorName": "骷髅战士",
+                                    "modelResource": "Monster/monster_07.prefab",
+                                    "count": 8
+                                },
+                                {
+                                    "actorId": 2107,
+                                    "actorName": "邪恶树精",
+                                    "modelResource": "Monster/monster_elite_07.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2008,
+                                    "actorName": "精英骷髅战士",
+                                    "modelResource": "Monster/monster_elite_05.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:16:22"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 501,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "5001:1",
+                    "formationRaw": "211022:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5001,
+                            "groupId": 211022,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2101:12",
+                            "description": "分散——狼+12",
+                            "monsters": [
+                                {
+                                    "actorId": 2101,
+                                    "actorName": "狼",
+                                    "modelResource": "Monster/monster_04.prefab",
+                                    "count": 12
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "20401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5004
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 504,
+                    "waveIndex": 4,
+                    "pointGroupRaw": "5004:1",
+                    "formationRaw": "211024:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5004,
+                            "groupId": 211024,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2007:1|2101:3",
+                            "description": "分散——精英狼+1；狼+3",
+                            "monsters": [
+                                {
+                                    "actorId": 2007,
+                                    "actorName": "精英狼",
+                                    "modelResource": "Monster/monster_elite_04.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2101,
+                                    "actorName": "狼",
+                                    "modelResource": "Monster/monster_04.prefab",
+                                    "count": 3
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "20501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5005
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 505,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "5005:1",
+                    "formationRaw": "211025:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5005,
+                            "groupId": 211025,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2106:4",
+                            "description": "分散——石头人·小+4",
+                            "monsters": [
+                                {
+                                    "actorId": 2106,
+                                    "actorName": "石头人·小",
+                                    "modelResource": "Monster/monster_boss_05_b.prefab",
+                                    "count": 4
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "30601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 506,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "5006:1",
+                    "formationRaw": "211026:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5006,
+                            "groupId": 211026,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2101:8",
+                            "description": "聚集——狼+8",
+                            "monsters": [
+                                {
+                                    "actorId": 2101,
+                                    "actorName": "狼",
+                                    "modelResource": "Monster/monster_04.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "30701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5007
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 507,
+                    "waveIndex": 7,
+                    "pointGroupRaw": "5007:1",
+                    "formationRaw": "211027:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5007,
+                            "groupId": 211027,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2108:1|2101:6",
+                            "description": "分散——石头人·中+1；狼+6",
+                            "monsters": [
+                                {
+                                    "actorId": 2108,
+                                    "actorName": "石头人·中",
+                                    "modelResource": "Monster/monster_boss_05_c.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2101,
+                                    "actorName": "狼",
+                                    "modelResource": "Monster/monster_04.prefab",
+                                    "count": 6
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "40901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5009
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 509,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "5009:1",
+                    "formationRaw": "211028:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5009,
+                            "groupId": 211028,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2106:3|2011:2",
+                            "description": "分散——石头人·小+3；食人花+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2106,
+                                    "actorName": "石头人·小",
+                                    "modelResource": "Monster/monster_boss_05_b.prefab",
+                                    "count": 3
+                                },
+                                {
+                                    "actorId": 2011,
+                                    "actorName": "食人花",
+                                    "modelResource": "Monster/monster_14.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "51201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5012
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 512,
+                    "waveIndex": 12,
+                    "pointGroupRaw": "5012:1",
+                    "formationRaw": "211031:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5012,
+                            "groupId": 211031,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2007:1|2011:2",
+                            "description": "分散——精英狼+1；食人花+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2007,
+                                    "actorName": "精英狼",
+                                    "modelResource": "Monster/monster_elite_04.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2011,
+                                    "actorName": "食人花",
+                                    "modelResource": "Monster/monster_14.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "61301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5013
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 513,
+                    "waveIndex": 13,
+                    "pointGroupRaw": "5013:1",
+                    "formationRaw": "211032:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5013,
+                            "groupId": 211032,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2108:1|2102:8",
+                            "description": "分散——石头人·中+1；小蜜蜂+8",
+                            "monsters": [
+                                {
+                                    "actorId": 2108,
+                                    "actorName": "石头人·中",
+                                    "modelResource": "Monster/monster_boss_05_c.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2102,
+                                    "actorName": "小蜜蜂",
+                                    "modelResource": "Monster/monster_05.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 5,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "pointId": "61401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                5014
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 514,
+                    "waveIndex": 14,
+                    "pointGroupRaw": "5014:1",
+                    "formationRaw": "211033:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 5014,
+                            "groupId": 211033,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2101:10",
+                            "description": "聚集——狼+10",
+                            "monsters": [
+                                {
+                                    "actorId": 2101,
+                                    "actorName": "狼",
+                                    "modelResource": "Monster/monster_04.prefab",
+                                    "count": 10
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-29 15:53:25"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 701,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "7001:1",
+                    "formationRaw": "211044:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7001,
+                            "groupId": 211044,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2004:1",
+                            "description": "分散——精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "10201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 702,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "7002:1",
+                    "formationRaw": "111031:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7002,
+                            "groupId": 111031,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2006:1|2004:1",
+                            "description": "聚集——精英哥布林射手+1；精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2006,
+                                    "actorName": "精英哥布林射手",
+                                    "modelResource": "Monster/monster_elite_03.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "10301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7003
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 703,
+                    "waveIndex": 3,
+                    "pointGroupRaw": "7003:1",
+                    "formationRaw": "211045:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7003,
+                            "groupId": 211045,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2004:1|2001:12",
+                            "description": "分散——精英哥布林战士+1；哥布林战士+12",
+                            "monsters": [
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 12
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "20401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7004
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 704,
+                    "waveIndex": 4,
+                    "pointGroupRaw": "7004:1",
+                    "formationRaw": "313029:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7004,
+                            "groupId": 313029,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "1997:2",
+                            "description": "包围——（新）精英哥布林战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "20501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7005
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 705,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "7005:1",
+                    "formationRaw": "112032:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7005,
+                            "groupId": 112032,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "1997:1|2004:1",
+                            "description": "聚集——（新）精英哥布林战士+1；精英哥布林战士+1",
+                            "monsters": [
+                                {
+                                    "actorId": 1997,
+                                    "actorName": "（新）精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_09.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "20601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 706,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "7006:1",
+                    "formationRaw": "313030:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7006,
+                            "groupId": 313030,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2001:8",
+                            "description": "包围——哥布林战士+8",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "30701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7007
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 707,
+                    "waveIndex": 7,
+                    "pointGroupRaw": "7007:1",
+                    "formationRaw": "111033:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7007,
+                            "groupId": 111033,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2006:2|2004:2",
+                            "description": "聚集——精英哥布林射手+2；精英哥布林战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2006,
+                                    "actorName": "精英哥布林射手",
+                                    "modelResource": "Monster/monster_elite_03.prefab",
+                                    "count": 2
+                                },
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "30801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7008
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 708,
+                    "waveIndex": 8,
+                    "pointGroupRaw": "7008:1",
+                    "formationRaw": "111034:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7008,
+                            "groupId": 111034,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2001:12",
+                            "description": "聚集--哥布林战士+12",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 12
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 7,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "pointId": "30901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                7009
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 709,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "7009:1",
+                    "formationRaw": "313031:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 7009,
+                            "groupId": 313031,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2004:2|2014:1",
+                            "description": "包围——精英哥布林战士+2；精英-哥布林大法师+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 2
+                                },
+                                {
+                                    "actorId": 2014,
+                                    "actorName": "精英-哥布林大法师",
+                                    "modelResource": "Monster/monster_31.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 16:59:24"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "10101",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8001
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 801,
+                    "waveIndex": 1,
+                    "pointGroupRaw": "8001:1",
+                    "formationRaw": "111037:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8001,
+                            "groupId": 111037,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2001:15",
+                            "description": "聚集——哥布林战士+15",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 15
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "10201",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8002
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 802,
+                    "waveIndex": 2,
+                    "pointGroupRaw": "8002:1",
+                    "formationRaw": "211050:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8002,
+                            "groupId": 211050,
+                            "formationPrefab": "F001",
+                            "monsterGroupRaw": "2002:5",
+                            "description": "分散--哥布林射手+5",
+                            "monsters": [
+                                {
+                                    "actorId": 2002,
+                                    "actorName": "哥布林射手",
+                                    "modelResource": "Monster/monster_02.prefab",
+                                    "count": 5
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "10301",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8003
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 803,
+                    "waveIndex": 3,
+                    "pointGroupRaw": "8003:1",
+                    "formationRaw": "112038:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8003,
+                            "groupId": 112038,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2001:15|2014:1",
+                            "description": "聚集——哥布林战士+15；精英-哥布林大法师+1",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 15
+                                },
+                                {
+                                    "actorId": 2014,
+                                    "actorName": "精英-哥布林大法师",
+                                    "modelResource": "Monster/monster_31.prefab",
+                                    "count": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "20401",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8004
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 804,
+                    "waveIndex": 4,
+                    "pointGroupRaw": "8004:1",
+                    "formationRaw": "313035:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8004,
+                            "groupId": 313035,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2002:8",
+                            "description": "包围——哥布林射手+8",
+                            "monsters": [
+                                {
+                                    "actorId": 2002,
+                                    "actorName": "哥布林射手",
+                                    "modelResource": "Monster/monster_02.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "20501",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8005
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 805,
+                    "waveIndex": 5,
+                    "pointGroupRaw": "8005:1",
+                    "formationRaw": "313036:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8005,
+                            "groupId": 313036,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2001:8",
+                            "description": "包围——哥布林战士+8",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 8
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "20601",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8006
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 806,
+                    "waveIndex": 6,
+                    "pointGroupRaw": "8006:1",
+                    "formationRaw": "111039:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8006,
+                            "groupId": 111039,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2004:1|2002:7",
+                            "description": "聚集——精英哥布林战士+1；哥布林射手+7",
+                            "monsters": [
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2002,
+                                    "actorName": "哥布林射手",
+                                    "modelResource": "Monster/monster_02.prefab",
+                                    "count": 7
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "30701",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8007
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 807,
+                    "waveIndex": 7,
+                    "pointGroupRaw": "8007:1",
+                    "formationRaw": "111040:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8007,
+                            "groupId": 111040,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2002:6|2004:2",
+                            "description": "聚集——哥布林射手+6；精英哥布林战士+2",
+                            "monsters": [
+                                {
+                                    "actorId": 2002,
+                                    "actorName": "哥布林射手",
+                                    "modelResource": "Monster/monster_02.prefab",
+                                    "count": 6
+                                },
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "30801",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8008
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 808,
+                    "waveIndex": 8,
+                    "pointGroupRaw": "8008:1",
+                    "formationRaw": "112041:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8008,
+                            "groupId": 112041,
+                            "formationPrefab": "J001",
+                            "monsterGroupRaw": "2001:15",
+                            "description": "聚集--哥布林战士+15",
+                            "monsters": [
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 15
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        },
+        {
+            "stageId": 8,
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "pointId": "30901",
+            "success": true,
+            "error": "",
+            "spawnTypeIds": [
+                8009
+            ],
+            "spawnRows": [
+                {
+                    "spawnId": 809,
+                    "waveIndex": 9,
+                    "pointGroupRaw": "8009:1",
+                    "formationRaw": "313037:1",
+                    "pointCount": 1,
+                    "formationVariants": [
+                        {
+                            "configId": 8009,
+                            "groupId": 313037,
+                            "formationPrefab": "B001",
+                            "monsterGroupRaw": "2004:1|2014:2|2001:10",
+                            "description": "包围——精英哥布林战士+1；精英-哥布林大法师+2；哥布林战士+10",
+                            "monsters": [
+                                {
+                                    "actorId": 2004,
+                                    "actorName": "精英哥布林战士",
+                                    "modelResource": "Monster/monster_elite_01.prefab",
+                                    "count": 1
+                                },
+                                {
+                                    "actorId": 2014,
+                                    "actorName": "精英-哥布林大法师",
+                                    "modelResource": "Monster/monster_31.prefab",
+                                    "count": 2
+                                },
+                                {
+                                    "actorId": 2001,
+                                    "actorName": "哥布林战士",
+                                    "modelResource": "Monster/monster_01.prefab",
+                                    "count": 10
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "cachedAt": "2026-09-30 17:05:26"
+        }
+    ],
+    "stagePools": [
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_01_B.prefab",
+            "stageId": 1,
+            "pointIds": [
+                "10101",
+                "10201",
+                "20301",
+                "30401",
+                "30901",
+                "40601",
+                "40701",
+                "41001",
+                "41101",
+                "41301",
+                "50501",
+                "50801",
+                "51201",
+                "51401",
+                "61501",
+                "71601"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_02_B.prefab",
+            "stageId": 2,
+            "pointIds": [
+                "10101",
+                "10201",
+                "20301",
+                "20401",
+                "30601",
+                "30701",
+                "40801",
+                "40901",
+                "41001",
+                "41101",
+                "50501",
+                "50902",
+                "51301",
+                "51401",
+                "51501",
+                "51502",
+                "60502",
+                "61201",
+                "61601",
+                "61701",
+                "71801"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03.prefab",
+            "stageId": 3,
+            "pointIds": [
+                "10101",
+                "10201",
+                "10401",
+                "10501",
+                "20301",
+                "30701",
+                "30801",
+                "30901",
+                "40601",
+                "41001",
+                "41011",
+                "41101",
+                "51301",
+                "51401",
+                "51501",
+                "61201",
+                "61501",
+                "61601",
+                "61701",
+                "61801",
+                "71901"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_03_B.prefab",
+            "stageId": 3,
+            "pointIds": [
+                "10101",
+                "10201",
+                "10401",
+                "10501",
+                "20301",
+                "30701",
+                "30801",
+                "30901",
+                "40601",
+                "41001",
+                "41011",
+                "41101",
+                "51301",
+                "51401",
+                "51501",
+                "61201",
+                "61501",
+                "61601",
+                "61701",
+                "61801",
+                "71901"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_04_B.prefab",
+            "stageId": 4,
+            "pointIds": [
+                "10101",
+                "20201",
+                "20301",
+                "20401",
+                "30501",
+                "30601",
+                "40701",
+                "40801",
+                "50901",
+                "51001",
+                "61101",
+                "61201",
+                "71301",
+                "71401"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_05_B.prefab",
+            "stageId": 5,
+            "pointIds": [
+                "10101",
+                "10201",
+                "20301",
+                "20401",
+                "20501",
+                "30601",
+                "30701",
+                "40801",
+                "40901",
+                "41001",
+                "51101",
+                "51201",
+                "61301",
+                "61401",
+                "71501",
+                "71601"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_07_B.prefab",
+            "stageId": 7,
+            "pointIds": [
+                "10101",
+                "10201",
+                "10301",
+                "20401",
+                "20501",
+                "20601",
+                "30701",
+                "30801",
+                "30901",
+                "41001",
+                "41101",
+                "51201",
+                "51301",
+                "61401",
+                "61501",
+                "61601",
+                "71701",
+                "71801"
+            ]
+        },
+        {
+            "stagePath": "Assets/GameAsset/Prefab/Stage/Stage_08_B.prefab",
+            "stageId": 8,
+            "pointIds": [
+                "10101",
+                "10201",
+                "10301",
+                "20401",
+                "20501",
+                "20601",
+                "30701",
+                "30801",
+                "30901",
+                "41001",
+                "41101",
+                "41201",
+                "51301",
+                "51401",
+                "51501",
+                "61601",
+                "61701",
+                "61801",
+                "62001"
+            ]
+        }
+    ]
+}

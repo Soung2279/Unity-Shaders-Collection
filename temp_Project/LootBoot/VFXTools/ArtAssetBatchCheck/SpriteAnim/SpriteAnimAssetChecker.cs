@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Game.Editor.VFXTools.ArtAssetBatchCheck.SpineWeapon;
 using UnityEditor;
 using UnityEngine;
 
@@ -103,12 +104,17 @@ namespace Game.Editor.VFXTools.ArtAssetBatchCheck.SpriteAnim
         private static SpriteAnimActorEntry CheckPrefab(GameObject prefab, string prefabPath,
             ActorSpriteAnimator animator, SpriteAnimCheckConfig config, SpriteAnimCheckReport report)
         {
+            var actors = SpineWeaponPreviewData.GetActorsForPrefab(SpineWeaponPreviewData.Load(), prefabPath);
+            var actorData = actors.FirstOrDefault();
             var entry = new SpriteAnimActorEntry
             {
                 Prefab = prefab,
                 Animator = animator,
                 PrefabPath = prefabPath,
-                PrefabName = prefab.name
+                PrefabName = prefab.name,
+                ActorId = actorData?.id ?? 0,
+                DeadEffectId = actorData?.deadEffectId ?? 0,
+                ActorConfigurations = new List<SpineWeaponPreviewData.ActorPreviewData>(actors)
             };
 
             var serialized = new SerializedObject(animator);
